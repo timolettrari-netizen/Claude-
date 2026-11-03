@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="de"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c1410"><meta name="apple-mobile-web-app-capable" content="yes">
+<title>Torwart Training</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon.svg">
+<style>
+:root{--bg:#0c1410;--card:#15221b;--ln:#24382c;--tx:#e8f2ec;--mu:#8fa59a;--ac:#3ddc84;--wa:#ffb547}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px system-ui,-apple-system,sans-serif;padding:env(safe-area-inset-top) 16px 96px}
+h1{font-size:21px;margin:16px 0 4px}h2{font-size:17px;margin:4px 0 10px}.mu{color:var(--mu);font-size:13px}
+.card{background:var(--card);border-radius:14px;padding:14px;margin:12px 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{padding:9px 13px;border-radius:20px;border:1px solid var(--ln);background:none;color:var(--tx);font-size:14px}
+.chip.on{background:var(--ac);color:#06210f;border-color:var(--ac);font-weight:600}
+button.main{width:100%;padding:14px;border:0;border-radius:12px;background:var(--ac);color:#06210f;font-size:16px;font-weight:700;margin-top:12px}
+.ex{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--ln)}.ex:last-child{border:0}
+.ex input{width:24px;height:24px;accent-color:var(--ac);flex:none;margin-top:2px}.ex.done b{text-decoration:line-through;color:var(--mu)}
+.dose{color:var(--ac);font-size:14px;font-weight:600}.tm{margin-left:auto;flex:none;background:none;border:1px solid var(--ln);color:var(--tx);border-radius:8px;padding:6px 9px;font-size:13px}
+.day{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--ln)}.day:last-child{border:0}
+.day button{background:none;border:1px solid var(--ac);color:var(--ac);border-radius:8px;padding:6px 10px;font-size:13px}.ok{color:var(--ac)}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#0a110d;border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;padding:14px 4px;background:none;border:0;color:var(--mu);font-size:14px}nav button.on{color:var(--ac);font-weight:600}
+.tab{display:none}.tab.on{display:block}
+#timer{position:fixed;inset:0;background:rgba(5,10,7,.96);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9}
+#timer .n{font-size:96px;font-weight:700;font-variant-numeric:tabular-nums}#timer button{margin-top:24px;width:200px}
+.tip{border-left:3px solid var(--wa);padding-left:10px}
+</style></head><body>
+
+<section class="tab on" id="t-plan">
+<h1>Mein Plan</h1><div class="mu" id="planinfo"></div>
+<div class="card"><h2>Einstellungen</h2>
+<div class="mu">Trainingstage pro Woche (zusätzlich zum Vereinstraining)</div><div class="chips" id="c-days"></div>
+<div class="mu" style="margin-top:12px">Ausrüstung</div><div class="chips" id="c-eq"></div>
+<div class="mu" style="margin-top:12px">Woche im 4-Wochen-Block</div><div class="chips" id="c-week"></div></div>
+<div class="card" id="week"></div>
+<div class="card tip mu" id="note"></div>
+</section>
+
+<section class="tab" id="t-pick">
+<h1>Einheit wählen</h1><div class="mu">Freies Training – unabhängig vom Plan</div>
+<div class="card"><div class="chips" id="c-type"></div>
+<div class="mu" style="margin-top:12px">Dauer</div><div class="chips" id="c-len"></div>
+<button class="main" id="go">Einheit starten</button></div>
+<div class="card mu" id="typedesc"></div>
+</section>
+
+<section class="tab" id="t-run">
+<h1 id="runtitle">Keine Einheit aktiv</h1><div class="mu" id="runsub">Wähle im Plan oder unter „Auswahl“ eine Einheit.</div>
+<div class="card" id="exlist"></div>
+<button class="main" id="finish" style="display:none">Einheit abschließen</button>
+</section>
+
+<section class="tab" id="t-log">
+<h1>Verlauf</h1><div class="card" id="stats"></div><div class="card" id="log"></div>
+</section>
+
+<div id="timer"><div class="mu" id="tlabel"></div><div class="n" id="tnum">0</div><button class="main" id="tstop">Fertig</button></div>
+
+<nav><button data-t="plan" class="on">Plan</button><button data-t="pick">Auswahl</button><button data-t="run">Training</button><button data-t="log">Verlauf</button></nav>
+
+<script>
+/* Übungen: n=Name, c=Hinweis, d=[Sätze, Wdh/Sekunden, 's' für Sekunden], g=nur mit Studio-Geräten */
+const X={
+ // Kraft Unterkörper
+ gob:{n:'Goblet Squat',c:'Kurzhantel vor der Brust, tief und kontrolliert',d:[3,10]},
+ bss:{n:'Bulgarian Split Squat',c:'Hinteres Bein erhöht – je Seite',d:[3,8]},
+ rdl:{n:'Rumänisches Kreuzheben (einbeinig)',c:'Hüfte schieben, Rücken gerade – je Seite',d:[3,8]},
+ cop:{n:'Copenhagen Plank',c:'Adduktoren! Wichtig für Spagat/Paraden – je Seite',d:[3,20,'s']},
+ nord:{n:'Nordic Hamstring Curl',c:'Langsam ablassen, mit Händen abfangen',d:[3,5]},
+ calf:{n:'Wadenheben einbeinig',c:'Oben 1 s halten – je Seite',d:[3,12]},
+ lat:{n:'Seitliche Ausfallschritte',c:'Für Seitwärtsbewegung im Tor – je Seite',d:[3,8]},
+ // Oberkörper/Rumpf
+ push:{n:'Liegestütz',c:'Körperspannung – ggf. Knie am Boden',d:[3,12]},
+ row:{n:'Rudern (Kurzhantel/Band)',c:'Schulterblätter zusammen',d:[3,10]},
+ ohp:{n:'Schulterdrücken stehend',c:'Stabile Schultern fürs Abwerfen/Fausten',d:[3,8]},
+ pall:{n:'Pallof Press',c:'Anti-Rotation – je Seite',d:[3,10]},
+ side:{n:'Seitstütz',c:'Becken hoch – je Seite',d:[3,30,'s']},
+ dead:{n:'Dead Bug',c:'Lendenwirbel am Boden',d:[3,10]},
+ ytw:{n:'Y-T-W Schulterübung',c:'Bauchlage, leichte oder keine Gewichte',d:[2,8]},
+ // Explosiv
+ cmj:{n:'Strecksprung aus der Hocke',c:'Maximal hoch, weich landen',d:[4,5]},
+ latb:{n:'Seitliche Sprünge (Skater)',c:'Abdruck wie zur Parade – je Seite',d:[4,5]},
+ box:{n:'Box Jump / Treppensprung',c:'Qualität vor Menge',d:[4,4]},
+ mbt:{n:'Medizinball-Wurf seitlich an Wand',c:'Oder Ball kräftig aufs Gras – je Seite',d:[3,6]},
+ dive:{n:'Abdruck + Hechtbewegung auf Matte',c:'Nur auf weichem Untergrund – je Seite',d:[3,4]},
+ spr:{n:'Antritt 5 m aus Torwart-Grundstellung',c:'Volle Pause zwischen den Läufen',d:[6,1]},
+ // Reaktion/Koordination
+ ladder:{n:'Koordinationsleiter / Schnelle Füße',c:'Kurz und sauber',d:[4,15,'s']},
+ wall:{n:'Ball gegen Wand fangen',c:'Nah an die Wand, schnell, beide Hände',d:[3,40,'s']},
+ drop:{n:'Fallender Ball (Partner/Tennisball)',c:'Ball fallen lassen, vor dem 2. Aufprall fangen',d:[3,10]},
+ shuf:{n:'Side-Shuffle mit Signal',c:'Richtungswechsel auf Zuruf/Timer',d:[4,15,'s']},
+ // Beweglichkeit
+ w90:{n:'90/90 Hüftrotation',c:'Langsam, aufrecht',d:[2,10]},
+ frog:{n:'Frog Stretch',c:'Adduktoren – ruhig atmen',d:[2,45,'s']},
+ couch:{n:'Couch Stretch',c:'Hüftbeuger – je Seite',d:[2,45,'s']},
+ pige:{n:'Taube (Pigeon)',c:'Gesäß – je Seite',d:[2,45,'s']},
+ cosk:{n:'Cossack Squat',c:'Seitliche Hocke tief – je Seite',d:[2,8]},
+ tsp:{n:'Brustwirbel-Rotation (Open Book)',c:'Für Paraden zur Seite – je Seite',d:[2,8]},
+ shd:{n:'Schulter-Dislocates mit Band/Stab',c:'Weit greifen',d:[2,12]},
+ ham:{n:'Hamstring-Dehnung (Bein auf Erhöhung)',c:'Rücken gerade – je Seite',d:[2,40,'s']},
+ wgs:{n:"World's Greatest Stretch",c:'Ganzkörper – je Seite',d:[2,5]},
+ ank:{n:'Sprunggelenk-Mobilisation an Wand',c:'Knie über Zehen – je Seite',d:[2,10]},
+ // Ausdauer
+ jog:{n:'Lockerer Dauerlauf',c:'Gesprächstempo – wie deine Läufe (~6:20 /km)',d:[1,25,'min']},
+ int:{n:'Intervalle 15 s schnell / 45 s locker',c:'Torwart-typische Belastung',d:[8,1,'min']},
+};
+const G={ // Geräte-Ersatz ohne Studio
+ gob:'Squat mit Rucksack',ohp:'Pike Push-up',row:'Rudern mit Handtuch an Tür',mbt:'Ball/Rucksack seitlich werfen',box:'Treppensprung'};
+const T={
+ kraftA:{n:'Kraft A · Beine & Rumpf',x:['gob','rdl','cop','lat','pall','side','calf'],w:'Fokus Absprungkraft und Stabilität.'},
+ kraftB:{n:'Kraft B · Oberkörper & Hüfte',x:['bss','nord','push','row','ohp','dead','ytw'],w:'Rücken & Schultern für Abwürfe, Hamstrings schützen.'},
+ explo:{n:'Explosivität · Sprung & Antritt',x:['wgs','cmj','latb','box','mbt','dive','spr'],w:'Vor Kraft, ausgeruht. Volle Pausen (60–90 s).'},
+ react:{n:'Reaktion & Füße',x:['ladder','shuf','wall','drop','latb'],w:'Schnell, kurz, frisch. Ideal vor dem Vereinstraining.'},
+ mob:{n:'Beweglichkeit · Torwart',x:['ank','w90','cosk','frog','couch','pige','ham','tsp','shd'],w:'Hüfte, Adduktoren, Brustwirbelsäule – deine Paraden-Reichweite.'},
+ mobS:{n:'Mobility kurz (10 min)',x:['wgs','w90','cosk','tsp','ank'],w:'Als Aufwärmen oder morgens.'},
+ run:{n:'Lauf + Mobility',x:['jog','frog','couch','ham'],w:'Grundlagenausdauer halten – du läufst ja schon gerne.'},
+ hiit:{n:'Spielnahe Ausdauer',x:['wgs','int','spr','mobS'],w:'Kurze, harte Belastungen wie im Spiel.'},
+};
+const PLAN={2:['kraftA',0,0,'kraftB',0,0,0],3:['kraftA',0,'explo',0,'kraftB',0,0],
+ 4:['kraftA',0,'explo',0,'kraftB','mob',0],5:['kraftA','mobS','explo',0,'kraftB','run',0]};
+const WD=['Mo','Di','Mi','Do','Fr','Sa','So'];
+const WK=[{n:'Woche 1 – Einstieg',s:0,r:0},{n:'Woche 2 – mehr Volumen',s:1,r:0},{n:'Woche 3 – mehr Intensität',s:1,r:2},{n:'Woche 4 – Entlastung',s:-1,r:-2}];
+const $=i=>document.getElementById(i);
+let S={days:3,eq:'home',week:0,type:'kraftA',len:'normal',log:[],cur:null};
+try{Object.assign(S,JSON.parse(localStorage.getItem('gk')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('gk',JSON.stringify(S))}catch(e){}};
+
+function chips(id,opts,key,cb){const el=$(id);el.innerHTML='';opts.forEach(([v,l])=>{const b=document.createElement('button');b.className='chip'+(S[key]==v?' on':'');b.textContent=l;b.onclick=()=>{S[key]=v;save();chips(id,opts,key,cb);cb&&cb()};el.appendChild(b)})}
+function dose(id,short){const e=X[id];if(!e)return'';let[s,r,u]=e.d,w=WK[S.week];
+ if(u!='min'){s=Math.max(1,s+w.s-(short?1:0));r=Math.max(1,r+(u=='s'?w.r*5:w.r))}
+ return{s,r,u,txt:`${s} × ${r}${u=='s'?' s':u=='min'?' min':''}`}}
+function exName(id){return S.eq=='home'&&G[id]?G[id]:X[id].n}
+
+function renderPlan(){const p=PLAN[S.days],today=(new Date().getDay()+6)%7,ws=weekStart();
+ $('planinfo').textContent=WK[S.week].n;
+ $('week').innerHTML='<h2>Diese Woche</h2>'+p.map((t,i)=>{const done=S.log.some(l=>l.t==t&&l.ts>=ws&&new Date(l.ts).getDay()==(i+1)%7);
+  return `<div class="day"><span><b>${WD[i]}</b>${i==today?' · heute':''}<br><span class="mu">${t?T[t].n:'Pause / Vereinstraining'}</span></span>${t?(done?'<span class="ok">✓</span>':`<button data-t="${t}">Start</button>`):''}</div>`}).join('');
+ $('week').querySelectorAll('button').forEach(b=>b.onclick=()=>start(b.dataset.t));
+ $('note').innerHTML='<b>Abgestimmt auf dich:</b> Laut Strava läufst du regelmäßig 5–10 km (~6:20 /km), machst aber kaum Krafttraining und hattest seit August wenig Aktivität. Der Plan setzt deshalb auf Kraft, Beweglichkeit und Sprungkraft und hält deine Laufbasis. Explosiv-Einheiten nie am Tag nach einem harten Spiel. Tipp: „Mobility kurz“ passt fast jeden Tag dazu. Bei Schmerzen: Übung weglassen.'}
+function weekStart(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return+d}
+
+function start(t,short){S.cur={t,short:!!short,done:[]};save();renderRun();show('run')}
+function renderRun(){const c=S.cur;if(!c||!T[c.t]){$('finish').style.display='none';$('exlist').innerHTML='<div class="mu">—</div>';return}
+ const t=T[c.t];let ids=t.x.flatMap(i=>T[i]?T[i].x:[i]);if(c.short)ids=ids.slice(0,Math.ceil(ids.length*.6));
+ $('runtitle').textContent=t.n;$('runsub').textContent=t.w+' · '+WK[S.week].n;
+ $('exlist').innerHTML=ids.map((id,k)=>{const d=dose(id,c.short),dn=c.done.includes(k);
+  return `<div class="ex${dn?' done':''}"><input type="checkbox" data-k="${k}"${dn?' checked':''}><div><b>${exName(id)}</b><br><span class="dose">${d.txt}</span> <span class="mu">· ${X[id].c}</span></div>${d.u=='s'||d.u=='min'?`<button class="tm" data-s="${d.u=='min'?d.r*60:d.r}" data-n="${exName(id)}">⏱</button>`:`<button class="tm" data-s="60" data-n="Satzpause">60s</button>`}</div>`}).join('');
+ $('exlist').querySelectorAll('input').forEach(i=>i.onchange=()=>{const k=+i.dataset.k;c.done=i.checked?[...c.done,k]:c.done.filter(x=>x!=k);save();renderRun()});
+ $('exlist').querySelectorAll('.tm').forEach(b=>b.onclick=()=>timer(+b.dataset.s,b.dataset.n));
+ $('finish').style.display='block'}
+$('finish').onclick=()=>{const c=S.cur;S.log.push({t:c.t,ts:Date.now(),n:c.done.length});S.cur=null;save();renderRun();renderPlan();renderLog();show('log')};
+
+let iv;function timer(sec,label){$('timer').style.display='flex';$('tlabel').textContent=label;let n=sec;$('tnum').textContent=n;clearInterval(iv);
+ iv=setInterval(()=>{n--;$('tnum').textContent=n;if(n<=0){clearInterval(iv);$('tnum').textContent='✓';navigator.vibrate&&navigator.vibrate([300,100,300])}},1000)}
+$('tstop').onclick=()=>{clearInterval(iv);$('timer').style.display='none'};
+
+function renderLog(){const L=S.log,ws=weekStart(),wk=L.filter(l=>l.ts>=ws).length;
+ let streak=0;for(let w=0;;w++){const a=ws-w*6048e5,b=a+6048e5;if(L.some(l=>l.ts>=a&&l.ts<b))streak++;else if(w>0||!wk)break;else continue}
+ const cnt={};L.forEach(l=>cnt[l.t]=(cnt[l.t]||0)+1);
+ $('stats').innerHTML=`<h2>Übersicht</h2><div class="day"><span>Diese Woche</span><b>${wk} / ${PLAN[S.days].filter(Boolean).length}</b></div><div class="day"><span>Wochen in Folge aktiv</span><b>${streak}</b></div><div class="day"><span>Einheiten gesamt</span><b>${L.length}</b></div>`+Object.entries(cnt).map(([k,v])=>`<div class="day"><span class="mu">${T[k]?T[k].n:k}</span><span>${v}</span></div>`).join('');
+ $('log').innerHTML='<h2>Letzte Einheiten</h2>'+(L.length?L.slice(-20).reverse().map(l=>`<div class="day"><span>${new Date(l.ts).toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'})}<br><span class="mu">${T[l.t]?T[l.t].n:l.t}</span></span><span class="mu">${l.n} Übungen</span></div>`).join(''):'<div class="mu">Noch nichts – leg los!</div>')}
+
+function show(t){document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.id=='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));scrollTo(0,0)}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.t));
+chips('c-days',[[2,'2'],[3,'3'],[4,'4'],[5,'5']],'days',()=>{renderPlan();renderLog()});
+chips('c-eq',[['home','Zuhause / Platz'],['gym','Fitnessstudio']],'eq',renderRun);
+chips('c-week',WK.map((w,i)=>[i,String(i+1)]),'week',()=>{renderPlan();renderRun()});
+const typeDesc=()=>$('typedesc').innerHTML=`<b>${T[S.type].n}</b><br>${T[S.type].w}<br><br>${T[S.type].x.map(i=>T[i]?T[i].n:exName(i)).join(' · ')}`;
+chips('c-type',Object.entries(T).map(([k,v])=>[k,v.n.split(' · ')[0]]),'type',typeDesc);
+chips('c-len',[['short','Kurz'],['normal','Normal']],'len');
+$('go').onclick=()=>start(S.type,S.len=='short');
+typeDesc();renderPlan();renderRun();renderLog();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+</script></body></html>
