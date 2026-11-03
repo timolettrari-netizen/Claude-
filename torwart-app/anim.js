@@ -46,21 +46,54 @@ const A={gob:['stG','sq',0,3],bss:['lunT','lunB',0,3],rdl:['st','rdl',0,3.4],cop
  int:['r1','r2',6,.5],thrust:['th1','th2',0,2.6],lpull:['lp1','lp2',0,2.6],add:['ad1','ad2',0,2.6],legp:['bp1','bp2',0,2.6]};
 const L={t:38,ua:20,fa:19,th:26,sh:26},V=a=>[Math.sin(a*Math.PI/180),Math.cos(a*Math.PI/180)];
 function joints(p){const h=[0,0],add=(o,a,l)=>{const v=V(a);return[o[0]+v[0]*l,o[1]+v[1]*l]};
- const s=add(h,p[0],L.t),hd=add(s,p[0],13);
+ const s=add(h,p[0],L.t),nk=add(s,p[0],4),hd=add(s,p[0],14);
  const e1=add(s,p[1],L.ua),w1=add(e1,p[2],L.fa),e2=add(s,p[3],L.ua),w2=add(e2,p[4],L.fa);
  const k1=add(h,p[5],L.th),f1=add(k1,p[6],L.sh),k2=add(h,p[7],L.th),f2=add(k2,p[8],L.sh);
- return{h,s,hd,e1,w1,e2,w2,k1,f1,k2,f2}}
+ return{h,s,nk,hd,e1,w1,e2,w2,k1,f1,k2,f2}}
+const ln=(p,q,c,w)=>`<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${q[0].toFixed(1)}" y2="${q[1].toFixed(1)}" class="${c}" stroke-width="${w}"/>`;
+const rc=(x,y,w,h,c,r=2)=>`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w}" height="${h}" rx="${r}" class="${c}"/>`;
+const ci=(p,r,c)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${r}" class="${c}"/>`;
+const mid=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
+const DB=p=>rc(p[0]-8,p[1]-1.5,16,3,'eq',1)+rc(p[0]-10,p[1]-5,4,10,'eq',1.5)+rc(p[0]+6,p[1]-5,4,10,'eq',1.5);
+const GR=152;
+function bench(p,w=46){return rc(p[0]-w/2,p[1],w,6,'eq2',2)+rc(p[0]-w/2+4,p[1]+6,3,GR-p[1]-6,'eq2',1)+rc(p[0]+w/2-7,p[1]+6,3,GR-p[1]-6,'eq2',1)}
+// Geräte hinter (bg) und vor (fg) der Figur
+function props(k,j){let bg='',fg='';
+ switch(k){
+ case'db1':fg=DB(mid(j.w1,j.w2));break;
+ case'db2':bg=DB(j.w2);fg=DB(j.w1);break;
+ case'bbS':fg=ci([j.s[0]-3,j.s[1]+2],12,'eq')+ci([j.s[0]-3,j.s[1]+2],3,'bg');break;
+ case'bbH':fg=ci(mid(j.w1,j.w2),12,'eq')+ci(mid(j.w1,j.w2),3,'bg');break;
+ case'benchB':bg=bench([j.f2[0]-4,j.f2[1]+3]);break;
+ case'benchF':bg=bench([j.f1[0]+4,j.f1[1]+3]);break;
+ case'thrust':bg=bench([j.s[0]+8,j.s[1]+4],34);fg=ci([j.h[0],j.h[1]-11],12,'eq')+ci([j.h[0],j.h[1]-11],3,'bg');break;
+ case'pad':fg=rc(j.f1[0]-9,j.f1[1]-9,18,8,'eq2',4);bg=rc(10,GR-3,180,3,'mat',1.5);break;
+ case'step':bg=rc(j.f1[0]-14,j.f1[1]+2,30,GR-j.f1[1]-2,'eq2',2);break;
+ case'mat':bg=rc(12,GR-3,176,4,'mat',2);break;
+ case'band':bg=rc(186,GR-90,5,90,'eq2',2)+`<line x1="${mid(j.w1,j.w2)[0]}" y1="${mid(j.w1,j.w2)[1]}" x2="188" y2="${mid(j.w1,j.w2)[1]}" class="cab" stroke-width="2.5"/>`;break;
+ case'cable':bg=rc(182,GR-120,12,120,'eq2',3)+`<line x1="${mid(j.w1,j.w2)[0]}" y1="${mid(j.w1,j.w2)[1]}" x2="182" y2="${mid(j.w1,j.w2)[1]}" class="cab" stroke-width="1.5"/>`;break;
+ case'lat':{const m=mid(j.w1,j.w2);bg=rc(j.h[0]-12,j.h[1]+2,26,6,'eq2',2)+rc(j.h[0]-1,j.h[1]+8,4,GR-j.h[1]-8,'eq2',1)+rc(m[0]-30,4,60,6,'eq2',2)+`<line x1="${m[0]}" y1="10" x2="${m[0]}" y2="${m[1]}" class="cab" stroke-width="1.5"/>`;fg=rc(m[0]-26,m[1]-2,52,4,'eq',2);break}
+ case'sled':bg=rc(j.h[0]-26,j.h[1]-4,30,8,'eq2',3);fg=rc(j.f1[0]-2,j.f1[1]-16,6,32,'eq',2);break;
+ case'box':bg=rc(132,GR-30,40,30,'eq2',4);break;
+ case'cones':bg=`<path d="M22 ${GR}l7-14 7 14z" class="cone"/><path d="M164 ${GR}l7-14 7 14z" class="cone"/>`;break;
+ case'ladder':bg=[20,48,76,104,132,160].map(x=>rc(x,GR-2,22,3,'cone',1)).join('');break;
+ case'wall':bg=rc(184,10,10,GR-10,'eq2',2);if(j)fg='';break;
+ case'ball':fg=ci([mid(j.w1,j.w2)[0]+4,mid(j.w1,j.w2)[1]-4],8,'ball');break;
+ case'stick':fg=ln([j.w1[0]-16,j.w1[1]],[j.w1[0]+16,j.w1[1]],'eq',3.5);break;}
+ return[bg,fg]}
 let raf;
-function playAnim(id,el){cancelAnimationFrame(raf);const a=A[id];if(!a){el.innerHTML='';return false}
- el.innerHTML='<svg viewBox="0 0 200 170" style="width:100%;background:#0e1a14;border-radius:14px"><line x1="10" y1="152" x2="190" y2="152" stroke="#2c4536" stroke-width="2"/><g id="fig" stroke-linecap="round" stroke-linejoin="round" fill="none"></g></svg>';
- const g=el.querySelector('#fig'),pa=P[a[0]],pb=P[a[1]],t0=performance.now();
- const ln=(p,q,c,w)=>`<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${c}" stroke-width="${w}"/>`;
+function playAnim(id,el,prop){cancelAnimationFrame(raf);const a=A[id];if(!a){el.innerHTML='';return false}
+ el.innerHTML='<svg viewBox="0 0 200 165" class="fig"><ellipse id="sh" cx="100" cy="153" rx="30" ry="3" class="shadow"/><line x1="0" y1="152.5" x2="200" y2="152.5" class="floor"/><g id="fig" stroke-linecap="round" stroke-linejoin="round" fill="none"></g></svg>';
+ const g=el.querySelector('#fig'),pa=P[a[0]],pb=P[a[1]],t0=performance.now(),raise=prop=='step'?10:prop=='benchF'&&/cop|side/.test(id)?0:0;
  (function f(now){const ph=(1-Math.cos(2*Math.PI*((now-t0)/1000)/a[3]))/2,p=pa.map((v,i)=>v+(pb[i]-v)*ph);
-  const J=joints(p),pts=Object.values(J),my=Math.max(...pts.map(q=>q[1]+(q===J.hd?9:0))),lift=a[2]*Math.max(0,(ph-.55)/.45);
-  const T=q=>[100+q[0],150-my+q[1]-lift],j={};for(const k in J)j[k]=T(J[k]);
-  const B='#5f8f74',F='#e8f2ec',W=6;
-  g.innerHTML=ln(j.h,j.k2,B,W)+ln(j.k2,j.f2,B,W)+ln(j.s,j.e2,B,5)+ln(j.e2,j.w2,B,5)
-   +ln(j.h,j.s,F,8)+ln(j.h,j.k1,'#3ddc84',W)+ln(j.k1,j.f1,'#3ddc84',W)+ln(j.s,j.e1,F,5)+ln(j.e1,j.w1,F,5)
-   +`<circle cx="${j.hd[0]}" cy="${j.hd[1]}" r="9" fill="${F}"/>`;
+  const J=joints(p),pts=[J.h,J.s,J.e1,J.w1,J.e2,J.w2,J.k1,J.f1,J.k2,J.f2],my=Math.max(...pts.map(q=>q[1]),J.hd[1]+9);
+  const lift=a[2]*Math.max(0,(ph-.55)/.45)+raise,T=q=>[100+q[0],GR-3-my+q[1]-lift],j={};for(const k in J)j[k]=T(J[k]);
+  const [bg,fg]=props(prop,j);
+  g.innerHTML=bg
+   +ln(j.h,j.k2,'lb',11)+ln(j.k2,j.f2,'lb',9)+ln(j.f2,[j.f2[0]+6,j.f2[1]],'shoe2',6)+ln(j.s,j.e2,'lb',8)+ln(j.e2,j.w2,'lb',7)
+   +ln(j.h,j.s,'shirt',17)+ln(j.nk,j.s,'skin',7)+ln(j.h,j.k1,'shorts',12)+ln(j.k1,j.f1,'skin',9.5)+ln(j.f1,[j.f1[0]+7,j.f1[1]],'shoe',6.5)
+   +`<circle cx="${j.hd[0].toFixed(1)}" cy="${j.hd[1].toFixed(1)}" r="9" class="head"/>`
+   +ln(j.s,j.e1,'shirt',8.5)+ln(j.e1,j.w1,'skin',7)+fg;
+  el.querySelector('#sh').setAttribute('cx',j.h[0]);
   raf=requestAnimationFrame(f)})(t0);return true}
 function stopAnim(){cancelAnimationFrame(raf)}
