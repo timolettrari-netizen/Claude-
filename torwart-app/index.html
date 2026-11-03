@@ -53,11 +53,12 @@ nav button{flex:1;padding:14px 4px;background:none;border:0;color:var(--mu);font
 <h1>Verlauf</h1><div class="card" id="stats"></div><div class="card" id="log"></div>
 </section>
 
-<div id="vmodal" style="position:fixed;inset:0;background:rgba(5,10,7,.96);display:none;flex-direction:column;justify-content:center;padding:16px;z-index:9"><h2 id="vtitle"></h2><div id="vbody"></div><button class="main" onclick="this.parentNode.style.display='none';this.parentNode.querySelector('video')?.pause()">Schließen</button></div>
+<div id="vmodal" style="position:fixed;inset:0;background:rgba(5,10,7,.96);display:none;flex-direction:column;justify-content:center;padding:16px;z-index:9"><h2 id="vtitle"></h2><div id="vbody"></div><button class="main" onclick="this.parentNode.style.display='none';this.parentNode.querySelector('video')?.pause();stopAnim()">Schließen</button></div>
 <div id="timer"><div class="mu" id="tlabel"></div><div class="n" id="tnum">0</div><button class="main" id="tstop">Fertig</button></div>
 
 <nav><button data-t="plan" class="on">Plan</button><button data-t="pick">Auswahl</button><button data-t="run">Training</button><button data-t="log">Verlauf</button></nav>
 
+<script src="anim.js"></script>
 <script>
 /* Übungen: n=Name, c=Hinweis, d=[Sätze, Wdh/Sekunden, 's' für Sekunden], g=nur mit Studio-Geräten */
 const X={
@@ -159,7 +160,7 @@ function renderRun(){const c=S.cur;if(!c||!T[c.t]){$('finish').style.display='no
  const t=T[c.t];let ids=t.x.flatMap(i=>T[i]?T[i].x:[i]);if(S.eq=='gym'&&GX[c.t])ids.splice(1,0,...GX[c.t]);if(c.short)ids=ids.slice(0,Math.ceil(ids.length*.6));
  $('runtitle').textContent=t.n;$('runsub').textContent=t.w+' · '+WK[S.week].n;
  $('exlist').innerHTML=ids.map((id,k)=>{const d=dose(id,c.short),dn=c.done.includes(k);
-  return `<div class="ex${dn?' done':''}"><input type="checkbox" data-k="${k}"${dn?' checked':''}><div><b>${exName(id)}</b><br><span class="dose">${d.txt}</span> <span class="mu">· ${exCue(id)}</span><br><button class="vid" data-v="${id}">▶ Video</button></div>${d.u=='s'||d.u=='min'?`<button class="tm" data-s="${d.u=='min'?d.r*60:d.r}" data-n="${exName(id)}">⏱</button>`:`<button class="tm" data-s="60" data-n="Satzpause">60s</button>`}</div>`}).join('');
+  return `<div class="ex${dn?' done':''}"><input type="checkbox" data-k="${k}"${dn?' checked':''}><div><b>${exName(id)}</b><br><span class="dose">${d.txt}</span> <span class="mu">· ${exCue(id)}</span><br><button class="vid" data-v="${id}">▶ Animation</button></div>${d.u=='s'||d.u=='min'?`<button class="tm" data-s="${d.u=='min'?d.r*60:d.r}" data-n="${exName(id)}">⏱</button>`:`<button class="tm" data-s="60" data-n="Satzpause">60s</button>`}</div>`}).join('');
  $('exlist').querySelectorAll('input').forEach(i=>i.onchange=()=>{const k=+i.dataset.k;c.done=i.checked?[...c.done,k]:c.done.filter(x=>x!=k);save();renderRun()});
  $('exlist').querySelectorAll('.vid').forEach(b=>b.onclick=()=>video(b.dataset.v));
  $('exlist').querySelectorAll('.tm').forEach(b=>b.onclick=()=>timer(+b.dataset.s,b.dataset.n));
@@ -167,8 +168,9 @@ function renderRun(){const c=S.cur;if(!c||!T[c.t]){$('finish').style.display='no
 $('finish').onclick=()=>{const c=S.cur;S.log.push({t:c.t,ts:Date.now(),n:c.done.length});S.cur=null;save();renderRun();renderPlan();renderLog();show('log')};
 
 function video(id){const n=exName(id);$('vtitle').textContent=n;
- $('vbody').innerHTML=VID[id]?`<video src="${VID[id]}" autoplay loop muted playsinline controls style="width:100%;border-radius:12px"></video>`
- :`<p class="mu">Für diese Übung ist noch kein eigenes Video hinterlegt.</p><a class="main" style="display:block;text-align:center;text-decoration:none" target="_blank" href="https://www.youtube.com/results?search_query=${encodeURIComponent(n+' Übung richtig ausführen')}">Video-Anleitung auf YouTube suchen</a>`;
+ $('vbody').innerHTML=`<div id="anim"></div><p class="dose" style="margin:10px 0 0">${dose(id).txt}</p><p class="mu">${exCue(id)}</p>`+(VID[id]?`<video src="${VID[id]}" autoplay loop muted playsinline controls style="width:100%;border-radius:12px"></video>`
+ :`<a class="main" style="display:block;text-align:center;text-decoration:none" target="_blank" href="https://www.youtube.com/results?search_query=${encodeURIComponent(n+' Übung richtig ausführen')}">Echtes Video auf YouTube</a>`);
+ playAnim(id,$('anim'));
  $('vmodal').style.display='flex'}
 let iv;function timer(sec,label){$('timer').style.display='flex';$('tlabel').textContent=label;let n=sec;$('tnum').textContent=n;clearInterval(iv);
  iv=setInterval(()=>{n--;$('tnum').textContent=n;if(n<=0){clearInterval(iv);$('tnum').textContent='✓';navigator.vibrate&&navigator.vibrate([300,100,300])}},1000)}
