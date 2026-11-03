@@ -14,6 +14,16 @@ const T={
 };
 const GPLAN={2:{2:'kraftA',4:'kraftB'},3:{2:'kraftA',3:'explo',4:'kraftB'},4:{1:'mob',2:'kraftA',3:'explo',4:'kraftB'},5:{1:'mob',2:'kraftA',3:'explo',4:'kraftB',5:'react'}};
 const FPLAN={2:['kraftA',0,0,'kraftB',0,0,0],3:['kraftA',0,'explo',0,'kraftB',0,0],4:['kraftA',0,'explo',0,'kraftB','mob',0],5:['kraftA','mob','explo',0,'kraftB','react',0]};
+const GOALS={
+ sprung:{n:'Sprungkraft',i:'🚀',d:'Höher springen, explosiver abdrücken',pri:['kraftA','explo','kraftB','mob','react'],test:'jump'},
+ speed:{n:'Schnelligkeit',i:'⚡️',d:'Schneller reagieren und antreten',pri:['explo','react','kraftA','mob','kraftB'],test:'sprint'},
+ kraft:{n:'Kraft & Athletik',i:'🏋️',d:'Stärker im Zweikampf und bei Paraden',pri:['kraftA','kraftB','explo','mob','kraftA'],test:'squat'},
+ mobil:{n:'Beweglichkeit',i:'🧘',d:'Mehr Reichweite, tiefere Paraden',pri:['mob','kraftA','mob','kraftB','mobS'],test:'reach'},
+ praev:{n:'Verletzungsschutz',i:'🛡️',d:'Leiste, Oberschenkel und Schultern stärken',pri:['kraftA','mob','kraftB','react','mob'],test:'plank'},
+ fit:{n:'Fitness & Ausdauer',i:'❤️',d:'90 Minuten fit und konzentriert',pri:['kraftA','hiit','kraftB','run','mob'],test:'cooper'}};
+const TESTS={jump:{n:'Strecksprung',u:'cm',up:1,h:'Mit Kreide an der Wand: Reichhöhe stehend vs. gesprungen.'},sprint:{n:'5-m-Sprint',u:'s',up:0,h:'Aus der Grundstellung, Handy-Stoppuhr oder Partner.'},
+ squat:{n:'Kniebeuge 5 Wdh.',u:'kg',up:1,h:'Höchstes Gewicht für 5 saubere Wiederholungen.'},reach:{n:'Sitz-Reichtest',u:'cm',up:1,h:'Beine gestreckt, Zentimeter über (+) oder vor (−) den Zehen.'},
+ plank:{n:'Seitstütz',u:'s',up:1,h:'Maximale Haltezeit, schwächere Seite zählt.'},cooper:{n:'Cooper-Test 12 min',u:'m',up:1,h:'So weit wie möglich in 12 Minuten laufen (Strava!).'}};
 const WD=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
 const WK=[{n:'Einstieg',s:0,r:0},{n:'Mehr Volumen',s:1,r:0},{n:'Mehr Intensität',s:1,r:2},{n:'Entlastung',s:-1,r:-2}];
 const CATS=['Alle','Kraft','Explosiv','Reaktion','Beweglichkeit','Ausdauer'];
@@ -24,14 +34,18 @@ const CH='<svg class="chev" viewBox="0 0 8 13"><path d="M1 1l5.5 5.5L1 12" strok
 /* ---------- Zustand ---------- */
 const weekStart=(ts=Date.now())=>{const d=new Date(ts);d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return+d};
 const dayKey=(ts=Date.now())=>{const d=new Date(ts);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
-let S={name:'Timo',game:6,days:3,eq:'gym',len:'normal',blockStart:weekStart(),log:[],ready:{},cur:null};
+let S={goal:null,tests:[],chat:[],name:'Timo',game:6,days:3,eq:'gym',len:'normal',blockStart:weekStart(),log:[],ready:{},cur:null};
 try{const o=JSON.parse(localStorage.getItem('gk2')||'null');if(o)Object.assign(S,o);else{const old=JSON.parse(localStorage.getItem('gk')||'null');if(old){S.log=(old.log||[]).map(l=>({t:l.t,ts:l.ts,n:l.n,sets:{}}));['days','eq'].forEach(k=>old[k]!=null&&(S[k]=old[k]))}}}catch(e){}
 const save=()=>{try{localStorage.setItem('gk2',JSON.stringify(S))}catch(e){}};
 const wIdx=()=>((Math.floor((weekStart()-weekStart(S.blockStart))/WEEK)%4)+4)%4;
 
 /* ---------- Hilfen ---------- */
 function ex(id){const o=Object.assign({},X[id],S.eq=='gym'?GY[id]||{}:{});if(S.eq=='home'&&HOME[id])o.n=HOME[id];return o}
-function dose(id,short){let[s,r,u]=X[id].d;const w=WK[wIdx()];
+function dose(id,short){let[s,r,u]=X[id].d;const w=WK[wIdx()],c=catOf(id);
+ if(S.goal=='kraft'&&c=='Kraft'&&!u){s++;r=Math.max(5,r-3)}
+ if((S.goal=='sprung'||S.goal=='speed')&&(c=='Explosiv'||c=='Reaktion'))s++;
+ if(S.goal=='mobil'&&c=='Beweglichkeit'&&u=='s')r+=15;
+ if(S.goal=='praev'&&['nord','cop','side','ytw','pall','calf'].includes(id))s++;
  if(u!='min'){s=Math.max(1,s+w.s-(short?1:0));r=Math.max(1,r+(u=='s'?w.r*5:w.r))}
  return{s,r,u,timed:u=='s'||u=='min',sec:u=='min'?r*60:u=='s'?r:0,txt:`${s} × ${r}${u=='s'?' s':u=='min'?' min':''}`}}
 function ids(t,short){let a=T[t].x.slice();if(S.eq=='gym'&&GYMX[t])a.splice(1,0,...GYMX[t]);if(short)a=a.slice(0,Math.ceil(a.length*.6));return a}
@@ -47,8 +61,9 @@ const buzz=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
 /* ---------- Plan ---------- */
 function planFor(i){ // i = 0..6 (Mo..So)
- if(S.game<0)return FPLAN[S.days][i]||null;
- const o=(i-S.game+7)%7;if(o==0)return'game';if(o==6)return'mobS';return GPLAN[S.days][o]||null}
+ const pri=(GOALS[S.goal]||GOALS.sprung).pri.slice(0,S.days);
+ if(S.game<0){const slots=[0,4,2,5,1],k=slots.slice(0,S.days).indexOf(i);return k<0?null:pri[k]}
+ const o=(i-S.game+7)%7;if(o==0)return'game';if(o==6)return'mobS';const k=[2,4,3,1,5].slice(0,S.days).indexOf(o);return k<0?null:pri[k]}
 const doneOn=(t,i)=>S.log.some(l=>l.t==t&&l.ts>=weekStart()&&(new Date(l.ts).getDay()+6)%7==i);
 const todayIdx=()=>(new Date().getDay()+6)%7;
 
@@ -64,20 +79,41 @@ function setReady(k,v){const d=dayKey();S.ready[d]=Object.assign(S.ready[d]||{},
 /* ---------- Heute ---------- */
 function renderHero(){const i=todayIdx(),t=planFor(i),sc=readiness(),tired=sc!=null&&sc<2.7;let h;
  if(t=='game')h=`<div class="hero game"><div class="k">Spieltag</div><div class="n">⚽️ Heute ist Spiel</div><div class="m">Kein Training. 10 min Aktivierung als Aufwärmen.</div><div class="acts"><button onclick="startW('mobS',false)">Aktivierung starten</button></div></div>`;
- else if(t){const dn=doneOn(t,i);h=`<div class="hero" style="background:linear-gradient(140deg,${T[t].c[0]},${T[t].c[1]})"><div class="k">${dn?'✓ Erledigt':'Heute dran'}</div><div class="n">${T[t].i} ${T[t].n}</div><div class="m">${T[t].l} · ${ids(t,tired).length} Übungen · ca. ${mins(t,tired)} min</div>
+ else if(t){const dn=doneOn(t,i);h=`<div class="hero" style="--hc:${T[t].c[0]}99"><div class="k">${dn?'✓ Erledigt':'Heute dran'}</div><div class="n">${T[t].i} ${T[t].n}</div><div class="m">${T[t].l} · ${ids(t,tired).length} Übungen · ca. ${mins(t,tired)} min</div>
   <div class="acts"><button onclick="startW('${t}',${tired})">${dn?'Nochmal':'Starten'}${tired?' (kurz)':''}</button><button class="gh" onclick="preview('${t}')">Details</button></div></div>`}
  else{let nx=null;for(let k=1;k<7&&!nx;k++){const p=planFor((i+k)%7);if(p&&p!='game')nx=[(i+k)%7,p]}
   h=`<div class="hero rest"><div class="k">Ruhetag</div><div class="n">🛌 Erholung</div><div class="m">Nächste Einheit: ${nx?WD[nx[0]]+' · '+T[nx[1]].n:'–'}</div><div class="acts"><button onclick="startW('mob',true)">Lockeres Dehnen</button></div></div>`}
  $('hero').innerHTML=h}
+function goalProgress(){const g=GOALS[S.goal];if(!g)return null;const ts=S.tests.filter(x=>x.k==g.test);
+ const done=S.log.filter(l=>l.ts>=weekStart()-3*WEEK).length,plan=S.days*4;return{g,adh:Math.min(100,Math.round(done/plan*100)),first:ts[0],last:ts[ts.length-1]}}
+function renderGoal(){const gp=goalProgress();if(!gp){$('goalcard').innerHTML=`<button class="goal" onclick="goalSheet()"><div class="gi">🎯</div><div class="gb"><b>Ziel festlegen</b><small>Dein Plan passt sich daran an</small></div>${CH}</button>`;return}
+ const tt=TESTS[gp.g.test],dv=gp.first&&gp.last&&gp.first!==gp.last?gp.last.v-gp.first.v:null,good=dv!=null&&(tt.up?dv>0:dv<0);
+ $('goalcard').innerHTML=`<button class="goal" onclick="goalSheet()"><div class="gi">${gp.g.i}</div><div class="gb"><small>Dein Ziel</small><b>${gp.g.n}</b><small>${gp.adh}% der Einheiten (4 Wochen) · ${tt.n}: ${gp.last?gp.last.v+' '+tt.u:'noch kein Test'}${dv!=null?` <span style="color:${good?'var(--ac)':'var(--red)'}">${dv>0?'+':''}${Math.round(dv*100)/100}</span>`:''}</small><div class="pbar" style="margin-top:6px"><i style="width:${gp.adh}%;background:var(--ac)"></i></div></div>${CH}</button>`}
+function goalSheet(first){openSheet(first?'Willkommen! 👋':'Dein Ziel',`${first?'<div class="sub" style="margin:0 0 14px">Was willst du als Torwart verbessern? Dein Plan, die Übungen und dein Coach passen sich daran an.</div>':''}
+ <div class="gpick">${Object.entries(GOALS).map(([k,g])=>`<button class="${S.goal==k?'on':''}" onclick="S.goal='${k}';save();renderAll();goalSheet(${!!first})"><div class="e">${g.i}</div><b>${g.n}</b><span>${g.d}</span></button>`).join('')}</div>
+ <div class="lbl">Einheiten pro Woche</div><div class="seg" id="g-days"></div><div class="lbl">Spieltag</div><div class="seg" id="g-game"></div>
+ <button class="btn" onclick="closeSheet();${first?"toast('Los geht’s! 💪')":''}">${first?'Plan erstellen':'Fertig'}</button>`);
+ seg('g-days',[[2,'2'],[3,'3'],[4,'4'],[5,'5']],()=>S.days,v=>S.days=v);
+ seg('g-game',[[-1,'—'],[0,'Mo'],[1,'Di'],[2,'Mi'],[3,'Do'],[4,'Fr'],[5,'Sa'],[6,'So']],()=>S.game,v=>S.game=v)}
+function testSheet(){openSheet('Leistungstest',`<div class="grp np">${Object.entries(TESTS).map(([k,t])=>`<label class="row"><input type="radio" name="tk" value="${k}" ${GOALS[S.goal]&&GOALS[S.goal].test==k?'checked':''}><div class="t">${t.n}<div class="s">${t.h}</div></div><span class="v">${t.u}</span></label>`).join('')}</div>
+ <div class="inputs" style="grid-template-columns:1fr"><div class="step"><label>Ergebnis</label><div class="sv" style="justify-content:center"><input id="tv" inputmode="decimal" placeholder="0" style="width:140px"></div></div></div>
+ <button class="btn" onclick="addTest()">Speichern</button>`)}
+function addTest(){const k=(document.querySelector('input[name=tk]:checked')||{}).value,v=parseFloat(($('tv').value||'').replace(',','.'));
+ if(!k||isNaN(v))return toast('Bitte Test und Wert wählen');S.tests.push({k,v,ts:Date.now()});save();closeSheet();renderAll();renderStats();toast('✓ Test gespeichert')}
+function renderTests(){const ks=Object.keys(TESTS).filter(k=>S.tests.some(x=>x.k==k));
+ $('tests').innerHTML=ks.length?ks.map(k=>{const t=TESTS[k],a=S.tests.filter(x=>x.k==k),l=a[a.length-1],f=a[0],d=a.length>1?Math.round((l.v-f.v)*100)/100:null,g=d!=null&&(t.up?d>0:d<0);
+  const mx=Math.max(...a.map(x=>x.v)),mn=Math.min(...a.map(x=>x.v)),sp=a.length>1?`<svg viewBox="0 0 60 20" style="width:60px;height:20px"><polyline fill="none" stroke="var(--ac)" stroke-width="2" points="${a.map((x,i)=>(i/(a.length-1)*58+1)+','+(19-(mx==mn?9:(x.v-mn)/(mx-mn)*18))).join(' ')}"/></svg>`:'';
+  return `<div class="row"><div class="t">${t.n}<div class="s">${a.length} Messungen${d!=null?` · <span style="color:${g?'var(--ac)':'var(--red)'}">${d>0?'+':''}${d} ${t.u}</span>`:''}</div></div>${sp}<div class="v"><b>${l.v}</b> ${t.u}</div></div>`}).join(''):'<div class="row"><div class="t s">Miss alle 4 Wochen deinen Test – so siehst du, ob du deinem Ziel näherkommst.</div></div>'}
+
 function renderToday(){const h=new Date().getHours();
  $('hello').textContent=(h<11?'Guten Morgen':h<18?'Hallo':'Guten Abend')+(S.name?', '+S.name:'');
  $('dateline').textContent=new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
  $('wkname').textContent='Woche '+(wIdx()+1)+' · '+WK[wIdx()].n;
- renderHero();renderReady();const ti=todayIdx();
+ renderHero();renderGoal();renderReady();const ti=todayIdx();
  $('week').innerHTML=WD.map((d,i)=>{const t=planFor(i),g=t=='game',dn=t&&!g&&doneOn(t,i);
   const ic=g?'<div class="ico" style="background:linear-gradient(140deg,#FF9F0A,#FF453A)">⚽️</div>':t?`<div class="ico" style="background:linear-gradient(140deg,${T[t].c[0]},${T[t].c[1]})">${T[t].i}</div>`:'<div class="ico" style="background:var(--fill)"></div>';
   return `<button class="row" ${t&&!g?`onclick="preview('${t}')"`:''}>${ic}<div class="t"><b style="font-weight:${i==ti?700:500}">${d}${i==ti?' · Heute':''}</b><div class="s">${g?'Spiel':t?T[t].n+' · '+T[t].l:'Ruhetag / Verein'}</div></div>${dn?'<span class="ok">✓</span>':t&&!g?CH:''}</button>`}).join('');
- $('note').innerHTML='<b>Auf dich abgestimmt:</b> Laut Strava läufst du regelmäßig 5–10 km (~6:20 /km), machst aber kaum Krafttraining. Deshalb Schwerpunkt Kraft, Sprungkraft und Beweglichkeit. Explosives nie am Tag nach dem Spiel, am Tag davor nur Aktivierung.'}
+ $('note').innerHTML='<b>Auf dich abgestimmt:</b> Ziel: '+((GOALS[S.goal]||{}).n||'–')+'. Laut Strava läufst du regelmäßig 5–10 km (~6:20 /km), machst aber kaum Krafttraining. Deshalb Schwerpunkt Kraft, Sprungkraft und Beweglichkeit. Explosives nie am Tag nach dem Spiel, am Tag davor nur Aktivierung.'}
 
 /* ---------- Training-Auswahl ---------- */
 function renderPlan(){const sh=S.len=='short';
@@ -172,7 +208,7 @@ function saveW(){const st=stats(W);S.log.push({t:W.t,ts:Date.now(),dur:Math.roun
 
 /* ---------- Statistik ---------- */
 function renderStats(){const L=S.log,ws=weekStart(),wk=L.filter(l=>l.ts>=ws);
- const goal=S.game<0?FPLAN[S.days].filter(Boolean).length:Object.keys(GPLAN[S.days]).length+1;
+ const goal=S.days+(S.game<0?0:1);
  const mn=wk.reduce((a,l)=>a+(l.dur??30),0),mgoal=goal*40;let streak=0;
  for(let w=0;w<300;w++){const a=ws-w*WEEK;if(L.some(l=>l.ts>=a&&l.ts<a+WEEK))streak++;else if(w>0)break}
  const rg=(r,v,c)=>{const C=2*Math.PI*r;return `<circle cx="60" cy="60" r="${r}" fill="none" stroke="${c}" stroke-opacity=".2" stroke-width="12"/><circle cx="60" cy="60" r="${r}" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-Math.min(1,v))}"/>`};
@@ -183,13 +219,14 @@ function renderStats(){const L=S.log,ws=weekStart(),wk=L.filter(l=>l.ts>=ws);
  const wks=[...Array(8)].map((_,k)=>{const a=ws-(7-k)*WEEK;return{c:L.filter(l=>l.ts>=a&&l.ts<a+WEEK).length,l:new Date(a).toLocaleDateString('de-DE',{day:'numeric',month:'numeric'})}}),mx=Math.max(goal,...wks.map(w=>w.c));
  $('chart').innerHTML=`<svg viewBox="0 0 320 150">${wks.map((w,k)=>{const h=w.c/mx*100,x=10+k*39;return `<rect x="${x}" y="${115-h}" width="26" height="${Math.max(h,2)}" rx="6" fill="${k==7?'var(--ac)':'var(--eq2)'}" opacity="${k==7?1:.55}"/><text x="${x+13}" y="${110-h}" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor">${w.c||''}</text><text x="${x+13}" y="134" text-anchor="middle" font-size="10" fill="currentColor" opacity=".5">${w.l}</text>`}).join('')}<line x1="6" x2="314" y1="${115-goal/mx*100}" y2="${115-goal/mx*100}" stroke="#FF375F" stroke-dasharray="4 4" stroke-width="1.2"/></svg><div class="ft" style="margin:4px 0 0">Gestrichelt: dein Wochenziel (${goal})</div>`;
  const prs=Object.keys(X).map(id=>[id,bestKg(id)]).filter(p=>p[1]>0).sort((a,b)=>b[1]-a[1]);
+ renderTests();
  $('prs').innerHTML=prs.length?prs.map(([id,kg])=>`<button class="row" onclick="detail('${id}')"><div class="t">${ex(id).n}</div><div class="v"><b style="color:var(--tx)">${kg}</b> kg</div>${CH}</button>`).join(''):'<div class="row"><div class="t s">Trage im Training Gewichte ein – hier erscheinen deine Bestwerte.</div></div>';
  $('log').innerHTML=L.length?L.slice(-30).reverse().map(l=>{const t=T[l.t]||{n:l.t,i:'',c:['#999','#777']};return `<div class="row"><div class="ico" style="background:linear-gradient(140deg,${t.c[0]},${t.c[1]})">${t.i}</div><div class="t">${t.n}<div class="s">${new Date(l.ts).toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'})} · ${l.dur?l.dur+' min · ':''}${l.n} Übungen${l.rpe?' · RPE '+l.rpe:''}</div></div></div>`}).join(''):'<div class="row"><div class="t s">Noch keine Einheit – leg los!</div></div>'}
 
 /* ---------- Profil ---------- */
 function seg(id,opts,get,set){const el=$(id);el.innerHTML=opts.map(([v,l])=>`<button class="${get()==v?'on':''}">${l}</button>`).join('');
  [...el.children].forEach((b,k)=>b.onclick=()=>{set(opts[k][0]);save();seg(id,opts,get,set);renderAll();buzz(6)})}
-function renderProf(){$('pName').value=S.name||'';
+function renderProf(){$('pName').value=S.name||'';$('pGoal').textContent=GOALS[S.goal]?GOALS[S.goal].i+' '+GOALS[S.goal].n:'–';
  $('pGame').innerHTML=[[-1,'Kein fester Spieltag'],...WD.map((d,i)=>[i,d])].map(([v,l])=>`<option value="${v}"${S.game==v?' selected':''}>${l}</option>`).join('');
  seg('s-eq',[['gym','🏋️ Studio'],['home','🏠 Zuhause']],()=>S.eq,v=>S.eq=v);
  seg('s-days',[[2,'2'],[3,'3'],[4,'4'],[5,'5']],()=>S.days,v=>S.days=v);
@@ -207,9 +244,45 @@ function openSheet(t,html){$('shT').textContent=t;$('shB').innerHTML=html;$('she
 function closeSheet(){if(!$('sheet').classList.contains('open'))return;$('sheet').classList.remove('open');if(W&&$('player').classList.contains('on'))renderP();else stopAnim()}
 let tab='today';
 function show(t){tab=t;document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.id=='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));scrollTo(0,0);
- if(t=='lib')renderLib();if(t=='stats')renderStats()}
+ if(t=='plan')renderLib();if(t=='stats')renderStats();if(t=='coach')renderCoach()}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{show(b.dataset.t);buzz(5)});
-function renderAll(){renderToday();renderPlan();lenSeg();renderProf();if(tab=='lib')renderLib();if(tab=='stats')renderStats();
+function renderAll(){renderToday();renderPlan();lenSeg();renderProf();if(tab=='plan')renderLib();if(tab=='stats')renderStats();
  const c=$('resume');if(S.cur&&S.cur.list&&!$('player').classList.contains('on')){if(!c){const d=document.createElement('div');d.id='resume';d.innerHTML=`<button class="btn" style="margin:0 0 14px">▶ Training fortsetzen</button>`;d.onclick=resumeW;$('hero').before(d)}}else if(c)c.remove()}
-renderAll();
+/* ---------- KI-Coach ---------- */
+let sampleFn,coachCtl,busy=false;
+const QS=['Was soll ich heute trainieren?','Wie war meine Woche?','Mein Knie zwickt – was ersetze ich?','Wie werde ich bei Flanken sicherer?','Erstelle mir ein Aufwärmen vor dem Spiel','Wie steigere ich meine Sprungkraft?'];
+function ctxData(){const ws=weekStart(),last=S.log.slice(-12).map(l=>({einheit:(T[l.t]||{}).n||l.t,datum:new Date(l.ts).toLocaleDateString('de-DE'),min:l.dur,rpe:l.rpe,saetze:Object.fromEntries(Object.entries(l.sets||{}).map(([id,s])=>[ex(id).n,s.map(x=>(x[0]?x[0]+'kg×':'')+x[1]).join(', ')]))}));
+ return {name:S.name,ziel:(GOALS[S.goal]||{}).n||'nicht gesetzt',einheitenProWoche:S.days,spieltag:S.game<0?'keiner':WD[S.game],ort:S.eq=='gym'?'Fitnessstudio':'Zuhause',
+  blockwoche:(wIdx()+1)+' von 4 ('+WK[wIdx()].n+')',heute:WD[todayIdx()],plan:WD.map((d,i)=>d+': '+(planFor(i)=='game'?'Spiel':planFor(i)?T[planFor(i)].n:'frei')),
+  tagesform:S.ready[dayKey()]||'nicht angegeben',dieseWoche:S.log.filter(l=>l.ts>=ws).length+' Einheiten',letzteEinheiten:last,
+  tests:S.tests.slice(-10).map(x=>TESTS[x.k].n+': '+x.v+' '+TESTS[x.k].u+' ('+new Date(x.ts).toLocaleDateString('de-DE')+')'),
+  strava:'Läuft regelmäßig 5–10 km im Tempo ~6:20/km, wenig Krafttraining, seit August weniger aktiv.',
+  einheitenTypen:Object.values(T).map(t=>t.n+' ('+t.l+')'),uebungen:Object.keys(X).map(id=>ex(id).n)}}
+const RULES=()=>`Du bist der persönliche KI-Coach in einer Trainings-App für einen Fußball-Torwart (Amateur). Du bist erfahrener Torwart- und Athletiktrainer.
+Regeln: Antworte auf Deutsch, per Du, motivierend aber ehrlich, kurz und konkret (meist unter 150 Wörtern). Nutze die Daten unten (Ziel, Plan, Tagesform, letzte Einheiten mit Gewichten, Tests). Empfiehl bevorzugt Übungen und Einheiten, die es in der App gibt, mit Sätzen×Wiederholungen. Bei Schmerzen: keine Diagnose, Belastung reduzieren, schmerzfreie Alternativen nennen und bei anhaltenden Beschwerden Arzt oder Physio empfehlen. Formatiere mit kurzen Absätzen, **fett** für Wichtiges und Listen mit "- ".
+DATEN DES SPIELERS (JSON):
+${JSON.stringify(ctxData())}`;
+function md(t){return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').split(/\n{2,}/).map(b=>/^\s*[-•] /m.test(b)?b.replace(/^(?!\s*[-•] )(.+)$/gm,'<p>$1</p>').replace(/((?:^\s*[-•] .*(?:\n|$))+)/gm,m=>'<ul>'+m.trim().split('\n').map(x=>'<li>'+x.replace(/^\s*[-•] /,'')+'</li>').join('')+'</ul>'):'<p>'+b.replace(/\n/g,'<br>')+'</p>').join('')}
+function renderCoach(){const m=$('msgs');if(!S.chat.length)m.innerHTML=`<div class="msg a"><p>Hi${S.name?' '+esc(S.name):''}! 👋 Ich bin dein Coach. Ich kenne dein Ziel (<b>${esc((GOALS[S.goal]||{}).n||'noch offen')}</b>), deinen Plan und deine letzten Einheiten.</p><p>Frag mich alles rund um Training, Technik, Regeneration oder Spielvorbereitung.</p></div>`;
+ else m.innerHTML=S.chat.map(c=>`<div class="msg ${c.role=='user'?'u':'a'}">${c.role=='user'?esc(c.content):md(c.content)}</div>`).join('')+(S.chat.length?'<button class="ft" style="align-self:center;color:var(--blue)" onclick="if(confirm(\'Chat löschen?\')){S.chat=[];save();renderCoach()}">Chat leeren</button>':'');
+ $('qs').innerHTML=QS.map(q=>`<button onclick="ask(this.textContent)">${q}</button>`).join('');
+ if(sampleFn===null){$('cbar').style.display='none';m.insertAdjacentHTML('beforeend','<div class="msg a">Der KI-Coach funktioniert, wenn du die App über claude.ai geöffnet hast und dort angemeldet bist.</div>')}
+ setTimeout(()=>scrollTo(0,document.body.scrollHeight),30)}
+async function ask(q){q=(q||'').trim();if(!q||busy)return;if(!sampleFn){toast('Coach wird noch verbunden …');return}
+ busy=true;$('cin').value='';S.chat.push({role:'user',content:q});save();renderCoach();
+ const m=$('msgs'),b=document.createElement('div');b.className='msg a think';b.textContent='Coach denkt nach';m.appendChild(b);scrollTo(0,document.body.scrollHeight);
+ coachCtl=new AbortController();const hist=S.chat.slice(-12);
+ try{const {text}=await sampleFn([{role:'user',content:RULES()},...hist],{cache:false,signal:coachCtl.signal,onText:({text})=>{b.classList.remove('think');b.innerHTML=md(text);scrollTo(0,document.body.scrollHeight)}});
+  S.chat.push({role:'assistant',content:text});S.chat=S.chat.slice(-30);save()}
+ catch(e){b.classList.remove('think');const c=e&&e.code;
+  if(c=='not_granted'||c=='sampling_disabled'){b.textContent='Der Coach braucht deine Erlaubnis, Claude zu nutzen. Öffne die App in claude.ai und erlaube den Zugriff.'}
+  else if(c=='rate_limited'){b.textContent='Gerade zu viele Anfragen – versuch es gleich nochmal.'}
+  else if(c=='cancelled'){b.innerHTML=md(e.text||'Abgebrochen.')}
+  else{b.innerHTML=(e&&e.text?md(e.text)+'<br>':'')+'<i>Verbindung unterbrochen – bitte nochmal fragen.</i>'}
+  if(S.chat[S.chat.length-1].role=='user')S.chat.pop();save()}
+ busy=false}
+$('cform').onsubmit=e=>{e.preventDefault();ask($('cin').value)};
+(async()=>{try{sampleFn=window.claude&&window.claude.use?await window.claude.use('sample'):null}catch(e){sampleFn=null}if(tab=='coach')renderCoach()})();
+
+renderAll();if(!S.goal)setTimeout(()=>goalSheet(true),400);
 try{if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}

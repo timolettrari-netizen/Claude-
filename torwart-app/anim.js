@@ -82,18 +82,31 @@ function props(k,j){let bg='',fg='';
  case'stick':fg=ln([j.w1[0]-16,j.w1[1]],[j.w1[0]+16,j.w1[1]],'eq',3.5);break;}
  return[bg,fg]}
 let raf;
-function playAnim(id,el,prop){cancelAnimationFrame(raf);const a=A[id];if(!a){el.innerHTML='';return false}
- el.innerHTML='<svg viewBox="0 0 200 165" class="fig"><ellipse id="sh" cx="100" cy="153" rx="30" ry="3" class="shadow"/><line x1="0" y1="152.5" x2="200" y2="152.5" class="floor"/><g id="fig" stroke-linecap="round" stroke-linejoin="round" fill="none"></g></svg>';
- const g=el.querySelector('#fig'),pa=P[a[0]],pb=P[a[1]],t0=performance.now(),raise=prop=='step'?10:prop=='benchF'&&/cop|side/.test(id)?0:0;
+// Gliedmaße als verjüngte, abgerundete Form (Breite w1 am Anfang, w2 am Ende)
+function limb(p,q,w1,w2,cls,bulge=0){const dx=q[0]-p[0],dy=q[1]-p[1],L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L,ux=dx/L,uy=dy/L;
+ const a1=[p[0]+nx*w1/2,p[1]+ny*w1/2],a2=[q[0]+nx*w2/2,q[1]+ny*w2/2],b2=[q[0]-nx*w2/2,q[1]-ny*w2/2],b1=[p[0]-nx*w1/2,p[1]-ny*w1/2];
+ const m=[(p[0]+q[0])/2+nx*(w1+w2)/4*(1+bulge),(p[1]+q[1])/2+ny*(w1+w2)/4*(1+bulge)];
+ const f=v=>v[0].toFixed(1)+' '+v[1].toFixed(1);
+ return `<path class="${cls}" d="M${f(a1)} Q${f(m)} ${f(a2)} A${w2/2} ${w2/2} 0 0 1 ${f(b2)} L${f(b1)} A${w1/2} ${w1/2} 0 0 1 ${f(a1)}Z"/>`}
+const lerp=(p,q,t)=>[p[0]+(q[0]-p[0])*t,p[1]+(q[1]-p[1])*t];
+function shoe(f,k,cls){const dx=f[0]-k[0],dy=f[1]-k[1],L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,fx=uy,fy=-ux; // nach vorne = senkrecht zum Schienbein
+ const dir=fx>=0?1:-1,vx=fx*dir,vy=fy*dir,h=[f[0]-vx*3,f[1]-vy*3],t=[f[0]+vx*9,f[1]+vy*9];return limb(h,t,6.5,5,cls)}
+function figure(j,lift){const far=(cls)=>cls+' far';
+ return limb(j.h,j.k2,13,9,far('skin'),.15)+limb(j.h,lerp(j.h,j.k2,.55),14,11,far('shorts'))+limb(j.k2,j.f2,9,5.5,far('skin'),.35)+shoe(j.f2,j.k2,far('shoe'))
+  +limb(j.s,j.e2,8.5,6.5,far('skin'),.2)+limb(j.s,lerp(j.s,j.e2,.5),9.5,8,far('shirt'))+limb(j.e2,j.w2,6.5,4.5,far('skin'),.2)+`<circle cx="${j.w2[0].toFixed(1)}" cy="${j.w2[1].toFixed(1)}" r="3" class="skin far"/>`
+  +limb(j.h,j.s,16,19,'shirt',.05)+limb(j.h,lerp(j.h,j.s,.18),16.5,16,'shorts')+limb(j.s,j.nk,7,6,'skin')
+  +`<ellipse cx="${j.hd[0].toFixed(1)}" cy="${j.hd[1].toFixed(1)}" rx="8" ry="9" class="skin"/><path class="hair" d="M${(j.hd[0]-8).toFixed(1)} ${(j.hd[1]-1).toFixed(1)} a8 8.5 0 0 1 16 0 q-8 -4 -16 0z"/>`
+  +limb(j.h,j.k1,13.5,9.5,'skin',.15)+limb(j.h,lerp(j.h,j.k1,.55),14.5,11.5,'shorts')+limb(j.k1,j.f1,9.5,5.5,'skin',.35)+shoe(j.f1,j.k1,'shoe')
+  +limb(j.s,j.e1,9,7,'skin',.2)+limb(j.s,lerp(j.s,j.e1,.5),10,8.5,'shirt')+limb(j.e1,j.w1,7,5,'skin',.2)+`<circle cx="${j.w1[0].toFixed(1)}" cy="${j.w1[1].toFixed(1)}" r="3.4" class="glove"/>`}
+let UID=0;
+function playAnim(id,el,prop){cancelAnimationFrame(raf);const a=A[id];if(!a){el.innerHTML='';return false}const u=++UID;
+ el.innerHTML=`<svg viewBox="0 0 200 165" class="fig" style="--sk:url(#gsk${u});--sh:url(#gsh${u})"><defs><linearGradient id="gsk${u}" x1="0" x2="1"><stop offset="0" stop-color="#F0C09A"/><stop offset="1" stop-color="#C98E66"/></linearGradient><linearGradient id="gsh${u}" x1="0" x2="1"><stop offset="0" stop-color="#C6F432"/><stop offset="1" stop-color="#8DBA12"/></linearGradient><radialGradient id="gfl${u}" cx=".5" cy="1" r=".9"><stop offset="0" stop-color="#ffffff" stop-opacity=".07"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs><rect width="200" height="165" fill="url(#gfl${u})"/><ellipse id="sh" cx="100" cy="153" rx="30" ry="3.2" class="shadow"/><line x1="0" y1="152.5" x2="200" y2="152.5" class="floor"/><g id="fig"></g></svg>`;
+ const g=el.querySelector('#fig'),pa=P[a[0]],pb=P[a[1]],t0=performance.now(),raise=prop=='step'?10:0;
  (function f(now){const ph=(1-Math.cos(2*Math.PI*((now-t0)/1000)/a[3]))/2,p=pa.map((v,i)=>v+(pb[i]-v)*ph);
-  const J=joints(p),pts=[J.h,J.s,J.e1,J.w1,J.e2,J.w2,J.k1,J.f1,J.k2,J.f2],my=Math.max(...pts.map(q=>q[1]),J.hd[1]+9);
-  const lift=a[2]*Math.max(0,(ph-.55)/.45)+raise,T=q=>[100+q[0],GR-3-my+q[1]-lift],j={};for(const k in J)j[k]=T(J[k]);
+  const J=joints(p),pts=[J.h,J.s,J.e1,J.w1,J.e2,J.w2,J.k1,J.f1,J.k2,J.f2],my=Math.max(...pts.map(q=>q[1]+3),J.hd[1]+9);
+  const lift=a[2]*Math.max(0,(ph-.55)/.45)+raise,T=q=>[100+q[0],GR-my+q[1]-lift],j={};for(const k in J)j[k]=T(J[k]);
   const [bg,fg]=props(prop,j);
-  g.innerHTML=bg
-   +ln(j.h,j.k2,'lb',11)+ln(j.k2,j.f2,'lb',9)+ln(j.f2,[j.f2[0]+6,j.f2[1]],'shoe2',6)+ln(j.s,j.e2,'lb',8)+ln(j.e2,j.w2,'lb',7)
-   +ln(j.h,j.s,'shirt',17)+ln(j.nk,j.s,'skin',7)+ln(j.h,j.k1,'shorts',12)+ln(j.k1,j.f1,'skin',9.5)+ln(j.f1,[j.f1[0]+7,j.f1[1]],'shoe',6.5)
-   +`<circle cx="${j.hd[0].toFixed(1)}" cy="${j.hd[1].toFixed(1)}" r="9" class="head"/>`
-   +ln(j.s,j.e1,'shirt',8.5)+ln(j.e1,j.w1,'skin',7)+fg;
-  el.querySelector('#sh').setAttribute('cx',j.h[0]);
+  g.innerHTML=bg+figure(j,lift)+fg;
+  const sh=el.querySelector('#sh');sh.setAttribute('cx',j.h[0]);sh.setAttribute('rx',26-Math.min(lift,20)*.5);
   raf=requestAnimationFrame(f)})(t0);return true}
 function stopAnim(){cancelAnimationFrame(raf)}

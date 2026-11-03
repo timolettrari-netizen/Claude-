@@ -1,14 +1,15 @@
 <!doctype html>
 <html lang="de"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0A0A0B">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Torwart">
-<title>Torwart Training</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon.svg"><link rel="stylesheet" href="app.css">
+<title>Torwart Training</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;1,700;1,800&display=swap" rel="stylesheet"><link rel="stylesheet" href="app.css">
 </head><body>
 
 <section class="tab on" id="t-today">
  <h1 id="hello">Heute</h1><div class="sub" id="dateline"></div>
  <div id="hero"></div>
+ <div class="grp" id="goalcard" style="margin-top:14px"></div>
  <div class="hd"><span>Tagesform</span><span id="rdyScore"></span></div><div class="grp ready" id="ready"></div>
  <div class="hd"><span>Diese Woche</span><span id="wkname"></span></div><div class="grp" id="week"></div>
  <div class="ft" id="note"></div>
@@ -18,13 +19,16 @@
  <h1>Training</h1><div class="sub">Wähle eine Einheit – frei oder aus dem Plan</div>
  <div class="seg" id="s-len"></div>
  <div class="tiles" id="tiles" style="margin-top:12px"></div>
-</section>
-
-<section class="tab" id="t-lib">
- <h1>Übungen</h1><div class="sub" id="libcount"></div>
+ <div class="hd2">Übungen</div><div class="sub" id="libcount"></div>
  <div class="search"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M11 11l4 4" stroke="currentColor" stroke-width="2"/></svg><input id="q" placeholder="Suchen" autocomplete="off"></div>
  <div class="chips" id="cats"></div>
  <div class="grp" id="lib" style="margin-top:10px"></div>
+</section>
+
+<section class="tab" id="t-coach">
+ <div class="coachhead"><div class="av">🧤</div><div><h1 style="margin:0">Coach</h1><div class="sub" style="margin:0">Dein KI-Torwarttrainer</div></div></div>
+ <div class="msgs" id="msgs"></div>
+ <div class="cbar" id="cbar"><div class="qs" id="qs"></div><form id="cform"><input id="cin" placeholder="Frag deinen Coach …" autocomplete="off"><button class="send" type="submit">↑</button></form></div>
 </section>
 
 <section class="tab" id="t-stats">
@@ -32,6 +36,7 @@
  <div class="grp rings" id="rings"></div>
  <div class="hd2">Überblick</div><div class="kpis" id="kpis"></div>
  <div class="hd2">Einheiten pro Woche</div><div class="grp chart" id="chart"></div>
+ <div class="hd2">Leistungstests</div><div class="grp np tests" id="tests"></div><button class="btn sec" onclick="testSheet()">+ Test eintragen</button>
  <div class="hd2">Bestleistungen</div><div class="grp np" id="prs"></div>
  <div class="hd2">Verlauf</div><div class="grp" id="log"></div>
 </section>
@@ -40,6 +45,7 @@
  <h1>Profil</h1><div class="sub">Einstellungen & Plan</div>
  <div class="grp np">
   <div class="row"><div class="t">Name</div><input class="txt" id="pName" placeholder="Dein Name"></div>
+  <button class="row" onclick="goalSheet()"><div class="t">Ziel</div><div class="v" id="pGoal"></div><svg class="chev" viewBox="0 0 8 13"><path d="M1 1l5.5 5.5L1 12" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></button>
   <div class="row"><div class="t">Spieltag</div><select class="sel" id="pGame"></select></div>
  </div>
  <div class="ft">Der Plan richtet sich nach deinem Spieltag: Kraft früh in der Woche, kurz vor dem Spiel nur Aktivierung.</div>
@@ -57,7 +63,7 @@
   <button class="row" id="reset"><div class="t" style="color:var(--red)">Alle Daten löschen</div></button>
  </div>
  <div class="ft">Deine Daten bleiben nur auf diesem Gerät. Exportiere regelmäßig ein Backup.</div>
- <div class="ft" style="text-align:center;margin:28px 0">Torwart Training · Version 2.0</div>
+ <div class="ft" style="text-align:center;margin:28px 0">Torwart Training · Version 3.0</div>
 </section>
 
 <div id="sheet"><div class="sheet-bg" onclick="closeSheet()"></div><div class="sheet"><div class="grab"></div>
@@ -69,7 +75,7 @@
 <nav>
  <button data-t="today" class="on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 3.2a6.8 6.8 0 1 0 0 13.6 6.8 6.8 0 0 0 0-13.6Zm0 3.3a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7Z"/></svg>Heute</button>
  <button data-t="plan"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="1.5" y="9" width="3" height="6" rx="1"/><rect x="5" y="6" width="3.5" height="12" rx="1.2"/><rect x="8.5" y="10.8" width="7" height="2.4" rx="1"/><rect x="15.5" y="6" width="3.5" height="12" rx="1.2"/><rect x="19.5" y="9" width="3" height="6" rx="1"/></svg>Training</button>
- <button data-t="lib"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2.2"/><rect x="13" y="3" width="8" height="8" rx="2.2"/><rect x="3" y="13" width="8" height="8" rx="2.2"/><rect x="13" y="13" width="8" height="8" rx="2.2"/></svg>Übungen</button>
+ <button data-t="coach"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.8 2 11.5c0 2.6 1.4 4.9 3.6 6.5L5 21.5l4-2c.9.3 1.9.4 3 .4 5.5 0 10-3.8 10-8.4S17.5 3 12 3Zm-4 9.7a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6Zm4 0a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6Zm4 0a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6Z"/></svg>Coach</button>
  <button data-t="stats"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="12" width="4.2" height="9" rx="1.5"/><rect x="9.9" y="7" width="4.2" height="14" rx="1.5"/><rect x="16.8" y="3" width="4.2" height="18" rx="1.5"/></svg>Statistik</button>
  <button data-t="prof"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21c.6-4.5 4.2-7 8.5-7s7.9 2.5 8.5 7Z"/></svg>Profil</button>
 </nav>
