@@ -168,5 +168,5 @@ chips('c-type',Object.entries(T).map(([k,v])=>[k,v.n.split(' · ')[0]]),'type',t
 chips('c-len',[['short','Kurz'],['normal','Normal']],'len');
 $('go').onclick=()=>start(S.type,S.len=='short');
 typeDesc();renderPlan();renderRun();renderLog();
-if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+try{if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 </script></body></html>
