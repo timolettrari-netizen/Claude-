@@ -2,210 +2,76 @@
 <html lang="de"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Torwart Training</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon.svg">
-<style>
-:root{--bg:#F2F2F7;--cell:#FFFFFF;--tx:#000;--mu:rgba(60,60,67,.6);--sep:rgba(60,60,67,.18);--fill:rgba(118,118,128,.12);
- --ac:#34C759;--blue:#007AFF;--red:#FF3B30;--orange:#FF9500;--bar:rgba(249,249,249,.8);
- --skin:#E0A882;--shirt:#34C759;--shorts:#1C1C1E;--back:#C9CDD3;--eq:#3A3A3C;--eq2:#AEAEB2;--floor:#D1D1D6;--stage:#FFFFFF}
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#000;--cell:#1C1C1E;--tx:#fff;--mu:rgba(235,235,245,.6);--sep:rgba(84,84,88,.6);--fill:rgba(118,118,128,.24);
- --ac:#30D158;--blue:#0A84FF;--red:#FF453A;--orange:#FF9F0A;--bar:rgba(22,22,22,.8);--shorts:#48484A;--back:#3A3A3C;--eq:#D1D1D6;--eq2:#636366;--floor:#38383A;--stage:#1C1C1E}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.3 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-body{padding:env(safe-area-inset-top) 0 calc(90px + env(safe-area-inset-bottom))}
-button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
-.tab{display:none;padding:0 16px;max-width:640px;margin:0 auto}.tab.on{display:block;animation:fade .25s}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}}
-h1{font-size:34px;font-weight:700;letter-spacing:.37px;margin:14px 0 2px}
-.sub{color:var(--mu);font-size:15px;margin-bottom:18px}
-.hd{font-size:13px;color:var(--mu);text-transform:uppercase;letter-spacing:-.08px;margin:22px 16px 7px}
-.ft{font-size:13px;color:var(--mu);margin:7px 16px 0;line-height:1.4}
-.grp{background:var(--cell);border-radius:12px;overflow:hidden}
-.row{display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 16px;position:relative;width:100%;text-align:left}
-.row+.row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--sep)}
-.row .t{flex:1;min-width:0}.row .s{color:var(--mu);font-size:15px}.row .v{color:var(--mu)}
-.chev{width:8px;height:13px;flex:none;opacity:.35}
-.ico{width:30px;height:30px;border-radius:7px;display:grid;place-items:center;flex:none;color:#fff;font-size:16px}
-.hero{background:linear-gradient(135deg,#34C759,#0FA968);color:#fff;border-radius:20px;padding:20px;box-shadow:0 8px 24px rgba(52,199,89,.25)}
-.hero .k{font-size:13px;font-weight:600;text-transform:uppercase;opacity:.85}.hero .n{font-size:24px;font-weight:700;margin:4px 0}
-.hero .m{opacity:.9;font-size:15px}.hero button{margin-top:16px;background:#fff;color:#0B8A3E;font-weight:600;border-radius:12px;padding:12px;width:100%}
-.btn{display:block;width:100%;background:var(--ac);color:#fff;font-weight:600;border-radius:14px;padding:15px;text-align:center;text-decoration:none;margin-top:16px;font-size:17px}
-.btn.sec{background:var(--fill);color:var(--blue)}
-.seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;margin:6px 0}
-.seg button{flex:1;padding:6px 4px;border-radius:7px;font-size:13px;font-weight:500}
-.seg button.on{background:var(--cell);box-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);font-weight:600}
-.lbl{font-size:15px;margin:12px 0 4px}
-.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.tile{background:var(--cell);border-radius:16px;padding:14px;text-align:left;min-height:118px;display:flex;flex-direction:column}
-.tile .ico{margin-bottom:auto}.tile b{font-size:16px;margin-top:12px}.tile span{color:var(--mu);font-size:13px}
-.chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--eq2);flex:none;display:grid;place-items:center;transition:.15s}
-.chk.on{background:var(--ac);border-color:var(--ac)}.chk.on::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
-.done .t b{color:var(--mu);text-decoration:line-through}
-.pbar{height:6px;background:var(--fill);border-radius:3px;overflow:hidden;margin:4px 0 2px}.pbar i{display:block;height:100%;background:var(--ac);transition:width .3s}
-.ok{color:var(--ac);font-weight:600}
-nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--bar);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep);padding:6px 0 calc(4px + env(safe-area-inset-bottom));z-index:5}
-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:500;color:#999}
-nav button.on{color:var(--ac)}nav svg{width:26px;height:26px}
-.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:.3s;z-index:8}
-.sheet{position:fixed;left:0;right:0;bottom:0;max-height:94vh;overflow-y:auto;background:var(--bg);border-radius:14px 14px 0 0;transform:translateY(100%);transition:transform .35s cubic-bezier(.2,.9,.3,1);z-index:9;padding:0 16px calc(24px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
-.open .sheet-bg{opacity:1;pointer-events:auto}.open .sheet{transform:none}
-.grab{width:36px;height:5px;border-radius:3px;background:var(--eq2);margin:6px auto 4px}
-.sh-top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);padding:6px 0 8px;z-index:1}
-.sh-top h2{font-size:22px;margin:0;font-weight:700}.x{width:30px;height:30px;border-radius:50%;background:var(--fill);color:var(--mu);font-size:15px;font-weight:700}
-.stage{background:var(--stage);border-radius:16px;padding:6px}
-svg.fig{width:100%;display:block}
-.fig .skin{stroke:var(--skin)}.fig .shirt{stroke:var(--shirt)}.fig .shorts{stroke:var(--shorts)}.fig .lb{stroke:var(--back)}.fig .head{fill:var(--skin)}
-.fig .shoe{stroke:var(--shorts)}.fig .shoe2{stroke:var(--back)}.fig .eq{fill:var(--eq);stroke:var(--eq)}.fig .eq2{fill:var(--eq2)}.fig .bg{fill:var(--stage)}
-.fig .mat{fill:#5AC8FA;opacity:.45}.fig .cab{stroke:var(--eq)}.fig .cone{fill:var(--orange)}.fig .ball{fill:var(--orange);stroke:none}
-.fig .floor{stroke:var(--floor);stroke-width:1}.fig .shadow{fill:var(--floor);opacity:.6}
-.pills{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}.pill{background:var(--fill);border-radius:20px;padding:5px 11px;font-size:13px;font-weight:600}
-.pill.g{background:rgba(52,199,89,.15);color:var(--ac)}
-ol.steps{list-style:none;counter-reset:s;margin:0;padding:0}
-ol.steps li{counter-increment:s;display:flex;gap:12px;padding:11px 16px;position:relative;font-size:16px}
-ol.steps li+li::before{content:"";position:absolute;top:0;left:52px;right:0;border-top:.5px solid var(--sep)}
-ol.steps li i{font-style:normal;flex:none;width:24px;height:24px;border-radius:50%;background:var(--ac);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center}
-.note{display:flex;gap:12px;padding:12px 16px;font-size:16px}.note .ico{width:26px;height:26px;font-size:14px}
-.ring{display:block;margin:20px auto;width:220px;height:220px}.ring text{font-size:44px;font-weight:600;fill:var(--tx);font-variant-numeric:tabular-nums}
-.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat div{background:var(--cell);border-radius:14px;padding:12px}
-.stat b{display:block;font-size:26px;font-weight:700}.stat span{font-size:12px;color:var(--mu)}
-</style></head><body>
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Torwart">
+<title>Torwart Training</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon.svg"><link rel="stylesheet" href="app.css">
+</head><body>
 
-<!-- PLAN -->
-<section class="tab on" id="t-plan">
- <h1>Heute</h1><div class="sub" id="dateline"></div>
- <div class="hero" id="hero"></div>
- <div class="hd">Diese Woche · <span id="wkname"></span></div><div class="grp" id="week"></div>
- <div class="hd">Einstellungen</div>
- <div class="grp" style="padding:4px 16px 12px">
+<section class="tab on" id="t-today">
+ <h1 id="hello">Heute</h1><div class="sub" id="dateline"></div>
+ <div id="hero"></div>
+ <div class="hd"><span>Tagesform</span><span id="rdyScore"></span></div><div class="grp ready" id="ready"></div>
+ <div class="hd"><span>Diese Woche</span><span id="wkname"></span></div><div class="grp" id="week"></div>
+ <div class="ft" id="note"></div>
+</section>
+
+<section class="tab" id="t-plan">
+ <h1>Training</h1><div class="sub">Wähle eine Einheit – frei oder aus dem Plan</div>
+ <div class="seg" id="s-len"></div>
+ <div class="tiles" id="tiles" style="margin-top:12px"></div>
+</section>
+
+<section class="tab" id="t-lib">
+ <h1>Übungen</h1><div class="sub" id="libcount"></div>
+ <div class="search"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M11 11l4 4" stroke="currentColor" stroke-width="2"/></svg><input id="q" placeholder="Suchen" autocomplete="off"></div>
+ <div class="chips" id="cats"></div>
+ <div class="grp" id="lib" style="margin-top:10px"></div>
+</section>
+
+<section class="tab" id="t-stats">
+ <h1>Statistik</h1><div class="sub">Dein Fortschritt</div>
+ <div class="grp rings" id="rings"></div>
+ <div class="hd2">Überblick</div><div class="kpis" id="kpis"></div>
+ <div class="hd2">Einheiten pro Woche</div><div class="grp chart" id="chart"></div>
+ <div class="hd2">Bestleistungen</div><div class="grp np" id="prs"></div>
+ <div class="hd2">Verlauf</div><div class="grp" id="log"></div>
+</section>
+
+<section class="tab" id="t-prof">
+ <h1>Profil</h1><div class="sub">Einstellungen & Plan</div>
+ <div class="grp np">
+  <div class="row"><div class="t">Name</div><input class="txt" id="pName" placeholder="Dein Name"></div>
+  <div class="row"><div class="t">Spieltag</div><select class="sel" id="pGame"></select></div>
+ </div>
+ <div class="ft">Der Plan richtet sich nach deinem Spieltag: Kraft früh in der Woche, kurz vor dem Spiel nur Aktivierung.</div>
+ <div class="hd"><span>Training</span></div>
+ <div class="grp" style="padding:4px 16px 14px">
   <div class="lbl">Trainingsort</div><div class="seg" id="s-eq"></div>
   <div class="lbl">Einheiten pro Woche</div><div class="seg" id="s-days"></div>
   <div class="lbl">Woche im 4-Wochen-Block</div><div class="seg" id="s-week"></div>
  </div>
- <div class="ft" id="note"></div>
-</section>
-
-<!-- EINHEITEN -->
-<section class="tab" id="t-pick">
- <h1>Einheiten</h1><div class="sub">Freies Training – unabhängig vom Plan</div>
- <div class="seg" id="s-len" style="margin-bottom:14px"></div>
- <div class="card-grid" id="tiles"></div>
- <div class="hd">Alle Übungen</div><div class="grp" id="lib"></div>
-</section>
-
-<!-- TRAINING -->
-<section class="tab" id="t-run">
- <h1 id="runtitle">Training</h1><div class="sub" id="runsub">Keine Einheit aktiv. Starte eine im Plan oder unter „Einheiten“.</div>
- <div id="prog"></div>
- <div class="grp" id="exlist"></div>
- <button class="btn" id="finish" style="display:none">Einheit abschließen</button>
-</section>
-
-<!-- VERLAUF -->
-<section class="tab" id="t-log">
- <h1>Verlauf</h1><div class="sub">Deine Einheiten</div>
- <div class="stat" id="stats"></div>
- <div class="hd">Zuletzt</div><div class="grp" id="log"></div>
+ <div class="ft" id="blockinfo"></div>
+ <div class="hd"><span>Daten</span></div>
+ <div class="grp np">
+  <button class="row" id="exp"><div class="t" style="color:var(--blue)">Backup exportieren</div></button>
+  <label class="row"><div class="t" style="color:var(--blue)">Backup importieren</div><input type="file" id="imp" accept=".json,application/json" hidden></label>
+  <button class="row" id="reset"><div class="t" style="color:var(--red)">Alle Daten löschen</div></button>
+ </div>
+ <div class="ft">Deine Daten bleiben nur auf diesem Gerät. Exportiere regelmäßig ein Backup.</div>
+ <div class="ft" style="text-align:center;margin:28px 0">Torwart Training · Version 2.0</div>
 </section>
 
 <div id="sheet"><div class="sheet-bg" onclick="closeSheet()"></div><div class="sheet"><div class="grab"></div>
  <div class="sh-top"><h2 id="shT"></h2><button class="x" onclick="closeSheet()">✕</button></div><div id="shB"></div></div></div>
 
+<div class="pl" id="player"></div>
+<div class="toast" id="toast"></div>
+
 <nav>
- <button data-t="plan" class="on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v9a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-9Z"/></svg>Plan</button>
- <button data-t="pick"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Einheiten</button>
- <button data-t="run"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="14" cy="4" r="2.2"/><path d="M9.5 8.2 13 7l3 3.2 3 .8-.5 1.9-3.6-1-1.4-1.4-1.1 3.4 2.6 2.3V21h-2v-4.8l-2.8-2.3-1 3.6L5 21l-1.5-1.3 3-4.2L8 10.5 6.5 11.4 5.5 14l-1.9-.7 1.4-3.6Z"/></svg>Training</button>
- <button data-t="log"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="12" width="4" height="9" rx="1.5"/><rect x="10" y="7" width="4" height="14" rx="1.5"/><rect x="17" y="3" width="4" height="18" rx="1.5"/></svg>Verlauf</button>
+ <button data-t="today" class="on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 3.2a6.8 6.8 0 1 0 0 13.6 6.8 6.8 0 0 0 0-13.6Zm0 3.3a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7Z"/></svg>Heute</button>
+ <button data-t="plan"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="1.5" y="9" width="3" height="6" rx="1"/><rect x="5" y="6" width="3.5" height="12" rx="1.2"/><rect x="8.5" y="10.8" width="7" height="2.4" rx="1"/><rect x="15.5" y="6" width="3.5" height="12" rx="1.2"/><rect x="19.5" y="9" width="3" height="6" rx="1"/></svg>Training</button>
+ <button data-t="lib"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2.2"/><rect x="13" y="3" width="8" height="8" rx="2.2"/><rect x="3" y="13" width="8" height="8" rx="2.2"/><rect x="13" y="13" width="8" height="8" rx="2.2"/></svg>Übungen</button>
+ <button data-t="stats"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="12" width="4.2" height="9" rx="1.5"/><rect x="9.9" y="7" width="4.2" height="14" rx="1.5"/><rect x="16.8" y="3" width="4.2" height="18" rx="1.5"/></svg>Statistik</button>
+ <button data-t="prof"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21c.6-4.5 4.2-7 8.5-7s7.9 2.5 8.5 7Z"/></svg>Profil</button>
 </nav>
-
-<script src="data.js"></script><script src="anim.js"></script>
-<script>
-const G={gob:'Goblet Squat mit Rucksack',ohp:'Pike Push-up',box:'Treppensprung'};
-const GX={kraftA:['thrust','legp'],kraftB:['lpull','add']};
-const T={
- kraftA:{n:'Kraft A',l:'Beine & Rumpf',i:'🦵',c:'#34C759',x:['gob','rdl','cop','lat','pall','side','calf'],w:'Absprungkraft und Stabilität.'},
- kraftB:{n:'Kraft B',l:'Oberkörper & Hüfte',i:'💪',c:'#007AFF',x:['bss','nord','push','row','ohp','dead','ytw'],w:'Rücken und Schultern für Abwürfe, Oberschenkel schützen.'},
- explo:{n:'Explosivität',l:'Sprung & Antritt',i:'⚡️',c:'#FF9500',x:['wgs','cmj','latb','box','mbt','dive','spr'],w:'Ausgeruht machen, 60–90 s Pause.'},
- react:{n:'Reaktion',l:'Hände & Füße',i:'🧤',c:'#AF52DE',x:['ladder','shuf','wall','drop','latb'],w:'Kurz und frisch – gut vor dem Vereinstraining.'},
- mob:{n:'Beweglichkeit',l:'Hüfte & Schulter',i:'🧘',c:'#5AC8FA',x:['ank','w90','cosk','frog','couch','pige','ham','tsp','shd'],w:'Mehr Reichweite bei Paraden.'},
- mobS:{n:'Mobility kurz',l:'10 Minuten',i:'⏱️',c:'#30B0C7',x:['wgs','w90','cosk','tsp','ank'],w:'Als Aufwärmen oder morgens.'},
- run:{n:'Lauf + Dehnen',l:'Grundlage',i:'🏃',c:'#FF2D55',x:['jog','frog','couch','ham'],w:'Grundlagenausdauer halten.'},
- hiit:{n:'Spielnahe Ausdauer',l:'Intervalle',i:'🔥',c:'#FF3B30',x:['wgs','int','spr','w90','cosk','tsp'],w:'Kurz, hart, wie im Spiel.'},
-};
-const PLAN={2:['kraftA',0,0,'kraftB',0,0,0],3:['kraftA',0,'explo',0,'kraftB',0,0],4:['kraftA',0,'explo',0,'kraftB','mob',0],5:['kraftA','mobS','explo',0,'kraftB','run',0]};
-const WD=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
-const WK=[{n:'Einstieg',s:0,r:0},{n:'Mehr Volumen',s:1,r:0},{n:'Mehr Intensität',s:1,r:2},{n:'Entlastung',s:-1,r:-2}];
-const $=i=>document.getElementById(i);
-let S={days:3,eq:'gym',week:0,len:'normal',log:[],cur:null};
-try{Object.assign(S,JSON.parse(localStorage.getItem('gk')||'{}'))}catch(e){}
-const save=()=>{try{localStorage.setItem('gk',JSON.stringify(S))}catch(e){}};
-const CH='<svg class="chev" viewBox="0 0 8 13"><path d="M1 1l5.5 5.5L1 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
-
-function ex(id){const b=X[id],g=S.eq=='gym'?GY[id]||{}:{};const o=Object.assign({},b,g);if(S.eq=='home'&&G[id])o.n=G[id];return o}
-function dose(id,short){let[s,r,u]=X[id].d,w=WK[S.week];
- if(u!='min'){s=Math.max(1,s+w.s-(short?1:0));r=Math.max(1,r+(u=='s'?w.r*5:w.r))}
- return{s,r,u,txt:`${s} × ${r}${u=='s'?' s':u=='min'?' min':''}`}}
-function ids(t,short){let a=T[t].x.slice();if(S.eq=='gym'&&GX[t])a.splice(1,0,...GX[t]);if(short)a=a.slice(0,Math.ceil(a.length*.6));return a}
-const mins=(t,short)=>Math.round(ids(t,short).reduce((m,id)=>{const d=dose(id,short);return m+(d.u=='min'?d.s*d.r:d.s*(d.u=='s'?d.r/60+1:1.5))},0)/5)*5;
-
-function seg(id,opts,key,cb){const el=$(id);el.innerHTML=opts.map(([v,l])=>`<button class="${S[key]==v?'on':''}" data-v="${v}">${l}</button>`).join('');
- el.querySelectorAll('button').forEach(b=>b.onclick=()=>{const v=b.dataset.v;S[key]=isNaN(v)?v:+v;save();seg(id,opts,key,cb);cb&&cb()})}
-const weekStart=()=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return+d};
-const doneOn=(t,i)=>S.log.some(l=>l.t==t&&l.ts>=weekStart()&&(new Date(l.ts).getDay()+6)%7==i);
-
-function renderPlan(){const p=PLAN[S.days],today=(new Date().getDay()+6)%7;
- $('dateline').textContent=new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
- $('wkname').textContent='Woche '+(S.week+1)+' – '+WK[S.week].n;
- const t=p[today];let next=null;for(let k=1;k<7&&!next;k++)if(p[(today+k)%7])next=[(today+k)%7,p[(today+k)%7]];
- $('hero').innerHTML=t?`<div class="k">${doneOn(t,today)?'✓ Erledigt':'Heute dran'}</div><div class="n">${T[t].i} ${T[t].n} · ${T[t].l}</div><div class="m">${ids(t).length} Übungen · ca. ${mins(t)} min · ${S.eq=='gym'?'Fitnessstudio':'Zuhause'}</div><button onclick="start('${t}')">${doneOn(t,today)?'Nochmal starten':'Training starten'}</button>`
-  :`<div class="k">Ruhetag</div><div class="n">Erholung oder Vereinstraining</div><div class="m">Nächste Einheit: ${next?WD[next[0]]+' – '+T[next[1]].n:'–'}</div><button onclick="start('mobS')">10 min Mobility</button>`;
- $('week').innerHTML=p.map((t,i)=>`<button class="row" ${t?`onclick="start('${t}')"`:''}><div class="ico" style="background:${t?T[t].c:'var(--fill)'}">${t?T[t].i:''}</div><div class="t"><b style="font-weight:${i==today?700:400}">${WD[i]}</b><div class="s">${t?T[t].n+' · '+T[t].l:'Pause / Verein'}</div></div>${t?(doneOn(t,i)?'<span class="ok">✓</span>':CH):''}</button>`).join('');
- $('note').innerHTML='<b>Auf dich abgestimmt:</b> Laut Strava läufst du regelmäßig 5–10 km (~6:20 /km), machst aber kaum Krafttraining. Der Plan setzt deshalb auf Kraft, Sprungkraft und Beweglichkeit und hält deine Laufbasis. Explosiv-Einheiten nie am Tag nach einem Spiel. Bei Schmerzen Übung weglassen.'}
-
-function renderPick(){$('tiles').innerHTML=Object.entries(T).map(([k,t])=>`<button class="tile" onclick="preview('${k}')"><div class="ico" style="background:${t.c}">${t.i}</div><b>${t.n}</b><span>${t.l} · ${mins(k,S.len=='short')} min</span></button>`).join('');
- $('lib').innerHTML=Object.keys(X).filter(id=>S.eq=='gym'||!['thrust','lpull','add','legp'].includes(id)).sort((a,b)=>ex(a).n.localeCompare(ex(b).n)).map(id=>`<button class="row" onclick="detail('${id}')"><div class="t">${ex(id).n}<div class="s">${ex(id).e}</div></div>${CH}</button>`).join('')}
-function preview(t){const sh=S.len=='short';openSheet(T[t].i+' '+T[t].n,`<div class="sub" style="margin:0 0 12px">${T[t].w} · ca. ${mins(t,sh)} min</div><div class="grp">${ids(t,sh).map(id=>`<button class="row" onclick="detail('${id}')"><div class="t">${ex(id).n}<div class="s">${dose(id,sh).txt}</div></div>${CH}</button>`).join('')}</div><button class="btn" onclick="closeSheet();start('${t}',${sh})">Einheit starten</button>`)}
-
-function start(t,short){S.cur={t,short:!!short,done:[]};save();renderRun();show('run')}
-function renderRun(){const c=S.cur;if(!c||!T[c.t]){$('runtitle').textContent='Training';$('prog').innerHTML='';$('exlist').innerHTML='';$('finish').style.display='none';return}
- const L=ids(c.t,c.short);$('runtitle').textContent=T[c.t].n;$('runsub').textContent=T[c.t].l+' · Woche '+(S.week+1)+' – '+WK[S.week].n;
- $('prog').innerHTML=`<div class="pbar"><i style="width:${c.done.length/L.length*100}%"></i></div><div class="ft" style="margin:4px 0 14px">${c.done.length} von ${L.length} erledigt · Tippe auf eine Übung für Anleitung & Animation</div>`;
- $('exlist').innerHTML=L.map((id,k)=>{const dn=c.done.includes(k);return `<div class="row${dn?' done':''}"><button class="chk${dn?' on':''}" onclick="tick(${k})" aria-label="erledigt"></button><button class="t" style="text-align:left" onclick="detail('${id}',${k})"><b style="font-weight:500">${ex(id).n}</b><div class="s">${dose(id,c.short).txt} · ${ex(id).e.split(/[,(]/)[0]}</div></button>${CH}</div>`}).join('');
- $('finish').style.display='block'}
-function tick(k){const c=S.cur;c.done=c.done.includes(k)?c.done.filter(x=>x!=k):[...c.done,k];save();renderRun();navigator.vibrate&&navigator.vibrate(10)}
-$('finish').onclick=()=>{const c=S.cur;S.log.push({t:c.t,ts:Date.now(),n:c.done.length});S.cur=null;save();renderRun();renderPlan();renderLog();show('log')};
-
-function detail(id,k){const e=ex(id),d=dose(id,S.cur?.short),steps=e.s.split('|');
- const timed=d.u=='s'||d.u=='min';
- openSheet(e.n,`<div class="stage" id="anim"></div>
- <div class="pills"><span class="pill g">${d.txt}</span><span class="pill">${timed?'Pause 30 s':'Pause 60–90 s'}</span></div>
- <div class="hd">Ausrüstung</div><div class="grp"><div class="note"><div class="ico" style="background:var(--eq2)">🏋️</div><div>${e.e}</div></div></div>
- <div class="hd">So geht's</div><div class="grp"><ol class="steps">${steps.map((s,i)=>`<li><i>${i+1}</i><span>${s}</span></li>`).join('')}</ol></div>
- <div class="hd">Achte auf</div><div class="grp"><div class="note"><div class="ico" style="background:var(--orange)">!</div><div>${e.f}</div></div></div>
- <div class="hd">Warum als Torwart</div><div class="grp"><div class="note"><div class="ico" style="background:var(--ac)">🧤</div><div>${e.w}</div></div></div>
- <button class="btn" onclick="timer(${timed?(d.u=='min'?d.r*60:d.r):75},'${timed?'Belastung':'Satzpause'}')">${timed?'Timer starten ('+(d.u=='min'?d.r+' min':d.r+' s')+')':'Satzpause 75 s'}</button>
- ${k!=null&&!S.cur.done.includes(k)?`<button class="btn sec" onclick="tick(${k});closeSheet()">Als erledigt markieren</button>`:''}
- <a class="btn sec" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(e.n+' Ausführung')}">Video auf YouTube ansehen</a>`);
- playAnim(id,$('anim'),e.p)}
-
-let iv;function timer(sec,label){stopAnim();let n=sec;const C=2*Math.PI*96;
- openSheet(label,`<svg class="ring" viewBox="0 0 220 220"><circle cx="110" cy="110" r="96" fill="none" stroke="var(--fill)" stroke-width="12"/><circle id="arc" cx="110" cy="110" r="96" fill="none" stroke="var(--ac)" stroke-width="12" stroke-linecap="round" transform="rotate(-90 110 110)" stroke-dasharray="${C}" stroke-dashoffset="0" style="transition:stroke-dashoffset 1s linear"/><text id="tn" x="110" y="126" text-anchor="middle"></text></svg><button class="btn" onclick="closeSheet()">Fertig</button>`);
- const up=()=>{$('tn').textContent=n>=60?Math.floor(n/60)+':'+String(n%60).padStart(2,'0'):n;$('arc').setAttribute('stroke-dashoffset',C*(1-n/sec))};up();clearInterval(iv);
- iv=setInterval(()=>{n--;up();if(n<=0){clearInterval(iv);$('tn').textContent='✓';navigator.vibrate&&navigator.vibrate([300,100,300])}},1000)}
-
-function renderLog(){const L=S.log,ws=weekStart(),wk=L.filter(l=>l.ts>=ws).length;let streak=0;
- for(let w=0;w<200;w++){const a=ws-w*6048e5;if(L.some(l=>l.ts>=a&&l.ts<a+6048e5))streak++;else if(w>0)break}
- $('stats').innerHTML=`<div><b>${wk}/${PLAN[S.days].filter(Boolean).length}</b><span>Diese Woche</span></div><div><b>${streak}</b><span>Wochen in Folge</span></div><div><b>${L.length}</b><span>Gesamt</span></div>`;
- $('log').innerHTML=L.length?L.slice(-25).reverse().map(l=>{const t=T[l.t]||{n:l.t,i:'',c:'var(--fill)',l:''};return `<div class="row"><div class="ico" style="background:${t.c}">${t.i}</div><div class="t">${t.n}<div class="s">${new Date(l.ts).toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'})} · ${l.n} Übungen</div></div></div>`}).join(''):'<div class="row"><div class="t s">Noch keine Einheit – leg los!</div></div>'}
-
-function openSheet(t,html){$('shT').textContent=t;$('shB').innerHTML=html;$('sheet').classList.add('open');document.querySelector('.sheet').scrollTop=0}
-function closeSheet(){$('sheet').classList.remove('open');stopAnim();clearInterval(iv)}
-function show(t){document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.id=='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));scrollTo(0,0)}
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.t));
-const all=()=>{renderPlan();renderPick();renderRun();renderLog()};
-seg('s-eq',[['gym','🏋️ Fitnessstudio'],['home','🏠 Zuhause']],'eq',all);
-seg('s-days',[[2,'2'],[3,'3'],[4,'4'],[5,'5']],'days',all);
-seg('s-week',WK.map((w,i)=>[i,String(i+1)]),'week',all);
-seg('s-len',[['normal','Normal'],['short','Kurz']],'len',renderPick);
-all();
-try{if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
-</script></body></html>
+<script src="data.js"></script><script src="anim.js"></script><script src="app.js"></script>
+</body></html>

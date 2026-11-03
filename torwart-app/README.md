@@ -1,7 +1,11 @@
 # Torwart Training (Handy-App)
-PWA für Kraft, Beweglichkeit, Sprungkraft und Reaktion – speziell für Fußballtorhüter.
-- **Plan:** 2–5 Tage/Woche, 4-Wochen-Block mit Progression (Einstieg → Volumen → Intensität → Entlastung)
-- **Auswahl:** 8 Einheitstypen frei wählbar, kurz oder normal, Zuhause oder Studio
-- **Training:** Abhaken, Timer für Halteübungen und Pausen
-- **Verlauf:** Einheiten, Wochen-Serie
-Installieren: Seite öffnen → „Zum Home-Bildschirm“.
+Trainings-App (PWA) für Fußballtorhüter – im iOS-Design, offline nutzbar.
+
+- **Heute:** Tagesform-Check, heutige Einheit, Wochenplan nach Spieltag
+- **Geführtes Training:** Satz für Satz, Gewicht/Wdh. eintragen, automatische Pausen mit Ton & Vibration, Display bleibt an
+- **Progression:** letzte Werte + Vorschlag zur Steigerung, 4-Wochen-Block mit automatischem Wochenwechsel
+- **Übungen:** 40+ Übungen mit Animation, Ausrüstung, Schritt-für-Schritt-Anleitung, Fehlern und Torwart-Nutzen; Suche & Kategorien
+- **Statistik:** Ringe, Wochen-Diagramm, Bestleistungen, Verlauf
+- **Profil:** Name, Spieltag, Studio/Zuhause, Einheiten pro Woche, Backup Export/Import
+
+Installieren: Seite öffnen → Teilen → „Zum Home-Bildschirm“.
