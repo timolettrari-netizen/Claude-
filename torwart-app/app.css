@@ -156,3 +156,12 @@ ol.steps li i{background:var(--ac);color:var(--acT)}
 .tests .row .v b{color:var(--tx);font-size:18px}
 
 .goal{width:100%;text-align:left}
+/* Eingebettet im Fitness-Coach: Navigation oben */
+body.embedded{padding:calc(env(safe-area-inset-top) + 60px) 0 24px}
+body.embedded nav{top:0;bottom:auto;padding:calc(env(safe-area-inset-top) + 6px) 8px 6px;border-top:0;border-bottom:.5px solid var(--sep);gap:4px}
+body.embedded nav button{flex-direction:row;justify-content:center;gap:5px;font-size:12px;font-weight:700;padding:7px 2px;border-radius:16px}
+body.embedded nav button.on{background:rgba(198,244,50,.14)}
+body.embedded nav svg{width:16px;height:16px}
+body.embedded .cbar{bottom:0;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+body.embedded .msgs{padding-bottom:120px}
+body.embedded .toast{top:calc(env(safe-area-inset-top) + 62px)}

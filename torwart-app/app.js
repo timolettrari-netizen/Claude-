@@ -31,12 +31,20 @@ const DAY=864e5,WEEK=7*DAY;
 const $=i=>document.getElementById(i);
 const CH='<svg class="chev" viewBox="0 0 8 13"><path d="M1 1l5.5 5.5L1 12" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>';
 
+/* ---------- Verknüpfung mit dem Fitness-Coach ---------- */
+const EMB=(()=>{try{return window.parent!==window}catch(e){return true}})();
+const FC=(()=>{try{return EMB&&window.parent.fcBridge||null}catch(e){return null}})();
+if(EMB)document.body.classList.add('embedded');
+const iso=(ts=Date.now())=>{const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const SHIFT={F:'Frei',F1:'Nach Nachtdienst',D:'Spätdienst',N:'Früh/Nacht'};
+function fcDay(i){if(!FC)return null;try{const d=new Date(weekStart()+i*DAY+12*3600e3),ds=iso(+d);return{ds,kind:FC.dayKind(ds),shift:FC.shift(ds),run:FC.session(ds)}}catch(e){return null}}
+
 /* ---------- Zustand ---------- */
 const weekStart=(ts=Date.now())=>{const d=new Date(ts);d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return+d};
 const dayKey=(ts=Date.now())=>{const d=new Date(ts);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
 let S={goal:null,tests:[],chat:[],name:'Timo',game:6,days:3,eq:'gym',len:'normal',blockStart:weekStart(),log:[],ready:{},cur:null};
-try{const o=JSON.parse(localStorage.getItem('gk2')||'null');if(o)Object.assign(S,o);else{const old=JSON.parse(localStorage.getItem('gk')||'null');if(old){S.log=(old.log||[]).map(l=>({t:l.t,ts:l.ts,n:l.n,sets:{}}));['days','eq'].forEach(k=>old[k]!=null&&(S[k]=old[k]))}}}catch(e){}
-const save=()=>{try{localStorage.setItem('gk2',JSON.stringify(S))}catch(e){}};
+try{let o=JSON.parse(localStorage.getItem('gk2')||'null');if(!o&&FC){try{o=FC.loadGk()}catch(e){}}if(o)Object.assign(S,o);else{const old=JSON.parse(localStorage.getItem('gk')||'null');if(old){S.log=(old.log||[]).map(l=>({t:l.t,ts:l.ts,n:l.n,sets:{}}));['days','eq'].forEach(k=>old[k]!=null&&(S[k]=old[k]))}}}catch(e){}
+let fcT;const save=()=>{try{localStorage.setItem('gk2',JSON.stringify(S))}catch(e){}if(FC){clearTimeout(fcT);fcT=setTimeout(()=>{try{FC.saveGk(JSON.parse(JSON.stringify(S)))}catch(e){}},1200)}};
 const wIdx=()=>((Math.floor((weekStart()-weekStart(S.blockStart))/WEEK)%4)+4)%4;
 
 /* ---------- Hilfen ---------- */
@@ -77,12 +85,13 @@ function renderReady(){const r=S.ready[dayKey()]||{},sc=readiness();
 function setReady(k,v){const d=dayKey();S.ready[d]=Object.assign(S.ready[d]||{},{[k]:v});save();renderReady();renderHero();buzz(8)}
 
 /* ---------- Heute ---------- */
-function renderHero(){const i=todayIdx(),t=planFor(i),sc=readiness(),tired=sc!=null&&sc<2.7;let h;
+function fcLine(i){const f=fcDay(i);if(!f)return'';const p=[];if(f.shift)p.push('🗓 '+SHIFT[f.kind]);if(f.run)p.push((f.run.done?'✓ ':'🏃 ')+f.run.title+(f.run.km?' '+String(f.run.km).replace('.',',')+' km':''));return p.join(' · ')}
+function renderHero(){const i=todayIdx(),t=planFor(i),sc=readiness(),fd=fcDay(i),night=fd&&fd.kind=='N',tired=(sc!=null&&sc<2.7)||night;let h;
  if(t=='game')h=`<div class="hero game"><div class="k">Spieltag</div><div class="n">⚽️ Heute ist Spiel</div><div class="m">Kein Training. 10 min Aktivierung als Aufwärmen.</div><div class="acts"><button onclick="startW('mobS',false)">Aktivierung starten</button></div></div>`;
- else if(t){const dn=doneOn(t,i);h=`<div class="hero" style="--hc:${T[t].c[0]}99"><div class="k">${dn?'✓ Erledigt':'Heute dran'}</div><div class="n">${T[t].i} ${T[t].n}</div><div class="m">${T[t].l} · ${ids(t,tired).length} Übungen · ca. ${mins(t,tired)} min</div>
+ else if(t){const dn=doneOn(t,i);h=`<div class="hero" style="--hc:${T[t].c[0]}99"><div class="k">${dn?'✓ Erledigt':'Heute dran'}</div><div class="n">${T[t].i} ${T[t].n}</div><div class="m">${T[t].l} · ${ids(t,tired).length} Übungen · ca. ${mins(t,tired)} min</div>${fd?`<div class="m" style="margin-top:6px;opacity:.75">${fcLine(i)}${night?' – heute kurze Variante zwischen den Diensten':fd.kind=='D'?' – Training am Vormittag':''}</div>`:''}
   <div class="acts"><button onclick="startW('${t}',${tired})">${dn?'Nochmal':'Starten'}${tired?' (kurz)':''}</button><button class="gh" onclick="preview('${t}')">Details</button></div></div>`}
  else{let nx=null;for(let k=1;k<7&&!nx;k++){const p=planFor((i+k)%7);if(p&&p!='game')nx=[(i+k)%7,p]}
-  h=`<div class="hero rest"><div class="k">Ruhetag</div><div class="n">🛌 Erholung</div><div class="m">Nächste Einheit: ${nx?WD[nx[0]]+' · '+T[nx[1]].n:'–'}</div><div class="acts"><button onclick="startW('mob',true)">Lockeres Dehnen</button></div></div>`}
+  h=`<div class="hero rest"><div class="k">Ruhetag</div><div class="n">🛌 Erholung</div><div class="m">Nächste Einheit: ${nx?WD[nx[0]]+' · '+T[nx[1]].n:'–'}</div>${fd&&fcLine(i)?`<div class="m" style="margin-top:6px;opacity:.75">${fcLine(i)}</div>`:''}<div class="acts"><button onclick="startW('mob',true)">Lockeres Dehnen</button></div></div>`}
  $('hero').innerHTML=h}
 function goalProgress(){const g=GOALS[S.goal];if(!g)return null;const ts=S.tests.filter(x=>x.k==g.test);
  const done=S.log.filter(l=>l.ts>=weekStart()-3*WEEK).length,plan=S.days*4;return{g,adh:Math.min(100,Math.round(done/plan*100)),first:ts[0],last:ts[ts.length-1]}}
@@ -112,7 +121,7 @@ function renderToday(){const h=new Date().getHours();
  renderHero();renderGoal();renderReady();const ti=todayIdx();
  $('week').innerHTML=WD.map((d,i)=>{const t=planFor(i),g=t=='game',dn=t&&!g&&doneOn(t,i);
   const ic=g?'<div class="ico" style="background:linear-gradient(140deg,#FF9F0A,#FF453A)">⚽️</div>':t?`<div class="ico" style="background:linear-gradient(140deg,${T[t].c[0]},${T[t].c[1]})">${T[t].i}</div>`:'<div class="ico" style="background:var(--fill)"></div>';
-  return `<button class="row" ${t&&!g?`onclick="preview('${t}')"`:''}>${ic}<div class="t"><b style="font-weight:${i==ti?700:500}">${d}${i==ti?' · Heute':''}</b><div class="s">${g?'Spiel':t?T[t].n+' · '+T[t].l:'Ruhetag / Verein'}</div></div>${dn?'<span class="ok">✓</span>':t&&!g?CH:''}</button>`}).join('');
+  return `<button class="row" ${t&&!g?`onclick="preview('${t}')"`:''}>${ic}<div class="t"><b style="font-weight:${i==ti?700:500}">${d}${i==ti?' · Heute':''}</b><div class="s">${g?'Spiel':t?T[t].n+' · '+T[t].l:'Ruhetag / Verein'}</div>${fcLine(i)?`<div class="s" style="font-size:12px">${fcLine(i)}</div>`:''}</div>${dn?'<span class="ok">✓</span>':t&&!g?CH:''}</button>`}).join('');
  $('note').innerHTML='<b>Auf dich abgestimmt:</b> Ziel: '+((GOALS[S.goal]||{}).n||'–')+'. Laut Strava läufst du regelmäßig 5–10 km (~6:20 /km), machst aber kaum Krafttraining. Deshalb Schwerpunkt Kraft, Sprungkraft und Beweglichkeit. Explosives nie am Tag nach dem Spiel, am Tag davor nur Aktivierung.'}
 
 /* ---------- Training-Auswahl ---------- */
@@ -204,7 +213,7 @@ function renderSummary(){stopAnim();const st=stats(W),dur=Math.round((Date.now()
  <div class="sum"><div><b>${dur}</b><span>Minuten</span></div><div><b>${st.n}</b><span>Sätze</span></div><div><b>${st.vol>=1000?(st.vol/1000).toFixed(1)+' t':st.vol+' kg'}</b><span>Volumen</span></div></div>
  <div class="setinfo">Wie anstrengend war's? (1 = locker, 10 = maximal)</div><div class="rpe">${[1,2,3,4,5,6,7,8,9,10].map(v=>`<button class="${W.rpe==v?'on':''}" onclick="W.rpe=${v};renderSummary()">${v}</button>`).join('')}</div>
  <button class="btn" style="margin-top:auto" onclick="saveW()">Speichern</button><button class="btn red" onclick="if(confirm('Verwerfen?')){S.cur=null;W=null;save();closePlayer()}">Verwerfen</button></div>`}
-function saveW(){const st=stats(W);S.log.push({t:W.t,ts:Date.now(),dur:Math.round((Date.now()-W.start)/60000),n:Object.keys(W.sets).length,sets:W.sets,rpe:W.rpe||null,vol:st.vol});S.cur=null;W=null;save();closePlayer();show('stats');toast('✓ Training gespeichert')}
+function saveW(){const st=stats(W);if(FC){try{const dur=Math.max(1,Math.round((Date.now()-W.start)/60000));FC.addWorkout({id:'gk'+W.start,d:iso(),type:'Torwart',min:dur,title:T[W.t].n})}catch(e){}}S.log.push({t:W.t,ts:Date.now(),dur:Math.round((Date.now()-W.start)/60000),n:Object.keys(W.sets).length,sets:W.sets,rpe:W.rpe||null,vol:st.vol});S.cur=null;W=null;save();closePlayer();show('stats');toast('✓ Training gespeichert')}
 
 /* ---------- Statistik ---------- */
 function renderStats(){const L=S.log,ws=weekStart(),wk=L.filter(l=>l.ts>=ws);
@@ -256,10 +265,11 @@ function ctxData(){const ws=weekStart(),last=S.log.slice(-12).map(l=>({einheit:(
   blockwoche:(wIdx()+1)+' von 4 ('+WK[wIdx()].n+')',heute:WD[todayIdx()],plan:WD.map((d,i)=>d+': '+(planFor(i)=='game'?'Spiel':planFor(i)?T[planFor(i)].n:'frei')),
   tagesform:S.ready[dayKey()]||'nicht angegeben',dieseWoche:S.log.filter(l=>l.ts>=ws).length+' Einheiten',letzteEinheiten:last,
   tests:S.tests.slice(-10).map(x=>TESTS[x.k].n+': '+x.v+' '+TESTS[x.k].u+' ('+new Date(x.ts).toLocaleDateString('de-DE')+')'),
+  fitness:FC?(()=>{try{return{gewichtKg:FC.kg(),zielKg:FC.goalKg(),zielDatum:FC.goalDate(),schritteHeute:FC.steps(),schrittziel:FC.stepGoal(),kalorienzielHeute:FC.kcalTarget(iso()),schichtHeute:SHIFT[FC.dayKind(iso())]||'unbekannt',woche:WD.map((d,i)=>d+': '+(fcLine(i)||'–'))}}catch(e){return null}})():null,
   strava:'Läuft regelmäßig 5–10 km im Tempo ~6:20/km, wenig Krafttraining, seit August weniger aktiv.',
   einheitenTypen:Object.values(T).map(t=>t.n+' ('+t.l+')'),uebungen:Object.keys(X).map(id=>ex(id).n)}}
 const RULES=()=>`Du bist der persönliche KI-Coach in einer Trainings-App für einen Fußball-Torwart (Amateur). Du bist erfahrener Torwart- und Athletiktrainer.
-Regeln: Antworte auf Deutsch, per Du, motivierend aber ehrlich, kurz und konkret (meist unter 150 Wörtern). Nutze die Daten unten (Ziel, Plan, Tagesform, letzte Einheiten mit Gewichten, Tests). Empfiehl bevorzugt Übungen und Einheiten, die es in der App gibt, mit Sätzen×Wiederholungen. Bei Schmerzen: keine Diagnose, Belastung reduzieren, schmerzfreie Alternativen nennen und bei anhaltenden Beschwerden Arzt oder Physio empfehlen. Formatiere mit kurzen Absätzen, **fett** für Wichtiges und Listen mit "- ".
+Regeln: Antworte auf Deutsch, per Du, motivierend aber ehrlich, kurz und konkret (meist unter 150 Wörtern). Nutze die Daten unten (Ziel, Plan, Tagesform, letzte Einheiten mit Gewichten, Tests). Empfiehl bevorzugt Übungen und Einheiten, die es in der App gibt, mit Sätzen×Wiederholungen. Er nimmt außerdem ab (Daten unter "fitness": Gewicht, Ziel, Schichtdienst Früh/Spät/Nacht, geplante Läufe). Berücksichtige Schichten, Erholung und Kaloriendefizit. Bei Schmerzen: keine Diagnose, Belastung reduzieren, schmerzfreie Alternativen nennen und bei anhaltenden Beschwerden Arzt oder Physio empfehlen. Formatiere mit kurzen Absätzen, **fett** für Wichtiges und Listen mit "- ".
 DATEN DES SPIELERS (JSON):
 ${JSON.stringify(ctxData())}`;
 function md(t){return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').split(/\n{2,}/).map(b=>/^\s*[-•] /m.test(b)?b.replace(/^(?!\s*[-•] )(.+)$/gm,'<p>$1</p>').replace(/((?:^\s*[-•] .*(?:\n|$))+)/gm,m=>'<ul>'+m.trim().split('\n').map(x=>'<li>'+x.replace(/^\s*[-•] /,'')+'</li>').join('')+'</ul>'):'<p>'+b.replace(/\n/g,'<br>')+'</p>').join('')}
@@ -282,7 +292,7 @@ async function ask(q){q=(q||'').trim();if(!q||busy)return;if(!sampleFn){toast('C
   if(S.chat[S.chat.length-1].role=='user')S.chat.pop();save()}
  busy=false}
 $('cform').onsubmit=e=>{e.preventDefault();ask($('cin').value)};
-(async()=>{try{sampleFn=window.claude&&window.claude.use?await window.claude.use('sample'):null}catch(e){sampleFn=null}if(tab=='coach')renderCoach()})();
+(async()=>{try{const c=window.claude||(EMB?(()=>{try{return window.parent.claude}catch(e){return null}})():null);sampleFn=c&&c.use?await c.use('sample'):null}catch(e){sampleFn=null}if(tab=='coach')renderCoach()})();
 
 renderAll();if(!S.goal)setTimeout(()=>goalSheet(true),400);
 try{if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
