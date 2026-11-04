@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fitness-Coach</title>
+<meta name="theme-color" content="#0A0A0B">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;1,700;1,800&display=swap" rel="stylesheet">
 <style>
 :root{
   box-sizing:border-box;
@@ -214,6 +216,40 @@ body[data-tab="torwart"] .navwrap{background:rgba(10,10,11,.92);border-top-color
 @media (prefers-color-scheme:dark){.c-gk{color:#C6F432}}
 @media (max-width:370px){.act .hero{flex-direction:column;align-items:flex-start}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* ===== Sport-Design (wie Torwart-Training) ===== */
+:root,:root:not([data-theme="light"]),:root[data-theme="dark"]{
+  --bg:#0A0A0B;--card:#161618;--card2:rgba(255,255,255,.08);--ink:#F5F5F7;--mut:rgba(235,235,245,.55);--mut3:rgba(235,235,245,.25);--line:rgba(255,255,255,.08);
+  --go:#C6F432;--ongo:#0A0A0B;--teal:#64D2FF;--vio:#BF5AF2;--blue:#4DA3FF;
+  --ok:#C6F432;--bad:#FF453A;--warn:#FF9F0A;--hot:#FF453A;
+  --orange:#FF9F0A;--green:#30D158;--purple:#BF5AF2;--pink:#FF375F;--cyan:#64D2FF;--indigo:#7D7AFF;--yellow:#FFD60A;--red:#FF453A;--mint:#63E6E2;
+  --sp:#FFD60A;--fn:#BF5AF2;--fr:rgba(48,209,88,.2);
+  --spT:#FFD60A;--fnT:#DA8FFF;--frT:#30D158;--orT:#FF9F0A;
+  --bar:rgba(10,10,11,.88);--segon:#3A3A3E;
+}
+html{color-scheme:dark}
+h1,h2,.sh,.ft,.ovl h1{font-family:"Barlow Condensed",var(--font);text-transform:uppercase;font-style:italic;font-weight:800;letter-spacing:.3px}
+h1{font-size:42px;line-height:1}.ovl h1{font-size:34px}h2{font-size:26px}.sh{font-size:28px}.ft{font-size:28px}
+.date{color:var(--go)}
+.card,.tcard,.tile,.tg3>div{border:1px solid rgba(255,255,255,.06)}
+.card .tg3>div{border:0}
+button{text-transform:uppercase;letter-spacing:.5px;font-weight:800}
+button.sm,button.x,nav button,.seg button,.dsel button,.cal button,.sets button,.pick,.rowb,button.tile,.navbar .nbb{text-transform:none;letter-spacing:-.2px}
+button.sm{font-weight:700}.pick,.rowb,button.tile{font-weight:400}
+button.sec{background:var(--card2);color:var(--ink)}button.ghost{color:var(--go)}
+nav button{color:#8E8E93}nav button.on{color:var(--go)}
+.coach .av,.ib{color:#0A0A0B}.coach .av{background:var(--go)}
+.dsel button.on{background:var(--go);color:#0A0A0B}.dsel button.on span,.dsel button.on small{color:rgba(10,10,11,.7)}
+.sets button.d{background:var(--go);color:#0A0A0B}
+.tip{background:rgba(198,244,50,.08);border:1px solid rgba(198,244,50,.18)}
+a.vid{color:var(--go);background:rgba(198,244,50,.12)}
+.timer{font-family:"Barlow Condensed",var(--rnd);font-style:italic;font-size:96px}
+.val,.leg .v,.tg3 b{font-family:"Barlow Condensed",var(--rnd);font-style:italic;font-weight:800}
+.val{font-size:36px}.tg3 b{font-size:32px}.leg .v{font-size:28px}
+.act{background:radial-gradient(circle at 85% 0%,rgba(198,244,50,.16),transparent 55%),var(--card)}
+.toast{background:#222225;color:var(--ink)}
+.ovl .in{background:var(--bg)}
+.cal button.today{box-shadow:inset 0 0 0 2px var(--go)}
+.wd.today .dd{color:var(--go)}
 </style>
 </head>
 <body>
@@ -844,10 +880,10 @@ function dayBand(ds){
     const h=i.min/60;
     if(i.type==='meal'){
       const x=X(Math.min(22.5,h)),lt=i.ml.sl.n.charAt(0).toUpperCase();
-      g+=`<circle cx="${x}" cy="66" r="11" fill="${i.done?'var(--green)':'var(--card)'}" stroke="${i.done?'var(--green)':'var(--mut3)'}" stroke-width="1.5"/><text x="${x}" y="70.5" font-size="12" font-weight="600" text-anchor="middle" fill="${i.done?'#FFFFFF':'var(--ink)'}">${lt}</text>`;
+      g+=`<circle cx="${x}" cy="66" r="11" fill="${i.done?'var(--go)':'var(--card)'}" stroke="${i.done?'var(--go)':'var(--mut3)'}" stroke-width="1.5"/><text x="${x}" y="70.5" font-size="12" font-weight="600" text-anchor="middle" fill="${i.done?'#0A0A0B':'var(--ink)'}">${lt}</text>`;
     }else{
       const x=X(h),wd=Math.max(40,i.se.min/60/24*w),x0=Math.min(x,L+w-wd);
-      g+=`<rect x="${x0}" y="90" width="${wd}" height="24" rx="7" fill="${i.done?'var(--green)':'var(--go)'}"/><text x="${x0+wd/2}" y="106" font-size="12" font-weight="600" text-anchor="middle" fill="#FFFFFF">${i.se.type==='Lauf'?'Lauf':'Kettlebell'}</text>`;
+      g+=`<rect x="${x0}" y="90" width="${wd}" height="24" rx="7" fill="${i.done?'var(--green)':'var(--go)'}"/><text x="${x0+wd/2}" y="106" font-size="12" font-weight="700" text-anchor="middle" fill="#0A0A0B">${i.se.type==='Lauf'?'Lauf':'Kettlebell'}</text>`;
     }
   });
   if(ds===todayS()){const n=new Date(),x=X(n.getHours()+n.getMinutes()/60);g+=`<line x1="${x}" x2="${x}" y1="16" y2="${H-4}" stroke="var(--red)" stroke-width="2"/><circle cx="${x}" cy="16" r="4" fill="var(--red)"/>`}
