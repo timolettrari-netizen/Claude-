@@ -14,6 +14,8 @@ nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#0e1520;borde
 nav button{background:none;margin:0;border-radius:0;color:var(--mu);font-weight:500}nav button.on{color:var(--ac)}
 .tab{display:none}.tab.on{display:block}.t{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1f2a3b}
 .bar{height:10px;background:#0e1520;border-radius:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--gr)}
+.kp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.kp .card{margin:0}.kp b{display:block;font-size:20px;margin-top:2px}
+svg{display:block;width:100%}.seg{display:flex;gap:6px;margin-bottom:12px}.seg button{margin:0;padding:8px;background:var(--card);color:var(--mu);font-size:14px}.seg button.sel{background:var(--ac);color:#fff}
 .del{background:none;color:var(--mu);width:auto;margin:0;padding:0 6px}
 </style></head><body>
 <h1 id="title">Rechner</h1>
@@ -27,6 +29,16 @@ nav button{background:none;margin:0;border-radius:0;color:var(--mu);font-weight:
 <div class="row"><div><div class="mu">Echtes Risiko</div><div id="rr1" class="r"></div></div><div><div class="mu">Möglicher Gewinn</div><div id="rr2" class="g"></div></div></div>
 <div class="mu" style="margin-top:8px" id="crv"></div></div></section>
 
+<section class="tab" id="dash">
+<div class="seg"><button data-r="7">7 Tage</button><button data-r="30" class="sel">30 Tage</button><button data-r="0">Alle</button></div>
+<div class="kp"><div class="card"><div class="mu">Netto P&amp;L</div><b id="k1">–</b></div><div class="card"><div class="mu">Trefferquote</div><b id="k2">–</b></div>
+<div class="card"><div class="mu">Profit-Faktor</div><b id="k3">–</b></div><div class="card"><div class="mu">Max. Drawdown</div><b id="k4" class="r">–</b></div>
+<div class="card"><div class="mu">Ø Gewinn</div><b id="k5" class="g">–</b></div><div class="card"><div class="mu">Ø Verlust</div><b id="k6" class="r">–</b></div></div>
+<div class="card"><div class="mu">Equity-Kurve</div><div id="eq"></div></div>
+<div class="card"><div class="mu">P&amp;L pro Tag</div><div id="dp"></div></div>
+<div class="card"><div class="mu">Nach Instrument</div><div id="bi"></div></div>
+<div class="card"><div class="mu">Long vs. Short</div><div id="ls"></div></div></section>
+
 <section class="tab" id="journal"><div class="card">
 <div class="row"><div><label>Instrument</label><select id="jins"></select></div><div><label>Richtung</label><select id="jdir"><option>Long</option><option>Short</option></select></div></div>
 <div class="row"><div><label>Ergebnis ($)</label><input id="jpl" type="number" inputmode="decimal" placeholder="z.B. -45"></div><div><label>Kontrakte</label><input id="jct" type="number" value="1"></div></div>
@@ -39,7 +51,7 @@ nav button{background:none;margin:0;border-radius:0;color:var(--mu);font-weight:
 <div class="mu" id="stat" style="margin-top:8px"></div></div>
 <div class="card"><div class="mu">Gesamt</div><div id="tot"></div></div></section>
 
-<nav><button data-t="calc" class="on">Rechner</button><button data-t="journal">Journal</button><button data-t="day">Tag</button></nav>
+<nav><button data-t="dash">Dashboard</button><button data-t="calc" class="on">Rechner</button><button data-t="journal">Journal</button><button data-t="day">Tag</button></nav>
 <script>
 const I={MES:5,MNQ:2,ES:50,NQ:20,MYM:.5,M2K:5},TK=.25,$=id=>document.getElementById(id);
 const S=JSON.parse(localStorage.getItem('tb')||'{}');S.trades=S.trades||[];
@@ -52,7 +64,7 @@ $('ctr').textContent=st>0?c:'–';$('rr1').textContent=f(-c*tv*st);$('rr2').text
 $('crv').textContent=st>0?`CRV 1:${(tg/st).toFixed(2)} · 1 Tick = ${tv} $/Kontrakt`:''}
 const today=()=>new Date().toISOString().slice(0,10);
 function list(){$('list').innerHTML=S.trades.length?S.trades.slice().reverse().map(t=>`<div class="t"><span>${t.d.slice(5)} ${t.i} ${t.dir}<br><span class="mu">${t.n||''}</span></span><span class="${t.p>=0?'g':'r'}">${f(t.p)}<button class="del" data-id="${t.id}">✕</button></span></div>`).join(''):'<div class="mu">Noch keine Trades.</div>';
-document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{if(confirm('Trade löschen?')){S.trades=S.trades.filter(t=>t.id!=b.dataset.id);save();list();day()}})}
+document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{if(confirm('Trade löschen?')){S.trades=S.trades.filter(t=>t.id!=b.dataset.id);save();list();day();dash()}})}
 function day(){const td=S.trades.filter(t=>t.d==today()),p=td.reduce((a,t)=>a+t.p,0),lim=+$('lim').value,g=+$('goal').value;
 $('today').textContent=f(p);$('today').className='big '+(p>=0?'g':'r');const b=$('pbar');
 b.style.width=Math.min(100,Math.abs(p)/(p>=0?g:lim)*100)+'%';b.style.background=p>=0?'var(--gr)':'var(--rd)';
@@ -60,7 +72,22 @@ $('stat').innerHTML=p<=-lim?'<b class="r">⛔ Limit erreicht – heute nicht meh
 const all=S.trades,w=all.filter(t=>t.p>0).length,sum=all.reduce((a,t)=>a+t.p,0);
 $('tot').innerHTML=all.length?`<div class="t"><span>Trades</span><span>${all.length}</span></div><div class="t"><span>Trefferquote</span><span>${(w/all.length*100).toFixed(0)} %</span></div><div class="t"><span>Summe</span><span class="${sum>=0?'g':'r'}">${f(sum)}</span></div>`:'<div class="mu">Noch keine Daten.</div>'}
 $('add').onclick=()=>{const p=parseFloat($('jpl').value);if(isNaN(p))return alert('Bitte Ergebnis eingeben');
-S.trades.push({id:Date.now(),d:today(),i:$('jins').value,dir:$('jdir').value,p,c:+$('jct').value,n:$('jnote').value});save();$('jpl').value=$('jnote').value='';list();day()};
+S.trades.push({id:Date.now(),d:today(),i:$('jins').value,dir:$('jdir').value,p,c:+$('jct').value,n:$('jnote').value});save();$('jpl').value=$('jnote').value='';list();day();dash()};
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.on').forEach(e=>e.classList.remove('on'));b.classList.add('on');$(b.dataset.t).classList.add('on');$('title').textContent=b.textContent});
-calc();list();day();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+let R=30;document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.seg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');R=+b.dataset.r;dash()});
+function dash(){const from=R?new Date(Date.now()-(R-1)*864e5).toISOString().slice(0,10):'',T=S.trades.filter(t=>t.d>=from),N=T.length;
+const set=(id,v,c)=>{$(id).textContent=v;if(c!=null)$(id).className=c};
+if(!N){['k1','k2','k3','k4','k5','k6'].forEach(k=>$(k).textContent='–');['eq','dp','bi','ls'].forEach(k=>$(k).innerHTML='<div class="mu" style="padding:12px 0">Keine Trades im Zeitraum.</div>');return}
+const W=T.filter(t=>t.p>0),L=T.filter(t=>t.p<0),gw=W.reduce((a,t)=>a+t.p,0),gl=-L.reduce((a,t)=>a+t.p,0),net=gw-gl;
+let eq=0,pk=0,dd=0;const pts=[0];T.forEach(t=>{eq+=t.p;pts.push(eq);pk=Math.max(pk,eq);dd=Math.max(dd,pk-eq)});
+set('k1',f(net),net>=0?'g':'r');set('k2',(W.length/N*100).toFixed(0)+' % ('+W.length+'/'+N+')');set('k3',gl?(gw/gl).toFixed(2):'∞',gw>=gl?'g':'r');
+set('k4',f(-dd));set('k5',W.length?f(gw/W.length):'–');set('k6',L.length?f(-gl/L.length):'–');
+const w=320,h=120,mn=Math.min(...pts),mx=Math.max(...pts),sp=mx-mn||1,y=v=>h-6-(v-mn)/sp*(h-12),x=i=>i/(pts.length-1)*w;
+const d=pts.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' '),c=net>=0?'var(--gr)':'var(--rd)';
+$('eq').innerHTML=`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="height:130px;margin-top:8px"><line x1="0" x2="${w}" y1="${y(0)}" y2="${y(0)}" stroke="#263247" stroke-dasharray="4 4"/><path d="${d} L${w} ${y(0)} L0 ${y(0)}Z" fill="${c}" opacity=".12"/><path d="${d}" fill="none" stroke="${c}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg><div class="mu" style="display:flex;justify-content:space-between"><span>Max ${f(mx)}</span><span>Min ${f(mn)}</span></div>`;
+const by={};T.forEach(t=>by[t.d]=(by[t.d]||0)+t.p);const ds=Object.keys(by).sort().slice(-20),am=Math.max(...ds.map(k=>Math.abs(by[k])))||1,bw=w/ds.length;
+$('dp').innerHTML=`<svg viewBox="0 0 ${w} ${h}" style="height:130px;margin-top:8px"><line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="#263247"/>${ds.map((k,i)=>{const v=by[k],bh=Math.abs(v)/am*(h/2-4);return`<rect x="${i*bw+bw*.15}" width="${bw*.7}" y="${v>=0?h/2-bh:h/2}" height="${Math.max(bh,1)}" rx="2" fill="${v>=0?'var(--gr)':'var(--rd)'}"><title>${k}: ${f(v)}</title></rect>`}).join('')}</svg><div class="mu" style="display:flex;justify-content:space-between"><span>${ds[0].slice(5)}</span><span>${ds.length} Handelstage · ${ds.filter(k=>by[k]>0).length} grün</span><span>${ds.at(-1).slice(5)}</span></div>`;
+const grp=key=>{const g={};T.forEach(t=>{const k=t[key];g[k]=g[k]||{n:0,w:0,p:0};g[k].n++;g[k].p+=t.p;if(t.p>0)g[k].w++});return Object.entries(g).sort((a,b)=>b[1].p-a[1].p).map(([k,v])=>`<div class="t"><span>${k}<br><span class="mu">${v.n} Trades · ${(v.w/v.n*100).toFixed(0)} %</span></span><span class="${v.p>=0?'g':'r'}">${f(v.p)}</span></div>`).join('')};
+$('bi').innerHTML=grp('i');$('ls').innerHTML=grp('dir')}
+calc();list();day();dash();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>
