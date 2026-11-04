@@ -1,26 +1,30 @@
 <!doctype html>
 <html lang="de"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0f17"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#120d0a"><meta name="apple-mobile-web-app-capable" content="yes">
 <title>Trade Begleiter</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon.svg">
 <style>
-:root{--bg:#0b0f17;--card:#141b27;--tx:#e6edf5;--mu:#8a97a8;--ac:#3fa7ff;--gr:#2ecc71;--rd:#ff5d5d}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px system-ui,-apple-system,sans-serif;padding:env(safe-area-inset-top) 16px 90px}
-h1{font-size:20px;margin:16px 0}.card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px}
-label{display:block;color:var(--mu);font-size:13px;margin:8px 0 4px}input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #263247;background:#0e1520;color:var(--tx);font-size:16px}
+:root{--bg:#120d0a;--card:rgba(255,255,255,.07);--bd:rgba(255,255,255,.14);--tx:#e6edf5;--mu:#8a97a8;--ac:#e08a45;--gr:#2ecc71;--rd:#ff5d5d}
+*{box-sizing:border-box}html{background:var(--bg)}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;background:radial-gradient(40% 35% at 20% 15%,#c47a3d 0,transparent 70%),radial-gradient(35% 30% at 85% 30%,#7a4a2e 0,transparent 70%),radial-gradient(45% 40% at 50% 90%,#3d5a73 0,transparent 70%),#120d0a;filter:blur(40px);opacity:.75}
+body{margin:0;color:var(--tx);font:16px system-ui,-apple-system,sans-serif;padding:env(safe-area-inset-top) 16px 90px}
+h1{font-size:20px;margin:16px 0}.card{background:var(--card);border:1px solid var(--bd);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);box-shadow:0 8px 30px rgba(0,0,0,.25);border-radius:20px;padding:14px;margin-bottom:12px}
+label{display:block;color:var(--mu);font-size:13px;margin:8px 0 4px}input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:rgba(0,0,0,.25);color:var(--tx);font-size:16px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}button{padding:13px;border:0;border-radius:10px;background:var(--ac);color:#fff;font-size:16px;font-weight:600;width:100%;margin-top:10px}
 .big{font-size:28px;font-weight:700}.mu{color:var(--mu);font-size:13px}.g{color:var(--gr)}.r{color:var(--rd)}
-nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#0e1520;border-top:1px solid #263247;padding-bottom:env(safe-area-inset-bottom)}
-nav button{background:none;margin:0;border-radius:0;color:var(--mu);font-weight:500}nav button.on{color:var(--ac)}
-.tab{display:none}.tab.on{display:block}.t{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1f2a3b}
-.bar{height:10px;background:#0e1520;border-radius:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--gr)}
+nav{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));left:12px;right:12px;display:flex;background:rgba(30,22,18,.55);border:1px solid var(--bd);border-radius:22px;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);overflow:hidden}
+nav button{background:none;margin:0;border-radius:0;color:var(--mu);font-weight:500}nav button.on{color:#fff;background:rgba(255,255,255,.12)}
+.tab{display:none}.tab.on{display:block}.t{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.bar{height:10px;background:rgba(0,0,0,.3);border-radius:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--gr)}
 .kp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.kp .card{margin:0}.kp b{display:block;font-size:20px;margin-top:2px}
-svg{display:block;width:100%}.seg{display:flex;gap:6px;margin-bottom:12px}.seg button{margin:0;padding:8px;background:var(--card);color:var(--mu);font-size:14px}.seg button.sel{background:var(--ac);color:#fff}
+svg{display:block;width:100%}.seg{display:flex;gap:6px;margin-bottom:12px}.seg button{margin:0;padding:8px;background:var(--card);border:1px solid var(--bd);color:var(--mu);font-size:14px}.seg button.sel{background:var(--ac);color:#fff}
+.hi{font-size:26px;font-weight:700;margin:4px 0 2px}.rings{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}.rings svg{width:78px;height:78px;margin:6px auto}
+.hero{display:flex;justify-content:space-between;align-items:flex-end}.pill{display:inline-block;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.1);font-size:12px;margin-top:6px}
 .del{background:none;color:var(--mu);width:auto;margin:0;padding:0 6px}
 </style></head><body>
-<h1 id="title">Rechner</h1>
+<h1 id="title" style="display:none">Dashboard</h1>
 
-<section class="tab on" id="calc"><div class="card">
+<section class="tab" id="calc"><div class="card">
 <label>Instrument</label><select id="ins"></select>
 <div class="row"><div><label>Risiko pro Trade ($)</label><input id="risk" type="number" inputmode="decimal" value="100"></div>
 <div><label>Stop (Ticks)</label><input id="stop" type="number" inputmode="decimal" value="12"></div></div>
@@ -29,7 +33,10 @@ svg{display:block;width:100%}.seg{display:flex;gap:6px;margin-bottom:12px}.seg b
 <div class="row"><div><div class="mu">Echtes Risiko</div><div id="rr1" class="r"></div></div><div><div class="mu">Möglicher Gewinn</div><div id="rr2" class="g"></div></div></div>
 <div class="mu" style="margin-top:8px" id="crv"></div></div></section>
 
-<section class="tab" id="dash">
+<section class="tab on" id="dash">
+<div style="margin:18px 0 14px"><div class="mu" id="hd"></div><div class="hi" id="hg"></div><div class="mu" id="hs"></div></div>
+<div class="card"><div class="hero"><div><div class="mu">Challenge-Konto</div><div class="big" id="bal">–</div><span class="pill" id="bst"></span></div><div style="text-align:right"><div class="mu">Heute</div><b id="htd">–</b></div></div></div>
+<div class="card"><div class="mu">Ziele</div><div class="rings" id="rings"></div></div>
 <div class="seg"><button data-r="7">7 Tage</button><button data-r="30" class="sel">30 Tage</button><button data-r="0">Alle</button></div>
 <div class="kp"><div class="card"><div class="mu">Netto P&amp;L</div><b id="k1">–</b></div><div class="card"><div class="mu">Trefferquote</div><b id="k2">–</b></div>
 <div class="card"><div class="mu">Profit-Faktor</div><b id="k3">–</b></div><div class="card"><div class="mu">Max. Drawdown</div><b id="k4" class="r">–</b></div>
@@ -49,16 +56,20 @@ svg{display:block;width:100%}.seg{display:flex;gap:6px;margin-bottom:12px}.seg b
 <div class="row"><div><label>Tagesverlust-Limit ($)</label><input id="lim" type="number" value="300"></div><div><label>Tagesziel ($)</label><input id="goal" type="number" value="300"></div></div></div>
 <div class="card"><div class="mu">Heute</div><div class="big" id="today">0 $</div><div class="bar"><i id="pbar"></i></div>
 <div class="mu" id="stat" style="margin-top:8px"></div></div>
+<div class="card"><div class="mu">Challenge</div>
+<label>Name</label><input id="nm" placeholder="Timo">
+<div class="row"><div><label>Kontogröße ($)</label><input id="acc" type="number" value="50000"></div><div><label>Gewinnziel ($)</label><input id="pt" type="number" value="3000"></div></div>
+<div class="row"><div><label>Max. Drawdown ($)</label><input id="mdd" type="number" value="2000"></div><div><label>Ziel Trefferquote (%)</label><input id="wr" type="number" value="55"></div></div></div>
 <div class="card"><div class="mu">Gesamt</div><div id="tot"></div></div></section>
 
-<nav><button data-t="dash">Dashboard</button><button data-t="calc" class="on">Rechner</button><button data-t="journal">Journal</button><button data-t="day">Tag</button></nav>
+<nav><button data-t="dash" class="on">Dashboard</button><button data-t="calc">Rechner</button><button data-t="journal">Journal</button><button data-t="day">Tag</button></nav>
 <script>
 const I={MES:5,MNQ:2,ES:50,NQ:20,MYM:.5,M2K:5},TK=.25,$=id=>document.getElementById(id);
 const S=JSON.parse(localStorage.getItem('tb')||'{}');S.trades=S.trades||[];
 const save=()=>{try{localStorage.setItem('tb',JSON.stringify(S))}catch(e){}};
 const f=n=>(n<0?'-':'')+Math.abs(n).toFixed(2)+' $';
 for(const s of[$('ins'),$('jins')])for(const k in I)s.add(new Option(k));
-['ins','risk','stop','tgt','lim','goal'].forEach(k=>{if(S[k]!=null)$(k).value=S[k];$(k).oninput=()=>{S[k]=$(k).value;save();calc();day()}});
+['ins','risk','stop','tgt','lim','goal','nm','acc','pt','mdd','wr'].forEach(k=>{if(S[k]!=null)$(k).value=S[k];$(k).oninput=()=>{S[k]=$(k).value;save();calc();day();dash()}});
 function calc(){const tv=I[$('ins').value]*TK,st=+$('stop').value,tg=+$('tgt').value,c=Math.floor(+$('risk').value/(tv*st));
 $('ctr').textContent=st>0?c:'–';$('rr1').textContent=f(-c*tv*st);$('rr2').textContent=f(c*tv*tg);
 $('crv').textContent=st>0?`CRV 1:${(tg/st).toFixed(2)} · 1 Tick = ${tv} $/Kontrakt`:''}
@@ -75,7 +86,18 @@ $('add').onclick=()=>{const p=parseFloat($('jpl').value);if(isNaN(p))return aler
 S.trades.push({id:Date.now(),d:today(),i:$('jins').value,dir:$('jdir').value,p,c:+$('jct').value,n:$('jnote').value});save();$('jpl').value=$('jnote').value='';list();day();dash()};
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.on').forEach(e=>e.classList.remove('on'));b.classList.add('on');$(b.dataset.t).classList.add('on');$('title').textContent=b.textContent});
 let R=30;document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.seg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');R=+b.dataset.r;dash()});
-function dash(){const from=R?new Date(Date.now()-(R-1)*864e5).toISOString().slice(0,10):'',T=S.trades.filter(t=>t.d>=from),N=T.length;
+const ring=(v,c,lbl,sub)=>{const r=32,C=2*Math.PI*r,q=Math.max(0,Math.min(1,v));return`<div><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="${r}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="8"/><circle cx="40" cy="40" r="${r}" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C*q} ${C}" transform="rotate(-90 40 40)"/><text x="40" y="45" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">${Math.round(q*100)}%</text></svg><div style="font-size:13px">${lbl}</div><div class="mu" style="font-size:11px">${sub}</div></div>`};
+function head(){const h=new Date().getHours(),n=$('nm').value||'Timo',all=S.trades,sum=all.reduce((a,t)=>a+t.p,0),acc=+$('acc').value,pt=+$('pt').value,mdd=+$('mdd').value;
+$('hd').textContent=new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+$('hg').textContent=(h<11?'Guten Morgen':h<18?'Guten Tag':'Guten Abend')+', '+n;
+const m=new Date(),ny=m.getUTCHours()+m.getUTCMinutes()/60;$('hs').textContent=ny>=14.5&&ny<21?'🟢 US-Session läuft – halte dich an dein Regelwerk.':'Markt-Session (15:30–22:00) noch nicht aktiv.';
+let eq=0,pk=0,dd=0;all.forEach(t=>{eq+=t.p;pk=Math.max(pk,eq);dd=Math.max(dd,pk-eq)});
+$('bal').textContent=(acc+sum).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' $';
+const left=mdd-dd;$('bst').innerHTML=sum>=pt?'🏆 Challenge-Ziel erreicht':left<=0?'⛔ Drawdown verletzt':`Puffer bis Drawdown: ${f(left)}`;
+const td=all.filter(t=>t.d==today()).reduce((a,t)=>a+t.p,0);$('htd').textContent=f(td);$('htd').className=td>=0?'g':'r';
+const w=all.length?all.filter(t=>t.p>0).length/all.length:0,g=+$('goal').value;
+$('rings').innerHTML=ring(sum/pt,'#f0a35e','Challenge',f(sum)+' / '+pt+' $')+ring(td/g,'#2ecc71','Tagesziel',f(td))+ring(w/(+$('wr').value/100),'#7fb8ff','Trefferquote',(w*100).toFixed(0)+' % / '+$('wr').value+' %')}
+function dash(){head();const from=R?new Date(Date.now()-(R-1)*864e5).toISOString().slice(0,10):'',T=S.trades.filter(t=>t.d>=from),N=T.length;
 const set=(id,v,c)=>{$(id).textContent=v;if(c!=null)$(id).className=c};
 if(!N){['k1','k2','k3','k4','k5','k6'].forEach(k=>$(k).textContent='–');['eq','dp','bi','ls'].forEach(k=>$(k).innerHTML='<div class="mu" style="padding:12px 0">Keine Trades im Zeitraum.</div>');return}
 const W=T.filter(t=>t.p>0),L=T.filter(t=>t.p<0),gw=W.reduce((a,t)=>a+t.p,0),gl=-L.reduce((a,t)=>a+t.p,0),net=gw-gl;
@@ -84,9 +106,9 @@ set('k1',f(net),net>=0?'g':'r');set('k2',(W.length/N*100).toFixed(0)+' % ('+W.le
 set('k4',f(-dd));set('k5',W.length?f(gw/W.length):'–');set('k6',L.length?f(-gl/L.length):'–');
 const w=320,h=120,mn=Math.min(...pts),mx=Math.max(...pts),sp=mx-mn||1,y=v=>h-6-(v-mn)/sp*(h-12),x=i=>i/(pts.length-1)*w;
 const d=pts.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' '),c=net>=0?'var(--gr)':'var(--rd)';
-$('eq').innerHTML=`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="height:130px;margin-top:8px"><line x1="0" x2="${w}" y1="${y(0)}" y2="${y(0)}" stroke="#263247" stroke-dasharray="4 4"/><path d="${d} L${w} ${y(0)} L0 ${y(0)}Z" fill="${c}" opacity=".12"/><path d="${d}" fill="none" stroke="${c}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg><div class="mu" style="display:flex;justify-content:space-between"><span>Max ${f(mx)}</span><span>Min ${f(mn)}</span></div>`;
+$('eq').innerHTML=`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="height:130px;margin-top:8px"><line x1="0" x2="${w}" y1="${y(0)}" y2="${y(0)}" stroke="rgba(255,255,255,.2)" stroke-dasharray="4 4"/><path d="${d} L${w} ${y(0)} L0 ${y(0)}Z" fill="${c}" opacity=".12"/><path d="${d}" fill="none" stroke="${c}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg><div class="mu" style="display:flex;justify-content:space-between"><span>Max ${f(mx)}</span><span>Min ${f(mn)}</span></div>`;
 const by={};T.forEach(t=>by[t.d]=(by[t.d]||0)+t.p);const ds=Object.keys(by).sort().slice(-20),am=Math.max(...ds.map(k=>Math.abs(by[k])))||1,bw=w/ds.length;
-$('dp').innerHTML=`<svg viewBox="0 0 ${w} ${h}" style="height:130px;margin-top:8px"><line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="#263247"/>${ds.map((k,i)=>{const v=by[k],bh=Math.abs(v)/am*(h/2-4);return`<rect x="${i*bw+bw*.15}" width="${bw*.7}" y="${v>=0?h/2-bh:h/2}" height="${Math.max(bh,1)}" rx="2" fill="${v>=0?'var(--gr)':'var(--rd)'}"><title>${k}: ${f(v)}</title></rect>`}).join('')}</svg><div class="mu" style="display:flex;justify-content:space-between"><span>${ds[0].slice(5)}</span><span>${ds.length} Handelstage · ${ds.filter(k=>by[k]>0).length} grün</span><span>${ds.at(-1).slice(5)}</span></div>`;
+$('dp').innerHTML=`<svg viewBox="0 0 ${w} ${h}" style="height:130px;margin-top:8px"><line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="rgba(255,255,255,.2)"/>${ds.map((k,i)=>{const v=by[k],bh=Math.abs(v)/am*(h/2-4);return`<rect x="${i*bw+bw*.15}" width="${bw*.7}" y="${v>=0?h/2-bh:h/2}" height="${Math.max(bh,1)}" rx="2" fill="${v>=0?'var(--gr)':'var(--rd)'}"><title>${k}: ${f(v)}</title></rect>`}).join('')}</svg><div class="mu" style="display:flex;justify-content:space-between"><span>${ds[0].slice(5)}</span><span>${ds.length} Handelstage · ${ds.filter(k=>by[k]>0).length} grün</span><span>${ds.at(-1).slice(5)}</span></div>`;
 const grp=key=>{const g={};T.forEach(t=>{const k=t[key];g[k]=g[k]||{n:0,w:0,p:0};g[k].n++;g[k].p+=t.p;if(t.p>0)g[k].w++});return Object.entries(g).sort((a,b)=>b[1].p-a[1].p).map(([k,v])=>`<div class="t"><span>${k}<br><span class="mu">${v.n} Trades · ${(v.w/v.n*100).toFixed(0)} %</span></span><span class="${v.p>=0?'g':'r'}">${f(v.p)}</span></div>`).join('')};
 $('bi').innerHTML=grp('i');$('ls').innerHTML=grp('dir')}
 calc();list();day();dash();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
