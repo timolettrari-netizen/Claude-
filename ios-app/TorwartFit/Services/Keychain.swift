@@ -3,7 +3,7 @@ import Security
 
 /// Speichert den Claude-API-Schlüssel sicher im iOS-Schlüsselbund.
 enum Keychain {
-    private static let service = "de.timo.torwartfit"
+    private static let service = "de.timolettrari.torwartfit"
 
     static func set(_ value: String, for key: String) {
         let base: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
