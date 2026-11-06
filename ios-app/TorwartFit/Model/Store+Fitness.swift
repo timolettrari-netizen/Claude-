@@ -73,8 +73,10 @@ extension Store {
 
     /// Kalorienziel des Tages: Grundziel + die Hälfte des geplanten Trainingsverbrauchs
     func calorieTarget(on date: Date) -> Int {
-        guard let p = plan(for: DateUtil.dayIndex(date)), p != "game", catalog.session(p) != nil else { return baseIntake }
-        return baseIntake + Int((Double(sessionKcal(p)) * 0.5 / 10).rounded()) * 10
+        var training = 0
+        if let p = plan(for: DateUtil.dayIndex(date)), p != "game", catalog.session(p) != nil { training += sessionKcal(p) }
+        if let r = plannedRun(on: date) { training += r.kcal }
+        return baseIntake + Int((Double(training) * 0.5 / 10).rounded()) * 10
     }
 
     var proteinTarget: Int { Int((s.body.goalKg * 1.6 / 5).rounded()) * 5 }

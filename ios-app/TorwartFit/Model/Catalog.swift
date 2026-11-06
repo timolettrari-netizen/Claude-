@@ -105,6 +105,23 @@ struct WorkoutLog: Codable, Identifiable, Hashable {
     var volume: Double
 }
 
+struct RunCoordinate: Codable, Hashable {
+    var lat: Double
+    var lon: Double
+}
+
+struct RunLog: Codable, Identifiable, Hashable {
+    var id = UUID()
+    var date: Date
+    var km: Double
+    var minutes: Int
+    var kcal: Int
+    var type: String          // wr, easy, long, int, free
+    var title: String
+    var route: [RunCoordinate] = []
+    var paceMinPerKm: Double? { km > 0.2 ? Double(minutes) / km : nil }
+}
+
 struct TestEntry: Codable, Identifiable, Hashable {
     var id = UUID()
     var test: String
@@ -153,6 +170,10 @@ struct AppState: Codable {
     var eaten: Set<String> = []
     var mealPicks: [String: String] = [:]     // "yyyy-MM-dd|slot" → Rezept-ID
     var stepsLog: [String: Int] = [:]
+    // Laufplan
+    var runsPerWeek = 2
+    var runPlanStart = DateUtil.weekStart(Date())
+    var runs: [RunLog] = []
 
     init() {}
 
@@ -181,6 +202,9 @@ struct AppState: Codable {
         eaten = try c.decodeIfPresent(Set<String>.self, forKey: .eaten) ?? []
         mealPicks = try c.decodeIfPresent([String: String].self, forKey: .mealPicks) ?? [:]
         stepsLog = try c.decodeIfPresent([String: Int].self, forKey: .stepsLog) ?? [:]
+        runsPerWeek = try c.decodeIfPresent(Int.self, forKey: .runsPerWeek) ?? d.runsPerWeek
+        runPlanStart = try c.decodeIfPresent(Date.self, forKey: .runPlanStart) ?? d.runPlanStart
+        runs = try c.decodeIfPresent([RunLog].self, forKey: .runs) ?? []
     }
 }
 

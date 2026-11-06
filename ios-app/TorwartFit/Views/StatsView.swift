@@ -26,7 +26,9 @@ struct StatsView: View {
                     Text("Überblick").sectionTitle()
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                         kpi("Einheiten", "\(store.s.logs.count)", "")
-                        kpi("Trainingszeit", String(format: "%.1f", Double(store.s.logs.reduce(0) { $0 + $1.minutes }) / 60), "h")
+                        kpi("Trainingszeit", String(format: "%.1f", Double(store.s.logs.reduce(0) { $0 + $1.minutes } + store.s.runs.reduce(0) { $0 + $1.minutes }) / 60), "h")
+                        kpi("Gelaufen", String(format: "%.1f", store.s.runs.reduce(0) { $0 + $1.km }), "km")
+                        kpi("Läufe", "\(store.s.runs.count)", "")
                         kpi("Bewegtes Gewicht", String(format: "%.1f", store.s.logs.reduce(0) { $0 + $1.volume } / 1000), "t")
                         let rp = store.s.logs.compactMap(\.rpe)
                         kpi("Ø Anstrengung", rp.isEmpty ? "–" : String(format: "%.1f", Double(rp.reduce(0, +)) / Double(rp.count)), "/10")
@@ -53,6 +55,10 @@ struct StatsView: View {
                     prList
                     Text("Verlauf").sectionTitle()
                     history
+                    if !store.s.runs.isEmpty {
+                        Text("Läufe").sectionTitle()
+                        runHistory
+                    }
                 }
                 .padding(16)
             }
@@ -166,6 +172,27 @@ struct StatsView: View {
             }
             .background(Color.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
+    }
+
+    private var runHistory: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(store.s.runs.suffix(30).reversed())) { r in
+                HStack(spacing: 12) {
+                    Text("🏃").frame(width: 34, height: 34).background(Color(hex: "#FF375F").opacity(0.25), in: RoundedRectangle(cornerRadius: 9))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(r.title)
+                        Text("\(DateUtil.format(r.date, "EEEdMMM")) · \(String(format: "%.2f", r.km)) km · \(r.minutes) min\(r.paceMinPerKm.map { " · " + Store.pace($0) + " /km" } ?? "")")
+                            .font(.footnote).foregroundStyle(Color.mut)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 16).padding(.vertical, 9)
+                .contextMenu {
+                    Button("Löschen", role: .destructive) { store.s.runs.removeAll { $0.id == r.id } }
+                }
+            }
+        }
+        .background(Color.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     @ViewBuilder private var history: some View {

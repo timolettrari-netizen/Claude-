@@ -9,6 +9,7 @@
 /* Begin PBXFileReference section */
 		AA0000000000000000000001 /* TorwartFit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TorwartFit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000000000000000000014 /* TorwartFit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TorwartFit.entitlements; sourceTree = "<group>"; };
+		AA0000000000000000000017 /* TorwartFit-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "TorwartFit-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -35,6 +36,7 @@
 			children = (
 				AA0000000000000000000002 /* TorwartFit */,
 				AA0000000000000000000014 /* TorwartFit.entitlements */,
+				AA0000000000000000000017 /* TorwartFit-Info.plist */,
 				AA0000000000000000000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -199,7 +201,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = TorwartFit;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "TorwartFit liest Schritte, Gewicht und Trainings aus Apple Health, um deinen Plan und dein Kalorienziel anzupassen.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "TorwartFit speichert deine Trainingseinheiten in Apple Health.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "TorwartFit speichert deine Trainings und Läufe in Apple Health.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "TorwartFit zeichnet beim Laufen Strecke und Tempo per GPS auf.";
+				INFOPLIST_FILE = "TorwartFit-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
@@ -231,7 +235,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = TorwartFit;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "TorwartFit liest Schritte, Gewicht und Trainings aus Apple Health, um deinen Plan und dein Kalorienziel anzupassen.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "TorwartFit speichert deine Trainingseinheiten in Apple Health.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "TorwartFit speichert deine Trainings und Läufe in Apple Health.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "TorwartFit zeichnet beim Laufen Strecke und Tempo per GPS auf.";
+				INFOPLIST_FILE = "TorwartFit-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;

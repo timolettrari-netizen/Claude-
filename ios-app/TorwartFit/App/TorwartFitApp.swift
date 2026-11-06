@@ -39,6 +39,9 @@ struct RootView: View {
         .fullScreenCover(item: $store.launch) { l in
             PlayerView(launch: l, store: store).environmentObject(store)
         }
+        .fullScreenCover(item: $store.runLaunch) { r in
+            RunTrackerView(launch: r).environmentObject(store)
+        }
         .sheet(isPresented: $onboarding) {
             GoalPickerView(first: true).environmentObject(store).interactiveDismissDisabled()
         }

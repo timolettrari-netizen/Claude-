@@ -36,6 +36,8 @@ struct TrainingView: View {
                         }
                     }
 
+                    RunPlanCard().padding(.top, 6)
+
                     Text("Übungen").sectionTitle().padding(.top, 10)
                     HStack {
                         Image(systemName: "magnifyingglass").foregroundStyle(Color.mut)

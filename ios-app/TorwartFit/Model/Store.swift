@@ -47,6 +47,7 @@ final class Store: ObservableObject {
 
     @Published var s: AppState { didSet { scheduleSave() } }
     @Published var launch: Launch?
+    @Published var runLaunch: RunLaunch?
     @Published var steps: Double = 0
     @Published var weight: Double?
 

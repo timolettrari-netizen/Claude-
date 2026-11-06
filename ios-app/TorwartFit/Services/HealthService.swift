@@ -11,7 +11,7 @@ final class HealthService {
     func requestAccess() async -> Bool {
         guard isAvailable else { return false }
         let read: Set<HKObjectType> = [HKQuantityType(.stepCount), HKQuantityType(.bodyMass), HKObjectType.workoutType()]
-        let share: Set<HKSampleType> = [HKObjectType.workoutType(), HKQuantityType(.activeEnergyBurned)]
+        let share: Set<HKSampleType> = [HKObjectType.workoutType(), HKQuantityType(.activeEnergyBurned), HKQuantityType(.distanceWalkingRunning)]
         do {
             try await hs.requestAuthorization(toShare: share, read: read)
             return true
@@ -37,6 +37,29 @@ final class HealthService {
                                         limit: 1)
         let r = try? await q.result(for: hs)
         return r?.first?.quantity.doubleValue(for: .gramUnit(with: .kilo))
+    }
+
+    func saveRun(start: Date, end: Date, km: Double, kcal: Double) async {
+        guard isAvailable else { return }
+        let cfg = HKWorkoutConfiguration()
+        cfg.activityType = .running
+        cfg.locationType = .outdoor
+        let builder = HKWorkoutBuilder(healthStore: hs, configuration: cfg, device: .local())
+        do {
+            try await builder.beginCollection(at: start)
+            var samples: [HKSample] = [HKCumulativeQuantitySample(type: HKQuantityType(.activeEnergyBurned),
+                                                                  quantity: HKQuantity(unit: .kilocalorie(), doubleValue: kcal),
+                                                                  start: start, end: end)]
+            if km > 0 {
+                samples.append(HKCumulativeQuantitySample(type: HKQuantityType(.distanceWalkingRunning),
+                                                          quantity: HKQuantity(unit: .meterUnit(with: .kilo), doubleValue: km),
+                                                          start: start, end: end))
+            }
+            try await builder.addSamples(samples)
+            try await builder.endCollection(at: end)
+            _ = try await builder.finishWorkout()
+        } catch {
+        }
     }
 
     func saveWorkout(start: Date, end: Date, kcal: Double) async {

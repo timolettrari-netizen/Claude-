@@ -50,6 +50,11 @@ struct ProfileView: View {
                     Picker("Einheiten pro Woche", selection: $store.s.days) {
                         ForEach(2...5, id: \.self) { Text("\($0)").tag($0) }
                     }
+                    Picker("Läufe pro Woche", selection: $store.s.runsPerWeek) {
+                        Text("Aus").tag(0)
+                        ForEach(1...4, id: \.self) { Text("\($0)").tag($0) }
+                    }
+                    Button("Laufplan neu starten (Woche 1)") { store.s.runPlanStart = DateUtil.weekStart(Date()) }
                     Picker("Woche im 4-Wochen-Block", selection: Binding(get: { store.weekIndex }, set: { store.setWeekIndex($0) })) {
                         ForEach(0..<4, id: \.self) { Text("\($0 + 1) – \(BlockWeek.all[$0].name)").tag($0) }
                     }

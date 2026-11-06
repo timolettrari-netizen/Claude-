@@ -2,7 +2,7 @@
 
 Native iPhone-App für dein Torwart- und Gym-Training. Nicht für den App Store gedacht – du spielst sie mit Xcode direkt auf dein iPhone.
 
-## Was drin ist (Version 1.1)
+## Was drin ist (Version 1.2)
 - **Heute:** Tagesansicht mit heutiger Einheit, Ziel, Tagesform, Wochenplan (abhängig von Spieltag und Ziel), Schritte und Gewicht aus Apple Health
 - **Training:** 11 Einheiten (Torwart + Gym A/B/C) und 55 Übungen mit Suche und Kategorien
 - **Geführtes Training:** Satz für Satz, Gewicht/Wiederholungen, Pausen-Timer mit Ton und Vibration, Steigerungsvorschlag, Display bleibt an, Zusammenfassung mit Anstrengung (RPE)
@@ -11,10 +11,12 @@ Native iPhone-App für dein Torwart- und Gym-Training. Nicht für den App Store 
 - **Statistik:** Aktivitätsringe, Diagramm, Leistungstests, Bestwerte, Verlauf
 - **Essen:** Mahlzeitenplan für 10 Tage passend zu deinem Dienst (frei / nach Nacht / Spät / Früh-Nacht), 18 Rezepte mit auf dein Kalorienziel skalierten Mengen, „Gegessen“ abhaken, Gerichte tauschen, Eiweiß/Kohlenhydrate, Einkaufsliste (7 Tage, teilbar)
 - **Abnehmen:** Gewicht mit Soll-Linie (Start → Ziel), Kalorienziel (Mifflin-St Jeor, Defizit aus Zieldatum, Trainingsbonus), Eingabe oder Apple Health
+- **Laufplan:** 1–4 Läufe pro Woche, automatisch auf freie Tage gelegt (nie am Spieltag oder Tag davor, möglichst nicht auf Torwart-Tage). Woche 1–2 Lauf-Geh-Intervalle, dann lockerer und langer Lauf, ab Woche 5 Intervalle, jede 4. Woche leichter. Tempo aus deinen Läufen (Start: 6:20 /km)
+- **GPS-Tracker:** Zeit, Strecke, Tempo, Kalorien, Pause, läuft auch mit gesperrtem Bildschirm weiter, Route auf der Karte, Speichern in Apple Health
 - **Dienstplan:** 4-Tage-Rhythmus (frei, frei, Spät, Früh/Nacht) vorausgefüllt, per Tippen änderbar; an Früh/Nacht-Tagen automatisch kurzes Training
 - **Profil** (Symbol oben rechts auf „Heute“): Ziel, Spieltag, Körperdaten, Dienstplan, Studio/Zuhause, Block-Woche, Apple Health, Erinnerungen, Coach-Schlüssel, Backup (auch Import aus der Web-App)
 
-Noch nicht enthalten: eigener Laufplan mit GPS-Tracking, Widget.
+Noch nicht enthalten: Widget, Strava-Import.
 
 ## Voraussetzungen
 - Mac mit **Xcode 16 oder neuer** (kostenlos im Mac App Store)

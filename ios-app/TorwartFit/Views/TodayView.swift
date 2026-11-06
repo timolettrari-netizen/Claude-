@@ -33,6 +33,7 @@ struct TodayView: View {
                     .padding(.top, 8)
                     ShiftRow()
                     HeroCard(preview: $preview)
+                    RunTodayCard()
                     CaloriesCard()
                     GoalCard().onTapGesture { showGoal = true }
                     if store.s.healthEnabled { HealthCard() }
