@@ -146,6 +146,13 @@ struct AppState: Codable {
     var remindersEnabled = false
     var reminderHour = 17
     var reminderMinute = 0
+    // Stufe 2: Dienstplan, Abnehmen, Ernährung
+    var shifts: [String: String] = [:]       // manuelle Änderungen am Dienstplan ("yyyy-MM-dd" → F/D/N/"-")
+    var body = BodyProfile()
+    var weights: [WeightEntry] = [WeightEntry(date: DateUtil.parse("2026-08-23"), kg: 115), WeightEntry(date: DateUtil.parse("2026-10-04"), kg: 118)]
+    var eaten: Set<String> = []
+    var mealPicks: [String: String] = [:]     // "yyyy-MM-dd|slot" → Rezept-ID
+    var stepsLog: [String: Int] = [:]
 
     init() {}
 
@@ -168,6 +175,12 @@ struct AppState: Codable {
         remindersEnabled = try c.decodeIfPresent(Bool.self, forKey: .remindersEnabled) ?? false
         reminderHour = try c.decodeIfPresent(Int.self, forKey: .reminderHour) ?? d.reminderHour
         reminderMinute = try c.decodeIfPresent(Int.self, forKey: .reminderMinute) ?? d.reminderMinute
+        shifts = try c.decodeIfPresent([String: String].self, forKey: .shifts) ?? [:]
+        body = try c.decodeIfPresent(BodyProfile.self, forKey: .body) ?? d.body
+        weights = try c.decodeIfPresent([WeightEntry].self, forKey: .weights) ?? d.weights
+        eaten = try c.decodeIfPresent(Set<String>.self, forKey: .eaten) ?? []
+        mealPicks = try c.decodeIfPresent([String: String].self, forKey: .mealPicks) ?? [:]
+        stepsLog = try c.decodeIfPresent([String: Int].self, forKey: .stepsLog) ?? [:]
     }
 }
 
