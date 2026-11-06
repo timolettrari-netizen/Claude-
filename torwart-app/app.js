@@ -10,6 +10,9 @@ const T={
  mob:{n:'Beweglichkeit',l:'Hüfte & Schulter',i:'🧘',c:['#64D2FF','#2AA5D8'],cat:'Beweglichkeit',x:['ank','w90','cosk','frog','couch','pige','ham','tsp','shd'],w:'Mehr Reichweite bei Paraden, schnellere Regeneration.'},
  mobS:{n:'Aktivierung',l:'10 Minuten',i:'⏱️',c:['#5AC8FA','#30B0C7'],cat:'Beweglichkeit',x:['wgs','w90','cosk','tsp','ank'],w:'Vor dem Spiel oder als Aufwärmen.'},
  run:{n:'Lauf + Dehnen',l:'Grundlage',i:'🏃',c:['#FF375F','#D70F4A'],cat:'Ausdauer',x:['jog','frog','couch','ham'],w:'Grundlagenausdauer halten.'},
+ gymA:{n:'Gym A',l:'Ganzkörper · Beine & Drücken',i:'🏋️',c:['#FF6B35','#D9431A'],cat:'Gym',x:['sqb','dbbench','row','rdlbb','latraise','plank'],w:'Grundübungen schwer und sauber. 90 s Pause, Gewicht steigern, wenn alle Wiederholungen klappen.'},
+ gymB:{n:'Gym B',l:'Ganzkörper · Maschinen & Ziehen',i:'💪',c:['#5E5CE6','#3634A3'],cat:'Gym',x:['legp','lpull','incpress','lcurl','face','ccrunch'],w:'Gelenkschonend an Maschinen – ideal nach anstrengenden Diensten.'},
+ gymC:{n:'Gym C',l:'Ganzkörper · Kraft & Puls',i:'🔥',c:['#00C7BE','#008F88'],cat:'Gym',x:['thrust','lunge','apull','ohp','tpush','hammer','mclimb'],w:'Etwas kürzere Pausen (60 s) – mehr Kalorienverbrauch.'},
  hiit:{n:'Spielnahe Ausdauer',l:'Intervalle',i:'🔥',c:['#FF453A','#C9201A'],cat:'Ausdauer',x:['wgs','int','spr','w90','cosk','tsp'],w:'Kurz, hart, wie im Spiel.'},
 };
 const GPLAN={2:{2:'kraftA',4:'kraftB'},3:{2:'kraftA',3:'explo',4:'kraftB'},4:{1:'mob',2:'kraftA',3:'explo',4:'kraftB'},5:{1:'mob',2:'kraftA',3:'explo',4:'kraftB',5:'react'}};
@@ -20,13 +23,14 @@ const GOALS={
  kraft:{n:'Kraft & Athletik',i:'🏋️',d:'Stärker im Zweikampf und bei Paraden',pri:['kraftA','kraftB','explo','mob','kraftA'],test:'squat'},
  mobil:{n:'Beweglichkeit',i:'🧘',d:'Mehr Reichweite, tiefere Paraden',pri:['mob','kraftA','mob','kraftB','mobS'],test:'reach'},
  praev:{n:'Verletzungsschutz',i:'🛡️',d:'Leiste, Oberschenkel und Schultern stärken',pri:['kraftA','mob','kraftB','react','mob'],test:'plank'},
+ gym:{n:'Gym & Abnehmen',i:'🏋️',d:'Muskeln aufbauen, Fett verlieren – 3er-Ganzkörperplan im Studio',pri:['gymA','gymB','gymC','mob','gymA'],test:'squat'},
  fit:{n:'Fitness & Ausdauer',i:'❤️',d:'90 Minuten fit und konzentriert',pri:['kraftA','hiit','kraftB','run','mob'],test:'cooper'}};
 const TESTS={jump:{n:'Strecksprung',u:'cm',up:1,h:'Mit Kreide an der Wand: Reichhöhe stehend vs. gesprungen.'},sprint:{n:'5-m-Sprint',u:'s',up:0,h:'Aus der Grundstellung, Handy-Stoppuhr oder Partner.'},
  squat:{n:'Kniebeuge 5 Wdh.',u:'kg',up:1,h:'Höchstes Gewicht für 5 saubere Wiederholungen.'},reach:{n:'Sitz-Reichtest',u:'cm',up:1,h:'Beine gestreckt, Zentimeter über (+) oder vor (−) den Zehen.'},
  plank:{n:'Seitstütz',u:'s',up:1,h:'Maximale Haltezeit, schwächere Seite zählt.'},cooper:{n:'Cooper-Test 12 min',u:'m',up:1,h:'So weit wie möglich in 12 Minuten laufen (Strava!).'}};
 const WD=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
 const WK=[{n:'Einstieg',s:0,r:0},{n:'Mehr Volumen',s:1,r:0},{n:'Mehr Intensität',s:1,r:2},{n:'Entlastung',s:-1,r:-2}];
-const CATS=['Alle','Kraft','Explosiv','Reaktion','Beweglichkeit','Ausdauer'];
+const CATS=['Alle','Gym','Kraft','Explosiv','Reaktion','Beweglichkeit','Ausdauer'];
 const DAY=864e5,WEEK=7*DAY;
 const $=i=>document.getElementById(i);
 const CH='<svg class="chev" viewBox="0 0 8 13"><path d="M1 1l5.5 5.5L1 12" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>';
@@ -57,9 +61,9 @@ function dose(id,short){let[s,r,u]=X[id].d;const w=WK[wIdx()],c=catOf(id);
  if(u!='min'){s=Math.max(1,s+w.s-(short?1:0));r=Math.max(1,r+(u=='s'?w.r*5:w.r))}
  return{s,r,u,timed:u=='s'||u=='min',sec:u=='min'?r*60:u=='s'?r:0,txt:`${s} × ${r}${u=='s'?' s':u=='min'?' min':''}`}}
 function ids(t,short){let a=T[t].x.slice();if(S.eq=='gym'&&GYMX[t])a.splice(1,0,...GYMX[t]);if(short)a=a.slice(0,Math.ceil(a.length*.6));return a}
-const catOf=id=>{for(const k of['kraftA','kraftB','explo','react','mob','run','hiit'])if(T[k].x.includes(id)||(GYMX[k]||[]).includes(id))return T[k].cat;return'Kraft'};
-const restOf=id=>{const d=X[id].d,c=catOf(id);return d[2]=='min'?0:c=='Beweglichkeit'?15:d[2]=='s'?30:c=='Explosiv'?90:c=='Reaktion'?45:75};
-const loaded=id=>!X[id].d[2]&&catOf(id)=='Kraft';
+const catOf=id=>{for(const k of['kraftA','kraftB','explo','react','mob','run','hiit','gymA','gymB','gymC'])if(T[k].x.includes(id)||(GYMX[k]||[]).includes(id))return T[k].cat;return'Kraft'};
+const restOf=id=>{const d=X[id].d,c=catOf(id);return d[2]=='min'?0:c=='Beweglichkeit'?15:d[2]=='s'?30:c=='Explosiv'?90:c=='Reaktion'?45:c=='Gym'?90:75};
+const loaded=id=>!X[id].d[2]&&(catOf(id)=='Kraft'||catOf(id)=='Gym');
 const mins=(t,short)=>Math.max(5,Math.round(ids(t,short).reduce((m,id)=>{const d=dose(id,short);return m+(d.u=='min'?d.s*d.r:d.s*((d.sec||40)+restOf(id))/60)},0)/5)*5);
 const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -132,12 +136,15 @@ function preview(t){const sh=S.len=='short'||(readiness()!=null&&readiness()<2.7
  <div class="sub" style="margin:0 0 12px">${T[t].w}</div><div class="grp">${ids(t,sh).map(id=>`<button class="row" onclick="detail('${id}')"><div class="stage" style="width:54px;padding:0;flex:none;box-shadow:none;background:var(--cell2)" data-mini="${id}"></div><div class="t">${ex(id).n}<div class="s">${dose(id,sh).txt}</div></div>${CH}</button>`).join('')}</div>
  <button class="btn" onclick="closeSheet();startW('${t}',${sh})">Training starten</button>`);
  document.querySelectorAll('[data-mini]').forEach(el=>{drawStill(el.dataset.mini,el)})}
-function drawStill(id,el){playAnim(id,el,ex(id).p);stopAnim()}
+const photoOf=id=>(S.eq=='gym'&&PHOTO[id+'_g'])||PHOTO[id]||null;
+function showMedia(id,el){const ph=photoOf(id);if(!ph){el.classList.remove('ph');return playAnim(id,el,ex(id).p)}stopAnim();
+ el.classList.add('ph');el.innerHTML=`<img src="img/${ph}-0.jpg" alt="${esc(ex(id).n)} – Start"><img class="b" src="img/${ph}-1.jpg" alt="${esc(ex(id).n)} – Ende"><span class="lbl2">Start ⇄ Ende</span>`}
+function drawStill(id,el){const ph=photoOf(id);if(ph){el.innerHTML=`<img src="img/${ph}-0.jpg" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">`;el.style.height='54px';el.style.overflow='hidden';return}playAnim(id,el,ex(id).p);stopAnim()}
 
 /* ---------- Übungen ---------- */
 let cat='Alle';
 function renderLib(){const q=$('q').value.trim().toLowerCase();
- const list=Object.keys(X).filter(id=>S.eq=='gym'||!['thrust','lpull','add','legp'].includes(id)).filter(id=>cat=='Alle'||catOf(id)==cat).filter(id=>!q||(ex(id).n+' '+ex(id).e).toLowerCase().includes(q)).sort((a,b)=>ex(a).n.localeCompare(ex(b).n,'de'));
+ const list=Object.keys(X).filter(id=>S.eq=='gym'||!(['thrust','lpull','add','legp'].includes(id)||catOf(id)=='Gym')).filter(id=>cat=='Alle'||catOf(id)==cat).filter(id=>!q||(ex(id).n+' '+ex(id).e).toLowerCase().includes(q)).sort((a,b)=>ex(a).n.localeCompare(ex(b).n,'de'));
  $('libcount').textContent=list.length+' Übungen mit Anleitung';
  $('cats').innerHTML=CATS.map(c=>`<button class="chip${c==cat?' on':''}" onclick="cat='${c}';renderLib()">${c}</button>`).join('');
  $('lib').innerHTML=list.map(id=>`<button class="row" onclick="detail('${id}')"><div class="stage" style="width:54px;padding:0;flex:none;box-shadow:none;background:var(--cell2)" data-mini="${id}"></div><div class="t">${ex(id).n}<div class="s">${catOf(id)} · ${esc(ex(id).e.split(/[,(]/)[0])}</div></div>${CH}</button>`).join('')||'<div class="row"><div class="t s">Nichts gefunden</div></div>';
@@ -157,8 +164,8 @@ function detail(id){const e=ex(id),d=dose(id,S.cur&&S.cur.short),pr=progression(
  <div class="hd"><span>So geht's</span></div><div class="grp"><ol class="steps">${e.s.split('|').map((s,i)=>`<li><i>${i+1}</i><span>${esc(s)}</span></li>`).join('')}</ol></div>
  <div class="hd"><span>Achte auf</span></div><div class="grp"><div class="note"><div class="ico" style="background:var(--orange)">!</div><div>${esc(e.f)}</div></div></div>
  <div class="hd"><span>Warum als Torwart</span></div><div class="grp"><div class="note"><div class="ico" style="background:var(--ac)">🧤</div><div>${esc(e.w)}</div></div></div>
- <a class="btn sec" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(e.n+' Ausführung')}">▶ Video auf YouTube</a>`);
- playAnim(id,$('anim'),e.p)}
+ <a class="btn sec" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(e.n+' Ausführung')}">▶ Video auf YouTube</a>${photoOf(id)?'<div class="credit">Fotos: Free Exercise DB (gemeinfrei)</div>':''}`);
+ showMedia(id,$('anim'))}
 
 /* ---------- Geführtes Training ---------- */
 let W=null,tick=null,lock=null;
@@ -196,7 +203,7 @@ function renderP(){const P=$('player');if(!W)return;
   <div class="pl-foot"><button onclick="move(-1)" ${W.i==0?'style="visibility:hidden"':''}>‹ Zurück</button><button onclick="detail('${id}')">Anleitung</button><button onclick="move(1)">Überspringen ›</button></div>`}
  P.innerHTML=`<div class="pl-top"><button class="x" onclick="quitW()">✕</button><div class="tt">${T[W.t].n}<small id="pElapsed">${fmt((Date.now()-W.start)/1000)}</small></div><button class="x" style="color:var(--blue);font-size:13px;width:auto;padding:0 12px;border-radius:15px" onclick="finishW()">Ende</button></div>
  <div class="segs">${segs}</div><div class="pl-body">${body}</div>`;
- if($('pAnim'))playAnim(id,$('pAnim'),e.p);else stopAnim();loop()}
+ if($('pAnim'))showMedia(id,$('pAnim'));else stopAnim();loop()}
 function adj(i,v){const el=$(i);el.value=Math.max(0,Math.round(((+el.value.replace(',','.')||0)+v)*100)/100);if(i=='pKg')W._kg=+el.value;buzz(5)}
 function startTimed(sec){W.phase='timed';W.workLen=sec;W.workEnd=Date.now()+sec*1000;beep(880,.12);renderP()}
 function logSet(kg,reps){const id=cur(),d=dose(id,W.short);(W.sets[id]=W.sets[id]||[]).push([kg&&!isNaN(kg)?kg:0,reps||0]);if(kg)W._kg=kg;buzz(15);
