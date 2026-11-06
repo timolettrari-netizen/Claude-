@@ -264,7 +264,7 @@ final class Store: ObservableObject {
         let vol = sets.values.flatMap { $0 }.reduce(0) { $0 + $1.kg * Double($1.reps) }
         s.logs.append(WorkoutLog(session: session, date: Date(), minutes: minutes, sets: sets, rpe: rpe, volume: vol))
         if s.healthEnabled {
-            let kcal = 5.0 * (weight ?? 100) * Double(minutes) / 60
+            let kcal = 5.0 * currentKg * Double(minutes) / 60
             Task { await HealthService.shared.saveWorkout(start: start, end: Date(), kcal: kcal) }
         }
     }

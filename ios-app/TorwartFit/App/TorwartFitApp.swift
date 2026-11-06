@@ -32,9 +32,9 @@ struct RootView: View {
         TabView(selection: $tab) {
             TodayView().tabItem { Label("Heute", systemImage: "circle.circle") }.tag(0)
             TrainingView().tabItem { Label("Training", systemImage: "dumbbell.fill") }.tag(1)
-            CoachView().tabItem { Label("Coach", systemImage: "bubble.left.and.text.bubble.right.fill") }.tag(2)
-            StatsView().tabItem { Label("Statistik", systemImage: "chart.bar.fill") }.tag(3)
-            ProfileView().tabItem { Label("Profil", systemImage: "person.crop.circle") }.tag(4)
+            NutritionView().tabItem { Label("Essen", systemImage: "fork.knife") }.tag(2)
+            CoachView().tabItem { Label("Coach", systemImage: "bubble.left.and.text.bubble.right.fill") }.tag(3)
+            StatsView().tabItem { Label("Statistik", systemImage: "chart.bar.fill") }.tag(4)
         }
         .fullScreenCover(item: $store.launch) { l in
             PlayerView(launch: l, store: store).environmentObject(store)

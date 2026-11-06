@@ -39,6 +39,8 @@ struct ProfileView: View {
                     Text("Der Plan richtet sich nach deinem Spieltag: Kraft früh in der Woche, kurz vor dem Spiel nur Aktivierung.")
                 }
 
+                BodySettingsSection()
+
                 Section("Training") {
                     Picker("Ort", selection: $store.s.place) {
                         Text("🏋️ Studio").tag("gym")
@@ -109,6 +111,7 @@ struct ProfileView: View {
             .scrollContentBackground(.hidden)
             .background(Color.bg)
             .navigationTitle("Profil")
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { DismissButton() } }
             .sheet(isPresented: $showGoal) { GoalPickerView(first: false).environmentObject(store) }
             .fileImporter(isPresented: $importing, allowedContentTypes: [.json]) { result in
                 guard case .success(let url) = result else { return }
@@ -130,4 +133,9 @@ struct ProfileView: View {
             .onChange(of: store.s.gameDay) { _, _ in Reminders.reschedule(store) }
         }
     }
+}
+
+private struct DismissButton: View {
+    @Environment(\.dismiss) private var dismiss
+    var body: some View { Button("Fertig") { dismiss() } }
 }

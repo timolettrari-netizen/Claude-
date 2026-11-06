@@ -123,7 +123,7 @@ extension Store {
     }
 
     /// Einkaufsliste für `days` Tage ab `from`
-    func shoppingList(from: Date, days: Int = 7) -> [(name: String, text: String)] {
+    func shoppingList(from: Date, days: Int = 7) -> [ShoppingItem] {
         var sums: [String: Double] = [:]
         for i in 0..<days {
             guard let d = DateUtil.calendar.date(byAdding: .day, value: i, to: from) else { continue }
@@ -131,10 +131,16 @@ extension Store {
                 for ing in m.ingredients where ing.qty > 0 { sums["\(ing.name)|\(ing.unit)", default: 0] += ing.qty }
             }
         }
-        return sums.map { key, q -> (name: String, text: String) in
+        return sums.map { key, q -> ShoppingItem in
             let parts = key.split(separator: "|", maxSplits: 1).map(String.init)
-            return (parts[0], Nutrition.format(q, parts.count > 1 ? parts[1] : ""))
+            return ShoppingItem(name: parts[0], text: Nutrition.format(q, parts.count > 1 ? parts[1] : ""))
         }
         .sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
     }
+}
+
+struct ShoppingItem: Identifiable, Hashable {
+    let name: String
+    let text: String
+    var id: String { name + "|" + text }
 }

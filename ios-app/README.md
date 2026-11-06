@@ -2,16 +2,19 @@
 
 Native iPhone-App für dein Torwart- und Gym-Training. Nicht für den App Store gedacht – du spielst sie mit Xcode direkt auf dein iPhone.
 
-## Was drin ist (Version 1.0)
+## Was drin ist (Version 1.1)
 - **Heute:** Tagesansicht mit heutiger Einheit, Ziel, Tagesform, Wochenplan (abhängig von Spieltag und Ziel), Schritte und Gewicht aus Apple Health
 - **Training:** 11 Einheiten (Torwart + Gym A/B/C) und 55 Übungen mit Suche und Kategorien
 - **Geführtes Training:** Satz für Satz, Gewicht/Wiederholungen, Pausen-Timer mit Ton und Vibration, Steigerungsvorschlag, Display bleibt an, Zusammenfassung mit Anstrengung (RPE)
 - **Übungen:** echte Fotos (Start ⇄ Ende, gemeinfrei aus der Free Exercise DB) oder animierte Figur, Ausrüstung, Schritte, Fehler, Nutzen
 - **Coach:** KI-Coach (Claude) mit deinen Trainingsdaten – braucht einen eigenen API-Schlüssel
 - **Statistik:** Aktivitätsringe, Diagramm, Leistungstests, Bestwerte, Verlauf
-- **Profil:** Ziel, Spieltag, Studio/Zuhause, Block-Woche, Apple Health, Erinnerungen, Backup (auch Import aus der Web-App)
+- **Essen:** Mahlzeitenplan für 10 Tage passend zu deinem Dienst (frei / nach Nacht / Spät / Früh-Nacht), 18 Rezepte mit auf dein Kalorienziel skalierten Mengen, „Gegessen“ abhaken, Gerichte tauschen, Eiweiß/Kohlenhydrate, Einkaufsliste (7 Tage, teilbar)
+- **Abnehmen:** Gewicht mit Soll-Linie (Start → Ziel), Kalorienziel (Mifflin-St Jeor, Defizit aus Zieldatum, Trainingsbonus), Eingabe oder Apple Health
+- **Dienstplan:** 4-Tage-Rhythmus (frei, frei, Spät, Früh/Nacht) vorausgefüllt, per Tippen änderbar; an Früh/Nacht-Tagen automatisch kurzes Training
+- **Profil** (Symbol oben rechts auf „Heute“): Ziel, Spieltag, Körperdaten, Dienstplan, Studio/Zuhause, Block-Woche, Apple Health, Erinnerungen, Coach-Schlüssel, Backup (auch Import aus der Web-App)
 
-Noch nicht enthalten (Stufe 2): Ernährung/Rezepte, Dienstplan, Laufplan und Abnehmen aus dem Fitness-Coach, Widget.
+Noch nicht enthalten: eigener Laufplan mit GPS-Tracking, Widget.
 
 ## Voraussetzungen
 - Mac mit **Xcode 16 oder neuer** (kostenlos im Mac App Store)

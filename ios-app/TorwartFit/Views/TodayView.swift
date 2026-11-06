@@ -6,6 +6,7 @@ struct TodayView: View {
     @EnvironmentObject var store: Store
     @State private var preview: Sel?
     @State private var showGoal = false
+    @State private var showProfile = false
 
     private var greeting: String {
         let h = DateUtil.calendar.component(.hour, from: Date())
@@ -17,17 +18,27 @@ struct TodayView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(DateUtil.format(Date(), "EEEEdMMMM").uppercased())
-                            .font(.footnote.weight(.bold)).foregroundStyle(Color.lime)
-                        Text(greeting).font(.sport(38)).textCase(.uppercase).lineLimit(2).minimumScaleFactor(0.6)
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(DateUtil.format(Date(), "EEEEdMMMM").uppercased())
+                                .font(.footnote.weight(.bold)).foregroundStyle(Color.lime)
+                            Text(greeting).font(.sport(38)).textCase(.uppercase).lineLimit(2).minimumScaleFactor(0.6)
+                        }
+                        Spacer()
+                        Button { showProfile = true } label: {
+                            Image(systemName: "person.crop.circle.fill").font(.system(size: 30)).foregroundStyle(Color.lime)
+                        }
+                        .accessibilityLabel("Profil")
                     }
                     .padding(.top, 8)
+                    ShiftRow()
                     HeroCard(preview: $preview)
+                    CaloriesCard()
                     GoalCard().onTapGesture { showGoal = true }
                     if store.s.healthEnabled { HealthCard() }
                     ReadinessCard()
                     WeekCard(preview: $preview)
+                    WeightCard()
                     Text("Auf dich abgestimmt: regelmäßige Läufe (5–10 km) sind deine Basis, deshalb liegt der Schwerpunkt auf Kraft, Sprungkraft und Beweglichkeit. Explosives nie am Tag nach dem Spiel, am Tag davor nur Aktivierung. Bei Schmerzen Übung weglassen.")
                         .font(.footnote).foregroundStyle(Color.mut).padding(.horizontal, 4)
                 }
@@ -37,6 +48,7 @@ struct TodayView: View {
             .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $preview) { s in SessionPreview(session: s.id).environmentObject(store) }
             .sheet(isPresented: $showGoal) { GoalPickerView(first: false).environmentObject(store) }
+            .sheet(isPresented: $showProfile) { ProfileView().environmentObject(store) }
         }
     }
 }
@@ -46,7 +58,7 @@ struct HeroCard: View {
     @Binding var preview: Sel?
 
     var body: some View {
-        let i = store.todayIndex, t = store.plan(for: i), tired = store.isTired
+        let i = store.todayIndex, t = store.plan(for: i), night = store.dayKind(Date()) == "N", tired = store.isTired || night
         VStack(alignment: .leading, spacing: 6) {
             if t == "game" {
                 kicker("Spieltag")
@@ -59,7 +71,9 @@ struct HeroCard: View {
                 Text("\(se.icon) \(se.name)").font(.sport(36)).textCase(.uppercase)
                 Text("\(se.label) · \(store.exercises(of: t, short: tired).count) Übungen · ca. \(store.minutes(t, short: tired)) min")
                     .foregroundStyle(.white.opacity(0.85))
-                if tired { Text("Tagesform niedrig – kurze Variante empfohlen").font(.footnote).foregroundStyle(.orange) }
+                if night { Text("Früh/Nacht-Dienst – kurze Variante zwischen den Diensten (ca. 13:30–15:30)").font(.footnote).foregroundStyle(.purple) }
+                else if tired { Text("Tagesform niedrig – kurze Variante empfohlen").font(.footnote).foregroundStyle(.orange) }
+                else if store.dayKind(Date()) == "D" { Text("Spätdienst – am besten vormittags trainieren").font(.footnote).foregroundStyle(.yellow) }
                 HStack(spacing: 10) {
                     Button(done ? "Nochmal" : (tired ? "Starten (kurz)" : "Starten")) { store.start(t, short: tired || store.s.shortMode) }
                         .buttonStyle(LimeButton())
@@ -213,6 +227,7 @@ struct WeekCard: View {
                                     .fontWeight(i == store.todayIndex ? .bold : .medium)
                                 Text(t == "game" ? "Spiel" : t.flatMap { store.catalog.session($0) }.map { "\($0.name) · \($0.label)" } ?? "Ruhetag / Verein")
                                     .font(.subheadline).foregroundStyle(Color.mut)
+                                ShiftChip(kind: store.dayKind(store.date(forWeekday: i))).scaleEffect(0.9, anchor: .leading)
                             }
                             Spacer()
                             if let t, t != "game" {
@@ -229,5 +244,24 @@ struct WeekCard: View {
             }
             .background(Color.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
+    }
+}
+
+/// Dienst heute
+struct ShiftRow: View {
+    @EnvironmentObject var store: Store
+    var body: some View {
+        let kind = store.dayKind(Date())
+        HStack(spacing: 12) {
+            Image(systemName: "calendar").foregroundStyle(.black)
+                .frame(width: 34, height: 34)
+                .background(kind == "N" ? Color.purple : kind == "D" ? Color.yellow : Color.green, in: RoundedRectangle(cornerRadius: 9))
+            VStack(alignment: .leading, spacing: 1) {
+                Text(NutritionData.shared.kindNames[kind] ?? "").font(.headline)
+                Text(Nutrition.kindInfo[kind] ?? "").font(.caption).foregroundStyle(Color.mut)
+            }
+            Spacer()
+        }
+        .card(padding: 12)
     }
 }

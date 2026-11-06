@@ -149,7 +149,16 @@ enum CoachContext {
             "letzteEinheiten": last,
             "tests": store.s.tests.suffix(10).map { "\(cat.test($0.test)?.name ?? $0.test): \(fmtKg($0.value)) \(cat.test($0.test)?.unit ?? "")" },
             "schritteHeute": Int(store.steps),
-            "gewichtKg": store.weight ?? 0,
+            "gewichtKg": (store.currentKg * 10).rounded() / 10,
+            "zielGewichtKg": store.s.body.goalKg,
+            "zielDatum": DateUtil.format(store.s.body.goalDate, "ddMMyyyy"),
+            "sollGewichtHeute": (store.targetKg(on: Date()) * 10).rounded() / 10,
+            "kalorienzielHeute": store.calorieTarget(on: Date()),
+            "heuteGegessenKcal": store.eatenKcal(on: Date()).kcal,
+            "eiweissZielG": store.proteinTarget,
+            "dienstHeute": NutritionData.shared.kindNames[store.dayKind(Date())] ?? "",
+            "dienstWoche": (0..<7).map { i in DateUtil.weekdays[i] + ": " + (NutritionData.shared.kindNames[store.dayKind(store.date(forWeekday: i))] ?? "") },
+            "mahlzeitenHeute": store.meals(on: Date()).map { "\($0.slot.time) \($0.slot.name): \($0.recipe.name) (\($0.kcal) kcal)" },
             "hintergrund": "Läuft regelmäßig 5–10 km (~6:20/km), will abnehmen (Ziel ca. 100 kg), arbeitet im Schichtdienst.",
             "einheitenTypen": cat.sessions.map { "\($0.name) (\($0.label))" },
         ]
@@ -157,7 +166,7 @@ enum CoachContext {
             .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
         return """
         Du bist der persönliche KI-Coach in einer Trainings-App für einen Fußball-Torwart (Amateur), der außerdem abnehmen möchte. Du bist erfahrener Torwart- und Athletiktrainer.
-        Antworte auf Deutsch, per Du, motivierend aber ehrlich, kurz und konkret (meist unter 150 Wörtern). Nutze die Daten unten. Empfiehl bevorzugt Einheiten und Übungen aus der App, mit Sätzen × Wiederholungen. Bei Schmerzen: keine Diagnose, Belastung reduzieren, schmerzfreie Alternativen nennen und bei anhaltenden Beschwerden Arzt oder Physio empfehlen. Formatiere mit kurzen Absätzen, **fett** für Wichtiges und Listen mit "- ".
+        Antworte auf Deutsch, per Du, motivierend aber ehrlich, kurz und konkret (meist unter 150 Wörtern). Nutze die Daten unten, auch Dienstplan (Früh/Spät/Nacht), Gewicht, Kalorienziel und Mahlzeiten – berücksichtige Schichten, Erholung und das Kaloriendefizit. Empfiehl bevorzugt Einheiten und Übungen aus der App, mit Sätzen × Wiederholungen. Bei Schmerzen: keine Diagnose, Belastung reduzieren, schmerzfreie Alternativen nennen und bei anhaltenden Beschwerden Arzt oder Physio empfehlen. Formatiere mit kurzen Absätzen, **fett** für Wichtiges und Listen mit "- ".
 
         DATEN DES SPIELERS (JSON):
         \(json)
