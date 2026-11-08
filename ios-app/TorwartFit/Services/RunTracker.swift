@@ -12,6 +12,29 @@ final class RunTracker: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var now = Date()
 
     let start = Date()
+    /// (Zeitpunkt, Strecke in m) für das Tempo der letzten Minute
+    private var samples: [(t: TimeInterval, d: Double)] = []
+    @Published var hrSum = 0
+    @Published var hrCount = 0
+    @Published var hrMax = 0
+
+    /// Tempo der letzten ~60 Sekunden (min/km)
+    var rollingPace: Double? {
+        guard let first = samples.first, let last = samples.last, last.t - first.t >= 30 else { return nil }
+        let d = last.d - first.d
+        guard d > 20 else { return nil }
+        return (last.t - first.t) / 60 / (d / 1000)
+    }
+
+    func recordSecond(hr: Int?) {
+        if running {
+            let t = elapsed
+            samples.append((t, distance))
+            samples.removeAll { t - $0.t > 60 }
+            if let hr { hrSum += hr; hrCount += 1; hrMax = max(hrMax, hr) }
+        }
+    }
+    var avgHR: Int? { hrCount > 0 ? hrSum / hrCount : nil }
     private var accumulated: TimeInterval = 0
     private var resumedAt: Date?
     private var last: CLLocation?

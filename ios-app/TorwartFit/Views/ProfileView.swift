@@ -61,6 +61,27 @@ struct ProfileView: View {
                 }
 
                 Section {
+                    Toggle("Sprachansagen beim Laufen", isOn: $store.s.coachVoice)
+                    Picker("Pulsquelle", selection: $store.s.hrSource) {
+                        Text("Keine").tag("none")
+                        Text("Brustgurt / Bluetooth").tag("ble")
+                        Text("Apple Watch").tag("watch")
+                    }
+                    if store.s.hrSource == "ble" {
+                        NavigationLink("Pulsgurt koppeln") { HRPairView() }
+                    }
+                    Stepper(value: $store.s.maxHR, in: 0...230) {
+                        HStack {
+                            Text("Max. Puls")
+                            Spacer()
+                            Text(store.s.maxHR == 0 ? "\(store.maxHeartRate) (automatisch)" : "\(store.s.maxHR)").foregroundStyle(Color.mut)
+                        }
+                    }
+                } header: { Text("Lauf-Coach") } footer: {
+                    Text("Der Coach sagt Abschnitte, Kilometer und „schneller/langsamer“ an. Lockere Läufe in Zone 2 (60–75 % vom Max-Puls = \(Int(Double(store.maxHeartRate) * 0.6))–\(Int(Double(store.maxHeartRate) * 0.75))). Apple Watch: auf der Uhr gleichzeitig ein Training „Laufen im Freien“ starten und Apple Health verbinden – der Puls kommt dann mit wenigen Sekunden Verzögerung. Max. Puls auf 0 = automatisch (208 − 0,7 × Alter).")
+                }
+
+                Section {
                     Toggle("Apple Health verbinden", isOn: Binding(get: { store.s.healthEnabled }, set: { on in
                         if on {
                             Task {

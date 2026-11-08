@@ -1,5 +1,6 @@
 import SwiftUI
 import MapKit
+import HealthKit
 
 /// Laufplan der Woche (im Reiter Training)
 struct RunPlanCard: View {
@@ -126,9 +127,31 @@ struct RunTrackerView: View {
     @Environment(\.dismiss) private var dismiss
     let launch: RunLaunch
     @StateObject private var t = RunTracker()
+    @StateObject private var coach: RunCoach
+    @ObservedObject private var ble = HeartRateMonitor.shared
+    @State private var watchHR: Int?
+    @State private var watchHRTime: Date?
+    @State private var hrQuery: HKQuery?
+    @State private var targets: RunTargets
     @State private var finished = false
     @State private var kmInput = ""
     @State private var confirmQuit = false
+
+    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    init(launch: RunLaunch, store: Store) {
+        self.launch = launch
+        let tg = store.runTargets(for: launch.plan)
+        _targets = State(initialValue: tg)
+        _coach = StateObject(wrappedValue: RunCoach(targets: tg, voiceOn: store.s.coachVoice))
+    }
+
+    /// Aktueller Puls: Brustgurt (live) oder Apple Watch (über Health, max. 60 s alt)
+    private var hr: Int? {
+        if store.s.hrSource == "ble" { return ble.liveBpm }
+        if store.s.hrSource == "watch", let w = watchHR, let tt = watchHRTime, Date().timeIntervalSince(tt) < 60 { return w }
+        return nil
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -147,8 +170,26 @@ struct RunTrackerView: View {
         }
         .padding(.horizontal, 16)
         .background(Color.bg.ignoresSafeArea())
-        .onAppear { t.begin(); UIApplication.shared.isIdleTimerDisabled = true }
-        .onDisappear { t.finish(); UIApplication.shared.isIdleTimerDisabled = false }
+        .onAppear {
+            t.begin()
+            coach.begin()
+            UIApplication.shared.isIdleTimerDisabled = true
+            if store.s.hrSource == "ble" { HeartRateMonitor.shared.start() }
+            if store.s.hrSource == "watch" {
+                hrQuery = HealthService.shared.streamHeartRate(since: t.start) { bpm in watchHR = bpm; watchHRTime = Date() }
+            }
+        }
+        .onDisappear {
+            t.finish()
+            coach.stop()
+            if let q = hrQuery { HealthService.shared.stop(q) }
+            UIApplication.shared.isIdleTimerDisabled = false
+        }
+        .onReceive(ticker) { _ in
+            guard !finished else { return }
+            t.recordSecond(hr: hr)
+            if t.running { coach.update(elapsed: t.elapsed, km: t.km, rollingPace: t.rollingPace, hr: hr) }
+        }
         .confirmationDialog("Lauf abbrechen?", isPresented: $confirmQuit, titleVisibility: .visible) {
             Button("Abbrechen ohne Speichern", role: .destructive) { t.finish(); dismiss() }
             Button("Beenden und speichern") { finish() }
@@ -170,16 +211,36 @@ struct RunTrackerView: View {
             Text(t.running ? "läuft" : "pausiert").font(.subheadline).foregroundStyle(Color.mut)
             HStack(spacing: 10) {
                 stat(String(format: "%.2f", t.km).replacingOccurrences(of: ".", with: ","), "km")
-                stat(t.paceMinPerKm.map { Store.pace($0) } ?? "–", "min/km")
-                stat("\(kcal)", "kcal")
+                stat(t.rollingPace.map { Store.pace($0) } ?? t.paceMinPerKm.map { Store.pace($0) } ?? "–", "min/km")
+                hrTile
             }
-            if let p = launch.plan {
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(p.details, id: \.self) { Text("• " + $0).font(.footnote).foregroundStyle(Color.mut) }
+            if let i = coach.phaseIndex, i < targets.phases.count {
+                let ph = targets.phases[i]
+                HStack {
+                    Text(phaseName(ph.kind)).font(.sport(26)).textCase(.uppercase).foregroundStyle(ph.kind == .walk ? Color.cyan : ph.kind == .fast ? Color.orange : Color.lime)
+                    Spacer()
+                    Text("noch \(clock(Double(coach.phaseRemaining)))").font(.title3.monospacedDigit().bold())
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .card(padding: 12)
+            }
+            HStack(alignment: .top, spacing: 10) {
+                Button { coach.voiceOn.toggle(); store.s.coachVoice = coach.voiceOn; Haptics.tap() } label: {
+                    Image(systemName: coach.voiceOn ? "speaker.wave.2.fill" : "speaker.slash.fill")
+                        .foregroundStyle(coach.voiceOn ? Color.lime : Color.mut).frame(width: 34, height: 34)
+                        .background(Color.card2, in: Circle())
+                }
+                .buttonStyle(.plain)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("COACH").font(.caption2.weight(.heavy)).foregroundStyle(Color.lime)
+                    Text(coach.message).font(.subheadline)
+                    Text(targetText).font(.caption).foregroundStyle(Color.mut)
+                }
+                Spacer(minLength: 0)
+            }
+            .card(padding: 12)
+            if let p = launch.plan {
                 ProgressView(value: min(t.km, p.km), total: max(p.km, 0.1)).tint(.lime)
-                Text("Ziel \(fmtKg(p.km)) km").font(.caption).foregroundStyle(Color.mut)
+                Text("Ziel \(fmtKg(p.km)) km · \(kcal) kcal").font(.caption).foregroundStyle(Color.mut)
             }
             if t.gps == .denied {
                 Text("Ortung ist aus. Erlaube sie unter Einstellungen → TorwartFit → Standort, oder trage die Strecke am Ende selbst ein.")
@@ -217,10 +278,17 @@ struct RunTrackerView: View {
                     TextField("km", text: $kmInput).keyboardType(.decimalPad)
                         .padding(12).background(Color.card2, in: RoundedRectangle(cornerRadius: 10))
                 }
+                if let a = t.avgHR {
+                    HStack(spacing: 10) {
+                        stat("\(a)", "Ø Puls")
+                        stat("\(t.hrMax)", "max. Puls")
+                    }
+                }
                 Button("Speichern") {
                     let km = Double(kmInput.replacingOccurrences(of: ",", with: ".")) ?? t.km
                     store.saveRun(plan: launch.plan, start: t.start, km: km, seconds: t.elapsed,
-                                  route: t.route.map { RunCoordinate(lat: $0.latitude, lon: $0.longitude) })
+                                  route: t.route.map { RunCoordinate(lat: $0.latitude, lon: $0.longitude) },
+                                  avgHR: t.avgHR, maxHR: t.hrMax > 0 ? t.hrMax : nil)
                     Haptics.success()
                     dismiss()
                 }
@@ -235,7 +303,36 @@ struct RunTrackerView: View {
         return t.km > 0.2 ? Int(0.92 * kg * t.km) : Int(8.5 * kg * t.elapsed / 3600)
     }
 
+    private var hrTile: some View {
+        let v = hr
+        let color: Color = {
+            guard let v else { return .white }
+            return v > targets.hrHi + 3 ? .red : v < targets.hrLo ? .cyan : .lime
+        }()
+        return VStack(spacing: 2) {
+            HStack(spacing: 3) {
+                Image(systemName: "heart.fill").font(.caption).foregroundStyle(.red)
+                Text(v.map { "\($0)" } ?? "–").font(.sport(30)).foregroundStyle(color)
+            }
+            Text(store.s.hrSource == "none" ? "kein Puls" : "Puls").font(.caption).foregroundStyle(Color.mut)
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 12)
+        .background(Color.card, in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    private var targetText: String {
+        var parts: [String] = []
+        if let lo = targets.paceLo, let hi = targets.paceHi { parts.append("Tempo \(Store.pace(lo))–\(Store.pace(hi)) /km") }
+        if store.s.hrSource != "none" { parts.append(targets.zoneText) }
+        return parts.isEmpty ? "Freier Lauf" : "Ziel: " + parts.joined(separator: " · ")
+    }
+
+    private func phaseName(_ k: RunPhase.Kind) -> String {
+        switch k { case .walk: return "Gehen"; case .jog: return "Traben"; case .easy: return "Locker"; case .fast: return "Zügig" }
+    }
+
     private func finish() {
+        coach.say("Lauf beendet. \(RunCoach.spokenKm(t.km)) Kilometer in \(RunCoach.spokenTime(t.elapsed)). Stark!")
         t.finish()
         kmInput = String(format: "%.2f", t.km).replacingOccurrences(of: ".", with: ",")
         finished = true
@@ -254,5 +351,43 @@ struct RunTrackerView: View {
     private func clock(_ t: TimeInterval) -> String {
         let s = Int(t), h = s / 3600, m = (s % 3600) / 60
         return h > 0 ? String(format: "%d:%02d:%02d", h, m, s % 60) : String(format: "%d:%02d", m, s % 60)
+    }
+}
+
+/// Bluetooth-Pulsgurt suchen und koppeln
+struct HRPairView: View {
+    @ObservedObject private var hr = HeartRateMonitor.shared
+    var body: some View {
+        List {
+            Section {
+                HStack {
+                    Image(systemName: "heart.fill").foregroundStyle(.red)
+                    Text(hr.connectedName ?? "Nicht verbunden")
+                    Spacer()
+                    Text(hr.liveBpm.map { "\($0) bpm" } ?? "–").font(.headline.monospacedDigit())
+                }
+                if hr.connectedName != nil {
+                    Button("Trennen", role: .destructive) { hr.disconnect() }
+                }
+            } header: { Text("Verbunden") }
+            Section {
+                if hr.bluetoothOff { Text("Bluetooth ist aus – bitte im Kontrollzentrum einschalten.").foregroundStyle(.orange) }
+                ForEach(hr.found) { d in
+                    Button { hr.connect(d.id) } label: {
+                        HStack { Text(d.name).foregroundStyle(.white); Spacer(); Image(systemName: "plus.circle").foregroundStyle(Color.lime) }
+                    }
+                }
+                if hr.scanning && hr.found.isEmpty {
+                    HStack { ProgressView(); Text("Suche … Gurt anlegen und leicht befeuchten.").foregroundStyle(Color.mut) }
+                }
+            } header: { Text("Gefundene Geräte") } footer: {
+                Text("Funktioniert mit Brustgurten und Uhren, die den Puls per Bluetooth senden (z. B. Polar H9/H10, Garmin HRM, Wahoo TICKR; bei Garmin-Uhren „Herzfrequenz übertragen“ einschalten). Der Gurt wird gespeichert und beim Laufen automatisch verbunden.")
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .background(Color.bg)
+        .navigationTitle("Pulsgurt")
+        .onAppear { hr.start(); hr.scan() }
+        .onDisappear { hr.stopScan() }
     }
 }

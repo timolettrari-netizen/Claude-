@@ -127,12 +127,13 @@ extension Store {
 
     func startRun(_ plan: PlannedRun?) { runLaunch = RunLaunch(plan: plan) }
 
-    func saveRun(plan: PlannedRun?, start: Date, km: Double, seconds: Double, route: [RunCoordinate]) {
+    func saveRun(plan: PlannedRun?, start: Date, km: Double, seconds: Double, route: [RunCoordinate], avgHR: Int? = nil, maxHR: Int? = nil) {
         let minutes = max(1, Int(seconds / 60))
         let kg = currentKg
         let kcal = km > 0.2 ? Int(0.92 * kg * km) : Int(8.5 * kg * seconds / 3600)
         s.runs.append(RunLog(date: start, km: (km * 100).rounded() / 100, minutes: minutes, kcal: kcal,
-                             type: plan?.type ?? "free", title: plan?.title ?? "Freier Lauf", route: route))
+                             type: plan?.type ?? "free", title: plan?.title ?? "Freier Lauf", route: route,
+                             avgHR: avgHR, maxHR: maxHR))
         s.runs.sort { $0.date < $1.date }
         if s.healthEnabled {
             Task { await HealthService.shared.saveRun(start: start, end: start.addingTimeInterval(seconds), km: km, kcal: Double(kcal)) }

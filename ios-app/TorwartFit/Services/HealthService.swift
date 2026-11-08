@@ -10,7 +10,7 @@ final class HealthService {
 
     func requestAccess() async -> Bool {
         guard isAvailable else { return false }
-        let read: Set<HKObjectType> = [HKQuantityType(.stepCount), HKQuantityType(.bodyMass), HKObjectType.workoutType()]
+        let read: Set<HKObjectType> = [HKQuantityType(.stepCount), HKQuantityType(.bodyMass), HKQuantityType(.heartRate), HKObjectType.workoutType()]
         let share: Set<HKSampleType> = [HKObjectType.workoutType(), HKQuantityType(.activeEnergyBurned), HKQuantityType(.distanceWalkingRunning)]
         do {
             try await hs.requestAuthorization(toShare: share, read: read)
@@ -38,6 +38,27 @@ final class HealthService {
         let r = try? await q.result(for: hs)
         return r?.first?.quantity.doubleValue(for: .gramUnit(with: .kilo))
     }
+
+    /// Live-Puls der Apple Watch (während auf der Uhr ein Training läuft) über Apple Health
+    func streamHeartRate(since start: Date, handler: @escaping (Int) -> Void) -> HKQuery? {
+        guard isAvailable else { return nil }
+        let type = HKQuantityType(.heartRate)
+        let pred = HKQuery.predicateForSamples(withStart: start.addingTimeInterval(-120), end: nil)
+        let unit = HKUnit.count().unitDivided(by: .minute())
+        let deliver: ([HKSample]?) -> Void = { samples in
+            guard let last = (samples as? [HKQuantitySample])?.max(by: { $0.endDate < $1.endDate }) else { return }
+            let bpm = Int(last.quantity.doubleValue(for: unit).rounded())
+            DispatchQueue.main.async { handler(bpm) }
+        }
+        let q = HKAnchoredObjectQuery(type: type, predicate: pred, anchor: nil, limit: HKObjectQueryNoLimit) { _, samples, _, _, _ in
+            deliver(samples)
+        }
+        q.updateHandler = { _, samples, _, _, _ in deliver(samples) }
+        hs.execute(q)
+        return q
+    }
+
+    func stop(_ q: HKQuery) { hs.stop(q) }
 
     func saveRun(start: Date, end: Date, km: Double, kcal: Double) async {
         guard isAvailable else { return }

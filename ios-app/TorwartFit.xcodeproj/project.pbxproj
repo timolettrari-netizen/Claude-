@@ -203,6 +203,7 @@
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "TorwartFit liest Schritte, Gewicht und Trainings aus Apple Health, um deinen Plan und dein Kalorienziel anzupassen.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "TorwartFit speichert deine Trainings und Läufe in Apple Health.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "TorwartFit zeichnet beim Laufen Strecke und Tempo per GPS auf.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "TorwartFit verbindet sich mit deinem Pulsgurt, damit der Lauf-Coach deine Herzfrequenz kennt.";
 				INFOPLIST_FILE = "TorwartFit-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -237,6 +238,7 @@
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "TorwartFit liest Schritte, Gewicht und Trainings aus Apple Health, um deinen Plan und dein Kalorienziel anzupassen.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "TorwartFit speichert deine Trainings und Läufe in Apple Health.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "TorwartFit zeichnet beim Laufen Strecke und Tempo per GPS auf.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "TorwartFit verbindet sich mit deinem Pulsgurt, damit der Lauf-Coach deine Herzfrequenz kennt.";
 				INFOPLIST_FILE = "TorwartFit-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

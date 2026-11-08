@@ -119,6 +119,8 @@ struct RunLog: Codable, Identifiable, Hashable {
     var type: String          // wr, easy, long, int, free
     var title: String
     var route: [RunCoordinate] = []
+    var avgHR: Int?
+    var maxHR: Int?
     var paceMinPerKm: Double? { km > 0.2 ? Double(minutes) / km : nil }
 }
 
@@ -174,6 +176,10 @@ struct AppState: Codable {
     var runsPerWeek = 2
     var runPlanStart = DateUtil.weekStart(Date())
     var runs: [RunLog] = []
+    // Lauf-Coach
+    var coachVoice = true
+    var hrSource = "none"        // none, ble, watch
+    var maxHR = 0                // 0 = automatisch (208 − 0,7 × Alter)
 
     init() {}
 
@@ -205,6 +211,9 @@ struct AppState: Codable {
         runsPerWeek = try c.decodeIfPresent(Int.self, forKey: .runsPerWeek) ?? d.runsPerWeek
         runPlanStart = try c.decodeIfPresent(Date.self, forKey: .runPlanStart) ?? d.runPlanStart
         runs = try c.decodeIfPresent([RunLog].self, forKey: .runs) ?? []
+        coachVoice = try c.decodeIfPresent(Bool.self, forKey: .coachVoice) ?? true
+        hrSource = try c.decodeIfPresent(String.self, forKey: .hrSource) ?? "none"
+        maxHR = try c.decodeIfPresent(Int.self, forKey: .maxHR) ?? 0
     }
 }
 
