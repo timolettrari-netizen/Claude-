@@ -2,7 +2,7 @@
 
 Native iPhone-App für dein Torwart- und Gym-Training. Nicht für den App Store gedacht – du spielst sie mit Xcode direkt auf dein iPhone.
 
-## Was drin ist (Version 1.4)
+## Was drin ist (Version 1.5)
 - **Heute:** Tagesansicht mit heutiger Einheit, Ziel, Tagesform, Wochenplan (abhängig von Spieltag und Ziel), Schritte und Gewicht aus Apple Health
 - **Training:** 11 Einheiten (Torwart + Gym A/B/C) und 55 Übungen mit Suche und Kategorien
 - **Geführtes Training:** Satz für Satz, Gewicht/Wiederholungen, Pausen-Timer mit Ton und Vibration, Steigerungsvorschlag, Display bleibt an, Zusammenfassung mit Anstrengung (RPE)
@@ -18,7 +18,7 @@ Native iPhone-App für dein Torwart- und Gym-Training. Nicht für den App Store 
 - **Dienstplan:** 4-Tage-Rhythmus (frei, frei, Spät, Früh/Nacht) vorausgefüllt, per Tippen änderbar; an Früh/Nacht-Tagen automatisch kurzes Training
 - **Profil** (Symbol oben rechts auf „Heute“): Ziel, Spieltag, Körperdaten, Dienstplan, Studio/Zuhause, Block-Woche, Apple Health, Erinnerungen, Coach-Schlüssel, Backup (auch Import aus der Web-App)
 
-- **Strava & Garmin:** Läufe aus Strava, Garmin Connect oder der Apple Watch werden über Apple Health automatisch übernommen (doppelte Läufe werden erkannt).
+- **Strava & Garmin:** Läufe und Krafttraining (auch HIIT, Crosstraining, Rumpf) aus Strava, Garmin Connect oder der Apple Watch werden über Apple Health automatisch übernommen (doppelte Läufe werden erkannt).
 
 Noch nicht enthalten: Widget.
 

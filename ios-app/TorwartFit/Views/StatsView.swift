@@ -203,10 +203,16 @@ struct StatsView: View {
                 ForEach(Array(store.s.logs.suffix(30).reversed())) { l in
                     let se = store.catalog.session(l.session)
                     HStack(spacing: 12) {
-                        SessionIcon(session: se)
+                        if l.healthID != nil {
+                            Text("🏋️").font(.system(size: 17)).frame(width: 34, height: 34)
+                                .background(Color.orange.opacity(0.25), in: RoundedRectangle(cornerRadius: 9))
+                        } else {
+                            SessionIcon(session: se)
+                        }
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(se?.name ?? l.session)
-                            Text("\(DateUtil.format(l.date, "EEEdMMM")) · \(l.minutes) min · \(l.sets.count) Übungen\(l.rpe.map { " · RPE \($0)" } ?? "")")
+                            Text(l.title ?? se?.name ?? l.session)
+                            Text("\(DateUtil.format(l.date, "EEEdMMM")) · \(l.minutes) min" + (l.healthID == nil ? " · \(l.sets.count) Übungen" : "")
+                                 + (l.kcal.map { " · \($0) kcal" } ?? "") + (l.avgHR.map { " · ♥ \($0)" } ?? "") + (l.rpe.map { " · RPE \($0)" } ?? ""))
                                 .font(.footnote).foregroundStyle(Color.mut)
                         }
                         Spacer()

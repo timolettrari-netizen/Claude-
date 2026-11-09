@@ -128,7 +128,7 @@ enum CoachContext {
         let last = store.s.logs.suffix(12).map { l -> [String: Any] in
             var sets: [String: String] = [:]
             for (id, s) in l.sets { sets[store.name(id)] = s.map { ($0.kg > 0 ? "\(fmtKg($0.kg))kg×" : "") + "\($0.reps)" }.joined(separator: ", ") }
-            return ["einheit": cat.session(l.session)?.name ?? l.session, "datum": DateUtil.format(l.date, "ddMMyyyy"),
+            return ["einheit": l.title ?? cat.session(l.session)?.name ?? l.session, "datum": DateUtil.format(l.date, "ddMMyyyy"),
                     "minuten": l.minutes, "anstrengung": l.rpe ?? 0, "saetze": sets]
         }
         let r = store.todayReadiness

@@ -169,4 +169,32 @@ extension Store {
             return added
         }
     }
+
+    /// Übernimmt Kraft- und Fitnesstrainings aus Apple Health (Strava, Garmin Connect …). Gibt die Anzahl neuer Einheiten zurück.
+    @discardableResult
+    func importHealthStrength(days: Int = 120) async -> Int {
+        guard s.healthEnabled else { return 0 }
+        let since = DateUtil.calendar.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let found = await HealthService.shared.strengthWorkouts(since: since)
+        return await MainActor.run {
+            var added = 0
+            var logs = self.s.logs
+            for w in found.sorted(by: { $0.start < $1.start }) {
+                if logs.contains(where: { $0.healthID == w.id }) { continue }
+                // gleiche Einheit aus zwei Quellen oder schon in TorwartFit aufgezeichnet (Start ±10 Min. bzw. Ende ±10 Min.)
+                if logs.contains(where: { l in
+                    let start = l.date.addingTimeInterval(-Double(l.minutes) * 60)
+                    return abs(l.date.timeIntervalSince(w.start)) < 600 || abs(start.timeIntervalSince(w.start)) < 600
+                        || abs(l.date.timeIntervalSince(w.end)) < 600
+                }) { continue }
+                let minutes = max(1, Int(w.end.timeIntervalSince(w.start) / 60))
+                logs.append(WorkoutLog(session: "extern", date: w.start, minutes: minutes, sets: [:], rpe: nil, volume: 0,
+                                       title: "\(w.kind) (\(w.source))", source: w.source, healthID: w.id,
+                                       kcal: w.kcal.map { Int($0) }, avgHR: w.avgHR))
+                added += 1
+            }
+            if added > 0 { self.s.logs = logs.sorted { $0.date < $1.date } }
+            return added
+        }
+    }
 }

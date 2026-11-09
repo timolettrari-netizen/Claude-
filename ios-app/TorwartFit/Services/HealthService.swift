@@ -71,6 +71,40 @@ final class HealthService {
         let source: String
     }
 
+    struct ImportedWorkout {
+        let id: String
+        let start: Date
+        let end: Date
+        let kcal: Double?
+        let avgHR: Int?
+        let source: String
+        let kind: String
+    }
+
+    /// Kraft- und Fitnesstrainings anderer Apps (Strava, Garmin Connect, Apple Watch …)
+    func strengthWorkouts(since: Date) async -> [ImportedWorkout] {
+        guard isAvailable else { return [] }
+        let types: [(HKWorkoutActivityType, String)] = [
+            (.traditionalStrengthTraining, "Krafttraining"), (.functionalStrengthTraining, "Funktionelles Krafttraining"),
+            (.highIntensityIntervalTraining, "HIIT"), (.crossTraining, "Crosstraining"), (.coreTraining, "Rumpftraining"),
+        ]
+        let typePred = NSCompoundPredicate(orPredicateWithSubpredicates: types.map { HKQuery.predicateForWorkouts(with: $0.0) })
+        let pred = NSCompoundPredicate(andPredicateWithSubpredicates: [HKQuery.predicateForSamples(withStart: since, end: nil), typePred])
+        let q = HKSampleQueryDescriptor(predicates: [.workout(pred)],
+                                        sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)], limit: 200)
+        guard let workouts = try? await q.result(for: hs) else { return [] }
+        let own = Bundle.main.bundleIdentifier ?? ""
+        let bpm = HKUnit.count().unitDivided(by: .minute())
+        return workouts.compactMap { w in
+            if w.sourceRevision.source.bundleIdentifier == own { return nil }
+            let name = types.first { $0.0 == w.workoutActivityType }?.1 ?? "Krafttraining"
+            return ImportedWorkout(id: w.uuid.uuidString, start: w.startDate, end: w.endDate,
+                                   kcal: w.statistics(for: HKQuantityType(.activeEnergyBurned))?.sumQuantity()?.doubleValue(for: .kilocalorie()),
+                                   avgHR: w.statistics(for: HKQuantityType(.heartRate))?.averageQuantity().map { Int($0.doubleValue(for: bpm).rounded()) },
+                                   source: w.sourceRevision.source.name, kind: name)
+        }
+    }
+
     /// Lauf-Trainings anderer Apps (Strava, Garmin Connect, Apple Watch …) aus Apple Health
     func runningWorkouts(since: Date) async -> [ImportedRun] {
         guard isAvailable else { return [] }

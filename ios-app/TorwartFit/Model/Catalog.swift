@@ -103,6 +103,12 @@ struct WorkoutLog: Codable, Identifiable, Hashable {
     var sets: [String: [SetEntry]]
     var rpe: Int?
     var volume: Double
+    // nur bei übernommenen Trainings (Strava, Garmin …)
+    var title: String?
+    var source: String?
+    var healthID: String?
+    var kcal: Int?
+    var avgHR: Int?
 }
 
 struct RunCoordinate: Codable, Hashable {

@@ -282,6 +282,7 @@ final class Store: ObservableObject {
         let w = await HealthService.shared.latestWeight()
         await MainActor.run { self.steps = st; self.weight = w }
         await importHealthRuns()
+        await importHealthStrength()
     }
 
     // MARK: Backup

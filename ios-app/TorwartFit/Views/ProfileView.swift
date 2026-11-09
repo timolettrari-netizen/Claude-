@@ -92,15 +92,18 @@ struct ProfileView: View {
                         } else { store.s.healthEnabled = false }
                     }))
                     if store.s.healthEnabled {
-                        Button("Läufe aus Strava / Garmin übernehmen") {
+                        Button("Trainings aus Strava / Garmin übernehmen") {
                             Task {
-                                let n = await store.importHealthRuns(days: 365)
-                                await MainActor.run { message = n == 0 ? "Keine neuen Läufe gefunden." : "\(n) Läufe übernommen." }
+                                let r = await store.importHealthRuns(days: 365)
+                                let k = await store.importHealthStrength(days: 365)
+                                await MainActor.run {
+                                    message = r + k == 0 ? "Keine neuen Trainings gefunden." : "Übernommen: \(r) Läufe, \(k) Kraft-/Fitnesseinheiten."
+                                }
                             }
                         }
                     }
                 } header: { Text("Apple Health") } footer: {
-                    Text("Liest Schritte, Gewicht und Puls, speichert deine Einheiten in Health und übernimmt Läufe aus Strava und Garmin Connect automatisch. Dafür in Strava (Einstellungen → Anwendungen, Dienste und Geräte → Health) bzw. Garmin Connect (Einstellungen → Apple Health) die Verbindung zu Apple Health einschalten.")
+                    Text("Liest Schritte, Gewicht und Puls, speichert deine Einheiten in Health und übernimmt Läufe und Krafttraining aus Strava und Garmin Connect automatisch. Dafür in Strava (Einstellungen → Anwendungen, Dienste und Geräte → Health) bzw. Garmin Connect (Einstellungen → Apple Health) die Verbindung zu Apple Health einschalten.")
                 }
 
                 Section("Erinnerungen") {
