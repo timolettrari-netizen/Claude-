@@ -181,7 +181,7 @@ struct StatsView: View {
                     Text("🏃").frame(width: 34, height: 34).background(Color(hex: "#FF375F").opacity(0.25), in: RoundedRectangle(cornerRadius: 9))
                     VStack(alignment: .leading, spacing: 2) {
                         Text(r.title)
-                        Text("\(DateUtil.format(r.date, "EEEdMMM")) · \(String(format: "%.2f", r.km)) km · \(r.minutes) min\(r.paceMinPerKm.map { " · " + Store.pace($0) + " /km" } ?? "")")
+                        Text("\(DateUtil.format(r.date, "EEEdMMM")) · \(String(format: "%.2f", r.km)) km · \(r.minutes) min\(r.paceMinPerKm.map { " · " + Store.pace($0) + " /km" } ?? "")\(r.avgHR.map { " · ♥ \($0)" } ?? "")")
                             .font(.footnote).foregroundStyle(Color.mut)
                     }
                     Spacer()

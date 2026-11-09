@@ -144,4 +144,29 @@ extension Store {
         let ws = DateUtil.weekStart(Date())
         return s.runs.filter { $0.date >= ws }.reduce(0) { $0 + $1.km }
     }
+
+    /// Übernimmt Läufe aus Apple Health (Strava, Garmin Connect, Apple Watch …). Gibt die Anzahl neuer Läufe zurück.
+    @discardableResult
+    func importHealthRuns(days: Int = 120) async -> Int {
+        guard s.healthEnabled else { return 0 }
+        let since = DateUtil.calendar.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let found = await HealthService.shared.runningWorkouts(since: since)
+        return await MainActor.run {
+            var added = 0
+            var runs = self.s.runs
+            for r in found.sorted(by: { $0.start < $1.start }) {
+                if runs.contains(where: { $0.healthID == r.id }) { continue }
+                // gleicher Lauf aus zwei Quellen (z. B. Garmin + Strava) oder schon in der App aufgezeichnet
+                if runs.contains(where: { abs($0.date.timeIntervalSince(r.start)) < 300 && (r.km == 0 || abs($0.km - r.km) < max(0.5, r.km * 0.1)) }) { continue }
+                let seconds = r.end.timeIntervalSince(r.start)
+                let kcal = r.kcal.map { Int($0) } ?? Int(0.92 * self.currentKg * r.km)
+                runs.append(RunLog(date: r.start, km: (r.km * 100).rounded() / 100, minutes: max(1, Int(seconds / 60)), kcal: kcal,
+                                   type: "import", title: "Lauf (\(r.source))", route: [], avgHR: r.avgHR, maxHR: r.maxHR,
+                                   healthID: r.id, source: r.source))
+                added += 1
+            }
+            if added > 0 { self.s.runs = runs.sorted { $0.date < $1.date } }
+            return added
+        }
+    }
 }

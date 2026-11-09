@@ -121,6 +121,8 @@ struct RunLog: Codable, Identifiable, Hashable {
     var route: [RunCoordinate] = []
     var avgHR: Int?
     var maxHR: Int?
+    var healthID: String?        // UUID des Trainings in Apple Health (bei Import)
+    var source: String?          // z. B. "Strava", "Garmin Connect"
     var paceMinPerKm: Double? { km > 0.2 ? Double(minutes) / km : nil }
 }
 

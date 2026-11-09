@@ -60,6 +60,40 @@ final class HealthService {
 
     func stop(_ q: HKQuery) { hs.stop(q) }
 
+    struct ImportedRun {
+        let id: String
+        let start: Date
+        let end: Date
+        let km: Double
+        let kcal: Double?
+        let avgHR: Int?
+        let maxHR: Int?
+        let source: String
+    }
+
+    /// Lauf-Trainings anderer Apps (Strava, Garmin Connect, Apple Watch …) aus Apple Health
+    func runningWorkouts(since: Date) async -> [ImportedRun] {
+        guard isAvailable else { return [] }
+        let pred = HKQuery.predicateForSamples(withStart: since, end: nil)
+        let q = HKSampleQueryDescriptor(predicates: [.workout(NSCompoundPredicate(andPredicateWithSubpredicates: [
+                                            pred, HKQuery.predicateForWorkouts(with: .running)]))],
+                                        sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)],
+                                        limit: 200)
+        guard let workouts = try? await q.result(for: hs) else { return [] }
+        let own = Bundle.main.bundleIdentifier ?? ""
+        let bpm = HKUnit.count().unitDivided(by: .minute())
+        return workouts.compactMap { w in
+            if w.sourceRevision.source.bundleIdentifier == own { return nil }   // eigene Läufe nicht doppelt
+            let km = w.statistics(for: HKQuantityType(.distanceWalkingRunning))?.sumQuantity()?.doubleValue(for: .meterUnit(with: .kilo)) ?? 0
+            let kcal = w.statistics(for: HKQuantityType(.activeEnergyBurned))?.sumQuantity()?.doubleValue(for: .kilocalorie())
+            let hr = w.statistics(for: HKQuantityType(.heartRate))
+            return ImportedRun(id: w.uuid.uuidString, start: w.startDate, end: w.endDate, km: km, kcal: kcal,
+                               avgHR: hr?.averageQuantity().map { Int($0.doubleValue(for: bpm).rounded()) },
+                               maxHR: hr?.maximumQuantity().map { Int($0.doubleValue(for: bpm).rounded()) },
+                               source: w.sourceRevision.source.name)
+        }
+    }
+
     func saveRun(start: Date, end: Date, km: Double, kcal: Double) async {
         guard isAvailable else { return }
         let cfg = HKWorkoutConfiguration()
