@@ -119,10 +119,32 @@ extension Store {
         if s.eaten.contains(meal.key) { s.eaten.remove(meal.key) } else { s.eaten.insert(meal.key) }
     }
 
+    /// Gegessen an einem Tag: abgehakte Plan-Mahlzeiten plus selbst erfasstes Essen
     func eatenKcal(on date: Date) -> (kcal: Int, protein: Int, carbs: Int) {
         let m = meals(on: date).filter { s.eaten.contains($0.key) }
-        return (m.reduce(0) { $0 + $1.kcal }, m.reduce(0) { $0 + $1.protein }, m.reduce(0) { $0 + $1.carbs })
+        let f = foods(on: date)
+        let kcal = m.reduce(0) { $0 + $1.kcal } + f.reduce(0) { $0 + $1.kcal }
+        let protein = m.reduce(0) { $0 + $1.protein } + f.reduce(0) { $0 + $1.protein }
+        let carbs = m.reduce(0) { $0 + $1.carbs } + f.reduce(0) { $0 + $1.carbs }
+        return (kcal, protein, carbs)
     }
+
+    // MARK: Selbst erfasstes Essen
+
+    func foods(on date: Date) -> [FoodEntry] {
+        let key = DateUtil.dayKey(date)
+        return s.foodLog.filter { $0.day == key }.sorted { $0.date < $1.date }
+    }
+
+    func addFood(_ e: FoodEntry) {
+        s.foodLog.append(e)
+        // nur die letzten 120 Tage behalten
+        if let cut = DateUtil.calendar.date(byAdding: .day, value: -120, to: Date()) {
+            s.foodLog.removeAll { $0.date < cut }
+        }
+    }
+
+    func deleteFood(_ e: FoodEntry) { s.foodLog.removeAll { $0.id == e.id } }
 
     /// Einkaufsliste für `days` Tage ab `from`
     func shoppingList(from: Date, days: Int = 7) -> [ShoppingItem] {

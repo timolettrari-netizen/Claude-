@@ -157,6 +157,9 @@ enum CoachContext {
         let mahlzeiten: [String] = store.meals(on: Date()).map { m -> String in
             "\(m.slot.time) \(m.slot.name): \(m.recipe.name) (\(m.kcal) kcal)"
         }
+        let extraFood: [String] = store.foods(on: Date()).map { f -> String in
+            "\(f.name) (\(f.kcal) kcal, \(f.protein) g Eiweiß)"
+        }
         let typen: [String] = cat.sessions.map { se -> String in "\(se.name) (\(se.label))" }
         let gewicht: Double = (store.currentKg * 10).rounded() / 10
         let soll: Double = (store.targetKg(on: Date()) * 10).rounded() / 10
@@ -186,6 +189,7 @@ enum CoachContext {
             "sollGewichtHeute": soll,
             "kalorienzielHeute": store.calorieTarget(on: Date()),
             "heuteGegessenKcal": store.eatenKcal(on: Date()).kcal,
+            "zusaetzlichGegessenHeute": extraFood,
             "eiweissZielG": store.proteinTarget,
             "dienstHeute": NutritionData.shared.kindNames[store.dayKind(Date())] ?? "",
             "dienstWoche": dienstWoche,

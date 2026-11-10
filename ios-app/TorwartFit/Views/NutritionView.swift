@@ -68,6 +68,8 @@ struct NutritionView: View {
 
                     ForEach(meals) { m in mealCard(m) }
 
+                    FoodLogCard(day: day)
+
                     Button { showShopping = true } label: { Label("Einkaufsliste für 7 Tage", systemImage: "cart") }
                         .buttonStyle(LimeButton(secondary: true))
 

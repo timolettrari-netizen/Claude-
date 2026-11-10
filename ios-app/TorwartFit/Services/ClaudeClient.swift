@@ -36,7 +36,9 @@ enum ClaudeClient {
     }
 
     /// Allgemeine Variante: Nachrichten mit beliebigen Inhaltsblöcken (Text, Bilder).
+    /// `format`: optionales JSON-Schema – dann ist die Antwort garantiert gültiges JSON in genau dieser Form.
     static func stream(system: String, rawMessages: [[String: Any]], effort: String, maxTokens: Int,
+                       format: [String: Any]? = nil,
                        onText: @escaping (String) -> Void) async throws -> String {
         guard let key = Keychain.get("anthropic_api_key"), !key.isEmpty else { throw ClaudeError.noKey }
 
@@ -48,12 +50,14 @@ enum ClaudeClient {
         req.setValue("2026-10-21", forHTTPHeaderField: "anthropic-version")
         req.setValue("server-side-fallback-2026-07-01", forHTTPHeaderField: "anthropic-beta")
 
+        var outputConfig: [String: Any] = ["effort": effort]
+        if let format { outputConfig["format"] = ["type": "json_schema", "schema": format] }
         let body: [String: Any] = [
             "model": model,
             "max_tokens": maxTokens,
             "stream": true,
             "system": system,
-            "output_config": ["effort": effort],
+            "output_config": outputConfig,
             "fallbacks": "default",                 // bei Ablehnung serverseitig auf Ersatzmodell ausweichen
             "messages": rawMessages,
         ]

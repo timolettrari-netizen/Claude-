@@ -145,6 +145,19 @@ struct ProgramRecord: Codable, Identifiable, Hashable {
     var testTo: Double?
 }
 
+/// Selbst erfasstes Essen (Foto + KI-Schätzung oder von Hand), zusätzlich zum Essensplan
+struct FoodEntry: Codable, Identifiable, Hashable {
+    var id = UUID()
+    var day: String          // "yyyy-MM-dd"
+    var date: Date
+    var name: String
+    var kcal: Int
+    var protein: Int
+    var carbs: Int
+    var fat: Int
+    var note: String?
+}
+
 /// Gespeicherte Video-Technikanalyse
 struct TechniqueLog: Codable, Identifiable, Hashable {
     var id = UUID()
@@ -217,6 +230,7 @@ struct AppState: Codable {
     // Freies Training & Technik-Analyse
     var intervals: [IntervalProgram] = []
     var analyses: [TechniqueLog] = []
+    var foodLog: [FoodEntry] = []
 
     init() {}
 
@@ -257,6 +271,7 @@ struct AppState: Codable {
         savedRunsPerWeek = try c.decodeIfPresent(Int.self, forKey: .savedRunsPerWeek) ?? 2
         intervals = try c.decodeIfPresent([IntervalProgram].self, forKey: .intervals) ?? []
         analyses = try c.decodeIfPresent([TechniqueLog].self, forKey: .analyses) ?? []
+        foodLog = try c.decodeIfPresent([FoodEntry].self, forKey: .foodLog) ?? []
         if goal != nil && programStart == nil { programStart = blockStart }   // älterer Stand ohne Plan-Daten
     }
 }
