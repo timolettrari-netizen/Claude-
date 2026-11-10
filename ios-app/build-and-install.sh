@@ -10,15 +10,18 @@ BUNDLE_ID="de.timolettrari.torwartfit"
 echo "== Xcode"
 xcodebuild -version
 
-# --- iPhone finden (verbunden, iOS) ---
+# --- iPhone finden: bevorzugt per Kabel, sonst verbunden ---
 if [ -z "${DEVICE:-}" ]; then
   TMP_JSON="$(mktemp)"
   xcrun devicectl list devices --json-output "$TMP_JSON" >/dev/null
   DEVICE="$(osascript -l JavaScript -e "
-    const d = JSON.parse($.NSString.stringWithContentsOfFileEncodingError('$TMP_JSON', 4, null).js).result.devices;
-    const ok = d.filter(x => (x.hardwareProperties||{}).platform === 'iOS'
-                          && (x.connectionProperties||{}).tunnelState !== 'unavailable');
-    ok.length ? ok[0].hardwareProperties.udid : '';
+    const d = JSON.parse($.NSString.stringWithContentsOfFileEncodingError('$TMP_JSON', 4, null).js).result.devices
+      .filter(x => (x.hardwareProperties||{}).platform === 'iOS' && (x.hardwareProperties||{}).udid);
+    const c = x => x.connectionProperties || {};
+    const pick = d.find(x => c(x).transportType === 'wired')
+              || d.find(x => c(x).tunnelState === 'connected')
+              || d.find(x => c(x).pairingState === 'paired' && c(x).tunnelState !== 'unavailable');
+    pick ? pick.hardwareProperties.udid : '';
   ")"
   rm -f "$TMP_JSON"
 fi
@@ -28,6 +31,7 @@ if [ -z "$DEVICE" ]; then
   xcrun devicectl list devices || true
   exit 1
 fi
+xcrun devicectl list devices 2>/dev/null | grep -i "$DEVICE" || true
 echo "== iPhone: $DEVICE"
 
 # --- Team-ID aus dem Apple-Development-Zertifikat lesen ---
@@ -45,7 +49,7 @@ echo "== Team: $TEAM"
 
 # --- Bauen ---
 xcodebuild -project TorwartFit.xcodeproj -scheme TorwartFit \
-  -destination "id=$DEVICE" -configuration Debug \
+  -destination "platform=iOS,id=$DEVICE" -configuration Debug \
   -allowProvisioningUpdates -allowProvisioningDeviceRegistration \
   DEVELOPMENT_TEAM="$TEAM" -derivedDataPath build build
 
