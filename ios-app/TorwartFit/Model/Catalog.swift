@@ -122,7 +122,7 @@ struct RunLog: Codable, Identifiable, Hashable {
     var km: Double
     var minutes: Int
     var kcal: Int
-    var type: String          // wr, easy, long, int, free
+    var type: String          // wr, easy, long, int, free oder FreeActivity.rawValue
     var title: String
     var route: [RunCoordinate] = []
     var avgHR: Int?
@@ -143,6 +143,14 @@ struct ProgramRecord: Codable, Identifiable, Hashable {
     var completed: Bool
     var testFrom: Double?
     var testTo: Double?
+}
+
+/// Gespeicherte Video-Technikanalyse
+struct TechniqueLog: Codable, Identifiable, Hashable {
+    var id = UUID()
+    var exercise: String
+    var date: Date
+    var text: String
 }
 
 struct TestEntry: Codable, Identifiable, Hashable {
@@ -206,6 +214,9 @@ struct AppState: Codable {
     var programWeeks = 8         // 0 = offen
     var programs: [ProgramRecord] = []
     var savedRunsPerWeek = 2
+    // Freies Training & Technik-Analyse
+    var intervals: [IntervalProgram] = []
+    var analyses: [TechniqueLog] = []
 
     init() {}
 
@@ -244,6 +255,8 @@ struct AppState: Codable {
         programWeeks = try c.decodeIfPresent(Int.self, forKey: .programWeeks) ?? 0
         programs = try c.decodeIfPresent([ProgramRecord].self, forKey: .programs) ?? []
         savedRunsPerWeek = try c.decodeIfPresent(Int.self, forKey: .savedRunsPerWeek) ?? 2
+        intervals = try c.decodeIfPresent([IntervalProgram].self, forKey: .intervals) ?? []
+        analyses = try c.decodeIfPresent([TechniqueLog].self, forKey: .analyses) ?? []
         if goal != nil && programStart == nil { programStart = blockStart }   // älterer Stand ohne Plan-Daten
     }
 }

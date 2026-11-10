@@ -100,14 +100,35 @@ struct NutritionView: View {
     private func mealCard(_ m: PlannedMeal) -> some View {
         let eaten = store.s.eaten.contains(m.key)
         return VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("\(m.slot.name) · \(m.slot.time) Uhr").font(.caption.weight(.semibold))
-                    .padding(.horizontal, 8).padding(.vertical, 3).background(Color.card2, in: Capsule())
-                Spacer()
-                Text("⏱ \(m.recipe.minutes) Min.").font(.caption).foregroundStyle(Color.mut)
+            if FoodPhoto.has(m.recipe) {
+                Button { recipe = m } label: {
+                    FoodPhoto(recipe: m.recipe, height: 190)
+                        .overlay(alignment: .topLeading) {
+                            Text("\(m.slot.name) · \(m.slot.time) Uhr").font(.caption.weight(.semibold))
+                                .padding(.horizontal, 8).padding(.vertical, 4).background(.ultraThinMaterial, in: Capsule()).padding(10)
+                        }
+                        .overlay(alignment: .topTrailing) {
+                            Text("⏱ \(m.recipe.minutes) Min.").font(.caption.weight(.semibold))
+                                .padding(.horizontal, 8).padding(.vertical, 4).background(.ultraThinMaterial, in: Capsule()).padding(10)
+                        }
+                        .overlay(alignment: .bottomTrailing) {
+                            if eaten {
+                                Image(systemName: "checkmark.circle.fill").font(.title).foregroundStyle(Color.lime)
+                                    .background(Circle().fill(.black)).padding(10)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+            } else {
+                HStack {
+                    Text("\(m.slot.name) · \(m.slot.time) Uhr").font(.caption.weight(.semibold))
+                        .padding(.horizontal, 8).padding(.vertical, 3).background(Color.card2, in: Capsule())
+                    Spacer()
+                    Text("⏱ \(m.recipe.minutes) Min.").font(.caption).foregroundStyle(Color.mut)
+                }
             }
             HStack(spacing: 14) {
-                Plate(emoji: m.recipe.emoji, recipeID: m.recipe.id)
+                if !FoodPhoto.has(m.recipe) { Plate(emoji: m.recipe.emoji) }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(m.recipe.name).font(.headline)
                     Text("\(m.kcal) kcal · \(m.protein) g Eiweiß · \(m.carbs) g KH").font(.footnote).foregroundStyle(Color.mut)
@@ -141,22 +162,7 @@ struct NutritionView: View {
 struct Plate: View {
     let emoji: [String]
     var size: CGFloat = 76
-    /// Rezept-ID: Gibt es ein Foto "Recipe_<id>" in den Assets, wird es statt der Emojis gezeigt.
-    var recipeID: String? = nil
     var body: some View {
-        if let id = recipeID, UIImage(named: "Recipe_\(id)") != nil {
-            Image("Recipe_\(id)")
-                .resizable()
-                .scaledToFill()
-                .frame(width: size, height: size)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.line, lineWidth: 1))
-        } else {
-            emojiPlate
-        }
-    }
-
-    private var emojiPlate: some View {
         ZStack {
             Circle().fill(Color.card2)
             Circle().fill(Color.card).padding(size * 0.12)
@@ -165,6 +171,22 @@ struct Plate: View {
             if emoji.count > 2 { Text(emoji[2]).font(.system(size: size * 0.18)).offset(x: size * 0.2, y: size * 0.2) }
         }
         .frame(width: size, height: size)
+    }
+}
+
+/// Echtes Foto eines Gerichts (Assets: Food/food_<id>)
+struct FoodPhoto: View {
+    let recipe: Recipe
+    var height: CGFloat = 190
+
+    static func has(_ r: Recipe) -> Bool { UIImage(named: "food_" + r.id) != nil }
+
+    var body: some View {
+        Color.card2
+            .frame(height: height)
+            .frame(maxWidth: .infinity)
+            .overlay { Image("food_" + recipe.id).resizable().scaledToFill() }
+            .clipShape(RoundedRectangle(cornerRadius: height < 80 ? 10 : 16, style: .continuous))
     }
 }
 
@@ -187,14 +209,12 @@ struct RecipeSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    if UIImage(named: "Recipe_\(meal.recipe.id)") != nil {
-                        Color.black
-                            .aspectRatio(4 / 3, contentMode: .fit)
-                            .overlay { Image("Recipe_\(meal.recipe.id)").resizable().scaledToFill() }
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    if FoodPhoto.has(meal.recipe) {
+                        FoodPhoto(recipe: meal.recipe, height: 260)
+                        Text("Beispielfoto – so ungefähr sieht deine Portion aus.").font(.caption2).foregroundStyle(Color.mut)
                     }
                     HStack(spacing: 14) {
-                        Plate(emoji: meal.recipe.emoji, size: 90, recipeID: meal.recipe.id)
+                        if !FoodPhoto.has(meal.recipe) { Plate(emoji: meal.recipe.emoji, size: 90) }
                         VStack(alignment: .leading, spacing: 4) {
                             Text("\(meal.kcal) kcal").font(.sport(30))
                             Text("\(meal.protein) g Eiweiß · \(meal.carbs) g KH · \(meal.fat) g Fett").font(.footnote).foregroundStyle(Color.mut)
@@ -250,7 +270,11 @@ struct MealPickSheet: View {
                         dismiss()
                     } label: {
                         HStack(spacing: 12) {
-                            Plate(emoji: r.emoji, size: 50, recipeID: r.id)
+                            if FoodPhoto.has(r) {
+                                FoodPhoto(recipe: r, height: 50).frame(width: 66)
+                            } else {
+                                Plate(emoji: r.emoji, size: 50)
+                            }
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(r.name).foregroundStyle(.white)
                                 Text("ca. \(Int(Double(r.kcal) * meal.factor)) kcal · \(r.minutes) Min. · \(r.devices.joined(separator: ", "))")

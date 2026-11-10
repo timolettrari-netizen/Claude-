@@ -28,7 +28,7 @@ struct StatsView: View {
                         kpi("Einheiten", "\(store.s.logs.count)", "")
                         kpi("Trainingszeit", String(format: "%.1f", totalHours), "h")
                         kpi("Gelaufen", String(format: "%.1f", totalRunKm), "km")
-                        kpi("Läufe", "\(store.s.runs.count)", "")
+                        kpi("Läufe", "\(store.runOnly.count)", "")
                         kpi("Bewegtes Gewicht", String(format: "%.1f", totalTonnes), "t")
                         let rp = store.s.logs.compactMap(\.rpe)
                         kpi("Ø Anstrengung", rp.isEmpty ? "–" : String(format: "%.1f", Double(rp.reduce(0, +)) / Double(rp.count)), "/10")
@@ -56,7 +56,7 @@ struct StatsView: View {
                     Text("Verlauf").sectionTitle()
                     history
                     if !store.s.runs.isEmpty {
-                        Text("Läufe").sectionTitle()
+                        Text("Läufe & Aktivitäten").sectionTitle()
                         runHistory
                     }
                 }
@@ -74,12 +74,12 @@ struct StatsView: View {
         let runMin: Int = store.s.runs.reduce(0) { $0 + $1.minutes }
         return Double(workoutMin + runMin) / 60
     }
-    private var totalRunKm: Double { store.s.runs.reduce(0.0) { $0 + $1.km } }
+    private var totalRunKm: Double { store.runOnly.reduce(0.0) { $0 + $1.km } }
     private var totalTonnes: Double { store.s.logs.reduce(0.0) { $0 + $1.volume } / 1000 }
 
     private func runLine(_ r: RunLog) -> String {
         var t: String = DateUtil.format(r.date, "EEEdMMM") + " · " + String(format: "%.2f", r.km) + " km · \(r.minutes) min"
-        if let p = r.paceMinPerKm { t += " · " + Store.pace(p) + " /km" }
+        if FreeActivity.from(logType: r.type).usesGPS, let p = r.paceMinPerKm { t += " · " + Store.pace(p) + " /km" }
         if let hr = r.avgHR { t += " · ♥ \(hr)" }
         return t
     }
@@ -202,7 +202,8 @@ struct StatsView: View {
         VStack(spacing: 0) {
             ForEach(Array(store.s.runs.suffix(30).reversed())) { r in
                 HStack(spacing: 12) {
-                    Text("🏃").frame(width: 34, height: 34).background(Color(hex: "#FF375F").opacity(0.25), in: RoundedRectangle(cornerRadius: 9))
+                    let act = FreeActivity.from(logType: r.type)
+                    Text(act.icon).frame(width: 34, height: 34).background(Color(hex: act.colors[0]).opacity(0.25), in: RoundedRectangle(cornerRadius: 9))
                     VStack(alignment: .leading, spacing: 2) {
                         Text(r.title)
                         Text(runLine(r))

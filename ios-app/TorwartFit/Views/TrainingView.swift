@@ -6,6 +6,7 @@ struct TrainingView: View {
     @State private var detail: Sel?
     @State private var query = ""
     @State private var category = "Alle"
+    @State private var showFree = false
 
     private var library: [String] {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
@@ -35,6 +36,11 @@ struct TrainingView: View {
                             Button { preview = Sel(id: se.id) } label: { SessionTile(session: se) }.buttonStyle(.plain)
                         }
                     }
+
+                    Button { showFree = true } label: {
+                        Label("Freies Training", systemImage: "figure.run.circle.fill")
+                    }
+                    .buttonStyle(LimeButton())
 
                     RunPlanCard().padding(.top, 6)
 
@@ -81,6 +87,7 @@ struct TrainingView: View {
             .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $preview) { s in SessionPreview(session: s.id).environmentObject(store) }
             .sheet(item: $detail) { s in ExerciseDetailView(id: s.id).environmentObject(store) }
+            .sheet(isPresented: $showFree) { FreeTrainingSheet().environmentObject(store) }
         }
     }
 }

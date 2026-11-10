@@ -26,6 +26,18 @@ enum ClaudeClient {
 
     /// Sendet den Chatverlauf und liefert den Text Stück für Stück über `onText` (immer der ganze bisherige Text).
     static func stream(system: String, messages: [ChatMessage], onText: @escaping (String) -> Void) async throws -> String {
+        try await stream(system: system, rawMessages: messages.map { ["role": $0.role, "content": $0.text] },
+                         effort: "low", maxTokens: 4000, onText: onText)
+    }
+
+    /// Bild als Inhaltsblock (JPEG, base64)
+    static func imageBlock(_ jpeg: Data) -> [String: Any] {
+        ["type": "image", "source": ["type": "base64", "media_type": "image/jpeg", "data": jpeg.base64EncodedString()]]
+    }
+
+    /// Allgemeine Variante: Nachrichten mit beliebigen Inhaltsblöcken (Text, Bilder).
+    static func stream(system: String, rawMessages: [[String: Any]], effort: String, maxTokens: Int,
+                       onText: @escaping (String) -> Void) async throws -> String {
         guard let key = Keychain.get("anthropic_api_key"), !key.isEmpty else { throw ClaudeError.noKey }
 
         var req = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
@@ -38,12 +50,12 @@ enum ClaudeClient {
 
         let body: [String: Any] = [
             "model": model,
-            "max_tokens": 4000,
+            "max_tokens": maxTokens,
             "stream": true,
             "system": system,
-            "output_config": ["effort": "low"],   // Chat: kurze, schnelle Antworten
+            "output_config": ["effort": effort],
             "fallbacks": "default",                 // bei Ablehnung serverseitig auf Ersatzmodell ausweichen
-            "messages": messages.map { ["role": $0.role, "content": $0.text] },
+            "messages": rawMessages,
         ]
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
 

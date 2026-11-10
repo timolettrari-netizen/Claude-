@@ -35,6 +35,9 @@ final class RunTracker: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     var avgHR: Int? { hrCount > 0 ? hrSum / hrCount : nil }
+    /// GPS aus (Stoppuhr-Training) und Höchstgeschwindigkeit für Sprünge
+    var useGPS = true
+    var maxSpeed: Double = 7
     private var accumulated: TimeInterval = 0
     private var resumedAt: Date?
     private var last: CLLocation?
@@ -60,8 +63,10 @@ final class RunTracker: NSObject, ObservableObject, CLLocationManagerDelegate {
     var paceMinPerKm: Double? { km > 0.05 ? elapsed / 60 / km : nil }
 
     func begin() {
-        manager.requestWhenInUseAuthorization()
-        manager.startUpdatingLocation()
+        if useGPS {
+            manager.requestWhenInUseAuthorization()
+            manager.startUpdatingLocation()
+        }
         resume()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.now = Date() }
     }
@@ -103,8 +108,8 @@ final class RunTracker: NSObject, ObservableObject, CLLocationManagerDelegate {
             if let prev = last {
                 let d = loc.distance(from: prev)
                 let dt = loc.timestamp.timeIntervalSince(prev.timestamp)
-                // Sprünge und unrealistische Geschwindigkeiten (> 25 km/h) ignorieren
-                guard dt > 0, d > 2, d / dt < 7 else { continue }
+                // Sprünge und unrealistische Geschwindigkeiten ignorieren
+                guard dt > 0, d > 2, d / dt < maxSpeed else { continue }
                 distance += d
             }
             last = loc

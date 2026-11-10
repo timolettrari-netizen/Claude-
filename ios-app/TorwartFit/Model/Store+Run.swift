@@ -12,18 +12,23 @@ struct PlannedRun: Identifiable, Hashable {
     let kcal: Int
     let details: [String]
     let timeHint: String
+    var program: IntervalProgram? = nil
 }
 
 /// Starten eines GPS-Laufs (für fullScreenCover)
 struct RunLaunch: Identifiable, Hashable {
     let id = UUID()
     let plan: PlannedRun?
+    var activity: FreeActivity = .run
+    var program: IntervalProgram? = nil
+
+    var title: String { plan?.title ?? program?.name ?? activity.name }
 }
 
 extension Store {
     /// Ø-Tempo in min/km aus den letzten Läufen (sonst 6:20 aus Strava)
     var paceMinPerKm: Double {
-        let r = s.runs.filter { $0.km > 3 && $0.minutes > 0 }.suffix(6)
+        let r = runOnly.filter { $0.km > 3 && $0.minutes > 0 }.suffix(6)
         guard !r.isEmpty else { return 6.33 }
         return r.map { Double($0.minutes) / $0.km }.reduce(0, +) / Double(r.count)
     }
@@ -87,7 +92,11 @@ extension Store {
                                                 "Traben heißt: so langsam, dass du dich noch unterhalten kannst. Das Gehen gehört dazu.",
                                                 "5 Min. gehen zum Auslaufen.",
                                                 "Bei Schmerzen in Knie, Hüfte oder Schienbein sofort auf Gehen wechseln."],
-                                      timeHint: hint))
+                                      timeHint: hint,
+                                      program: IntervalProgram(name: "Lauf-Geh-Intervalle", warmup: 300,
+                                                               steps: [IntervalStep(name: "Traben", seconds: Int(a) * 60, hard: true),
+                                                                       IntervalStep(name: "Gehen", seconds: Int(b) * 60, hard: false)],
+                                                               repeats: reps, cooldown: 300)))
             case "long":
                 let km = (min(14, 5 + 0.6 * Double(max(0, w - 3))) * f * 2).rounded() / 2
                 out.append(PlannedRun(key: key, date: c.date, type: type, title: "Langer Lauf", km: km,
@@ -102,7 +111,11 @@ extension Store {
                                       minutes: minutes, kcal: Int(0.97 * kg * km),
                                       details: ["10 Min. locker einlaufen.", "\(reps) × (2 Min. zügig / 2 Min. Trab).",
                                                 "Zügig = Tempo, bei dem nur kurze Sätze gehen.", "10 Min. locker auslaufen."],
-                                      timeHint: hint))
+                                      timeHint: hint,
+                                      program: IntervalProgram(name: "Intervall-Lauf", warmup: 600,
+                                                               steps: [IntervalStep(name: "Zügig", seconds: 120, hard: true),
+                                                                       IntervalStep(name: "Trab", seconds: 120, hard: false)],
+                                                               repeats: reps, cooldown: 600)))
             default:
                 var km = (min(8, 4 + 0.5 * Double(max(0, w - 3))) * f * (c.kind == "F1" ? 0.85 : 1) * 2).rounded() / 2
                 if c.kind == "N" { km = min(km, 4) }
@@ -122,27 +135,29 @@ extension Store {
     }
 
     func runDone(on date: Date) -> Bool {
-        s.runs.contains { DateUtil.calendar.isDate($0.date, inSameDayAs: date) }
+        runOnly.contains { DateUtil.calendar.isDate($0.date, inSameDayAs: date) }
     }
 
-    func startRun(_ plan: PlannedRun?) { runLaunch = RunLaunch(plan: plan) }
+    func startRun(_ plan: PlannedRun?) {
+        runLaunch = RunLaunch(plan: plan, activity: plan?.program == nil ? .run : .interval, program: plan?.program)
+    }
 
-    func saveRun(plan: PlannedRun?, start: Date, km: Double, seconds: Double, route: [RunCoordinate], avgHR: Int? = nil, maxHR: Int? = nil) {
+    func saveRun(_ launch: RunLaunch, start: Date, km: Double, seconds: Double, route: [RunCoordinate], avgHR: Int? = nil, maxHR: Int? = nil) {
         let minutes = max(1, Int(seconds / 60))
-        let kg = currentKg
-        let kcal = km > 0.2 ? Int(0.92 * kg * km) : Int(8.5 * kg * seconds / 3600)
+        let a = launch.activity
+        let kcal = a.kcal(kg: currentKg, km: km, seconds: seconds)
         s.runs.append(RunLog(date: start, km: (km * 100).rounded() / 100, minutes: minutes, kcal: kcal,
-                             type: plan?.type ?? "free", title: plan?.title ?? "Freier Lauf", route: route,
+                             type: launch.plan?.type ?? a.rawValue, title: launch.title, route: route,
                              avgHR: avgHR, maxHR: maxHR))
         s.runs.sort { $0.date < $1.date }
         if s.healthEnabled {
-            Task { await HealthService.shared.saveRun(start: start, end: start.addingTimeInterval(seconds), km: km, kcal: Double(kcal)) }
+            Task { await HealthService.shared.saveActivity(a, start: start, end: start.addingTimeInterval(seconds), km: km, kcal: Double(kcal)) }
         }
     }
 
     var runKmThisWeek: Double {
         let ws = DateUtil.weekStart(Date())
-        return s.runs.filter { $0.date >= ws }.reduce(0) { $0 + $1.km }
+        return runOnly.filter { $0.date >= ws }.reduce(0) { $0 + $1.km }
     }
 
     /// Übernimmt Läufe aus Apple Health (Strava, Garmin Connect, Apple Watch …). Gibt die Anzahl neuer Läufe zurück.

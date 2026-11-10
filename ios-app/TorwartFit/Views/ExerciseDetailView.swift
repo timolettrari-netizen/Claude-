@@ -5,6 +5,7 @@ struct ExerciseDetailView: View {
     @Environment(\.dismiss) private var dismiss
     let id: String
     var short = false
+    @State private var showAnalysis = false
 
     var body: some View {
         NavigationStack {
@@ -41,13 +42,22 @@ struct ExerciseDetailView: View {
                     }
                     section("Achte auf") { row("!", store.mistakes(id), .orange) }
                     section("Warum") { row("🧤", store.ex(id)?.why ?? "", .lime) }
+                    Button { showAnalysis = true } label: {
+                        Label("Technik per Video prüfen", systemImage: "video.badge.checkmark")
+                    }
+                    .buttonStyle(LimeButton())
+                    let n = store.s.analyses.filter { $0.exercise == id }.count
+                    if n > 0 {
+                        Text("\(n) frühere Analyse\(n == 1 ? "" : "n") gespeichert").font(.caption).foregroundStyle(Color.mut)
+                    }
                     if let url = URL(string: "https://www.youtube.com/results?search_query=" +
                                      (store.name(id) + " Ausführung").addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!) {
                         Link(destination: url) { Label("Video auf YouTube", systemImage: "play.rectangle.fill") }
                             .buttonStyle(LimeButton(secondary: true))
                     }
-                    if store.photo(id) != nil {
-                        Text("Fotos: Free Exercise DB (gemeinfrei)").font(.caption2).foregroundStyle(Color.mut)
+                    if let p = store.photo(id) {
+                        Text(p.hasPrefix("Gen_") ? "Fotos: KI-generierte Beispielbilder" : "Fotos: Free Exercise DB (gemeinfrei)")
+                            .font(.caption2).foregroundStyle(Color.mut)
                     }
                 }
                 .padding(16)
@@ -56,6 +66,7 @@ struct ExerciseDetailView: View {
             .navigationTitle(store.name(id))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Fertig") { dismiss() } } }
+            .sheet(isPresented: $showAnalysis) { TechniqueAnalysisView(id: id).environmentObject(store) }
         }
     }
 

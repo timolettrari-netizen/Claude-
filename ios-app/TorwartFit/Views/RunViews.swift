@@ -1,6 +1,8 @@
 import SwiftUI
 import MapKit
 import HealthKit
+import AVFoundation
+import AudioToolbox
 
 /// Laufplan der Woche (im Reiter Training)
 struct RunPlanCard: View {
@@ -59,8 +61,6 @@ struct RunPlanCard: View {
                 }
             }
             .background(Color.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            Button { store.startRun(nil) } label: { Label("Freien Lauf starten (GPS)", systemImage: "location.fill") }
-                .buttonStyle(LimeButton(secondary: true))
         }
         .sheet(item: $detail) { r in RunDetailSheet(run: r).environmentObject(store).presentationDetents([.medium, .large]) }
     }
@@ -155,12 +155,24 @@ struct RunTrackerView: View {
     @State private var finished = false
     @State private var kmInput = ""
     @State private var confirmQuit = false
+    @State private var segIndex = -1
+    @StateObject private var voice = IntervalVoice()
+
+    private var gps: Bool { launch.activity.usesGPS }
+    private var timeline: [IntervalProgram.Segment] { launch.program?.timeline ?? [] }
 
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     init(launch: RunLaunch, store: Store) {
         self.launch = launch
-        let tg = store.runTargets(for: launch.plan)
+        var tg = store.runTargets(for: launch.plan)
+        if launch.program != nil {
+            // Intervalle sagt IntervalVoice an; der Coach meldet nur Kilometer und warnt bei sehr hohem Puls.
+            tg.phases = []
+            tg.paceLo = nil
+            tg.paceHi = nil
+            tg.hrHi = tg.fastHrHi
+        }
         _targets = State(initialValue: tg)
         _coach = StateObject(wrappedValue: RunCoach(targets: tg, voiceOn: store.s.coachVoice))
     }
@@ -180,9 +192,10 @@ struct RunTrackerView: View {
                         .background(Color.card2, in: Circle())
                 }
                 Spacer()
-                Text(launch.plan?.title ?? "Freier Lauf").font(.subheadline.weight(.semibold))
+                Text("\(launch.activity.icon) \(launch.title)").font(.subheadline.weight(.semibold)).lineLimit(1)
                 Spacer()
-                Text(gpsText).font(.caption).foregroundStyle(t.gps == .ok ? Color.lime : .orange)
+                if gps { Text(gpsText).font(.caption).foregroundStyle(t.gps == .ok ? Color.lime : .orange) }
+                else { Text("Stoppuhr").font(.caption).foregroundStyle(Color.mut) }
             }
             .padding(.top, 8)
             if finished { summary } else { live }
@@ -190,9 +203,11 @@ struct RunTrackerView: View {
         .padding(.horizontal, 16)
         .background(Color.bg.ignoresSafeArea())
         .onAppear {
+            t.useGPS = gps
+            t.maxSpeed = launch.activity.maxSpeed
             t.begin()
-            coach.begin()
             UIApplication.shared.isIdleTimerDisabled = true
+            if launch.program != nil { voice.prepare() } else if gps { coach.begin() }
             if store.s.hrSource == "ble" { HeartRateMonitor.shared.start() }
             if store.s.hrSource == "watch" {
                 hrQuery = HealthService.shared.streamHeartRate(since: t.start) { bpm in watchHR = bpm; watchHRTime = Date() }
@@ -201,13 +216,16 @@ struct RunTrackerView: View {
         .onDisappear {
             t.finish()
             coach.stop()
+            voice.stop()
             if let q = hrQuery { HealthService.shared.stop(q) }
             UIApplication.shared.isIdleTimerDisabled = false
         }
         .onReceive(ticker) { _ in
             guard !finished else { return }
             t.recordSecond(hr: hr)
-            if t.running { coach.update(elapsed: t.elapsed, km: t.km, rollingPace: t.rollingPace, hr: hr) }
+            intervalTick(Int(t.elapsed))
+            // Sprach-Coach (Tempo, Puls, Kilometer) nur bei Touren mit GPS
+            if t.running && gps { coach.update(elapsed: t.elapsed, km: t.km, rollingPace: t.rollingPace, hr: hr) }
         }
         .confirmationDialog("Lauf abbrechen?", isPresented: $confirmQuit, titleVisibility: .visible) {
             Button("Abbrechen ohne Speichern", role: .destructive) { t.finish(); dismiss() }
@@ -226,14 +244,23 @@ struct RunTrackerView: View {
     private var live: some View {
         VStack(spacing: 18) {
             Spacer()
-            Text(clock(t.elapsed)).font(.system(size: 84, weight: .heavy).width(.condensed).italic().monospacedDigit())
+            if launch.program != nil { intervalPanel }
+            Text(clock(t.elapsed)).font(.system(size: launch.program == nil ? 84 : 44, weight: .heavy).width(.condensed).italic().monospacedDigit())
             Text(t.running ? "läuft" : "pausiert").font(.subheadline).foregroundStyle(Color.mut)
             HStack(spacing: 10) {
-                stat(String(format: "%.2f", t.km).replacingOccurrences(of: ".", with: ","), "km")
-                stat(t.rollingPace.map { Store.pace($0) } ?? t.paceMinPerKm.map { Store.pace($0) } ?? "–", "min/km")
+                if gps {
+                    stat(String(format: "%.2f", t.km).replacingOccurrences(of: ".", with: ","), "km")
+                    if launch.activity == .bike {
+                        stat(speedText, "km/h")
+                    } else {
+                        stat(t.rollingPace.map { Store.pace($0) } ?? t.paceMinPerKm.map { Store.pace($0) } ?? "–", "min/km")
+                    }
+                } else {
+                    stat("\(kcal)", "kcal")
+                }
                 hrTile
             }
-            if let i = coach.phaseIndex, i < targets.phases.count {
+            if launch.program == nil, let i = coach.phaseIndex, i < targets.phases.count {
                 let ph = targets.phases[i]
                 HStack {
                     Text(phaseName(ph.kind)).font(.sport(26)).textCase(.uppercase).foregroundStyle(ph.kind == .walk ? Color.cyan : ph.kind == .fast ? Color.orange : Color.lime)
@@ -251,7 +278,7 @@ struct RunTrackerView: View {
                 .buttonStyle(.plain)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("COACH").font(.caption2.weight(.heavy)).foregroundStyle(Color.lime)
-                    Text(coach.message).font(.subheadline)
+                    Text(coachText).font(.subheadline)
                     Text(targetText).font(.caption).foregroundStyle(Color.mut)
                 }
                 Spacer(minLength: 0)
@@ -261,7 +288,7 @@ struct RunTrackerView: View {
                 ProgressView(value: min(t.km, p.km), total: max(p.km, 0.1)).tint(.lime)
                 Text("Ziel \(fmtKg(p.km)) km · \(kcal) kcal").font(.caption).foregroundStyle(Color.mut)
             }
-            if t.gps == .denied {
+            if gps && t.gps == .denied {
                 Text("Ortung ist aus. Erlaube sie unter Einstellungen → TorwartFit → Standort, oder trage die Strecke am Ende selbst ein.")
                     .font(.footnote).foregroundStyle(.orange).multilineTextAlignment(.center)
             }
@@ -289,13 +316,15 @@ struct RunTrackerView: View {
                 }
                 HStack(spacing: 10) {
                     stat("\(max(1, Int(t.elapsed / 60)))", "Minuten")
-                    stat(String(format: "%.2f", t.km).replacingOccurrences(of: ".", with: ","), "km (GPS)")
+                    if gps { stat(String(format: "%.2f", t.km).replacingOccurrences(of: ".", with: ","), "km (GPS)") }
                     stat("\(kcal)", "kcal")
                 }
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Strecke in km (anpassen, falls das GPS gefehlt hat)").font(.footnote).foregroundStyle(Color.mut)
-                    TextField("km", text: $kmInput).keyboardType(.decimalPad)
-                        .padding(12).background(Color.card2, in: RoundedRectangle(cornerRadius: 10))
+                if gps {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Strecke in km (anpassen, falls das GPS gefehlt hat)").font(.footnote).foregroundStyle(Color.mut)
+                        TextField("km", text: $kmInput).keyboardType(.decimalPad)
+                            .padding(12).background(Color.card2, in: RoundedRectangle(cornerRadius: 10))
+                    }
                 }
                 if let a = t.avgHR {
                     HStack(spacing: 10) {
@@ -304,8 +333,8 @@ struct RunTrackerView: View {
                     }
                 }
                 Button("Speichern") {
-                    let km = Double(kmInput.replacingOccurrences(of: ",", with: ".")) ?? t.km
-                    store.saveRun(plan: launch.plan, start: t.start, km: km, seconds: t.elapsed,
+                    let km = gps ? (Double(kmInput.replacingOccurrences(of: ",", with: ".")) ?? t.km) : 0
+                    store.saveRun(launch, start: t.start, km: km, seconds: t.elapsed,
                                   route: t.route.map { RunCoordinate(lat: $0.latitude, lon: $0.longitude) },
                                   avgHR: t.avgHR, maxHR: t.hrMax > 0 ? t.hrMax : nil)
                     Haptics.success()
@@ -317,9 +346,73 @@ struct RunTrackerView: View {
         }
     }
 
-    private var kcal: Int {
-        let kg = store.currentKg
-        return t.km > 0.2 ? Int(0.92 * kg * t.km) : Int(8.5 * kg * t.elapsed / 3600)
+    private var kcal: Int { launch.activity.kcal(kg: store.currentKg, km: gps ? t.km : 0, seconds: t.elapsed) }
+
+    private var speedText: String {
+        t.elapsed > 30 ? String(format: "%.1f", t.km / (t.elapsed / 3600)).replacingOccurrences(of: ".", with: ",") : "–"
+    }
+
+    // MARK: Intervalle
+
+    private func segment(at sec: Int) -> Int? {
+        guard let i = timeline.lastIndex(where: { $0.start <= sec }) else { return nil }
+        return sec < timeline[i].start + timeline[i].seconds ? i : nil
+    }
+
+    private func intervalTick(_ sec: Int) {
+        guard launch.program != nil, t.running else { return }
+        let idx = segment(at: sec) ?? timeline.count
+        if idx != segIndex {
+            let first = segIndex == -1
+            segIndex = idx
+            if idx < timeline.count {
+                let sg = timeline[idx]
+                if !first { AudioServicesPlaySystemSound(1013) }
+                Haptics.success()
+                if coach.voiceOn { voice.say("\(sg.name), \(IntervalVoice.spoken(sg.seconds))") }
+            } else {
+                AudioServicesPlaySystemSound(1025)
+                Haptics.success()
+                if coach.voiceOn { voice.say("Intervalle geschafft. Du kannst jetzt beenden.") }
+            }
+            return
+        }
+        if idx < timeline.count {
+            let left = timeline[idx].start + timeline[idx].seconds - sec
+            if left <= 3 && left > 0 { AudioServicesPlaySystemSound(1103) }
+        }
+    }
+
+    @ViewBuilder private var intervalPanel: some View {
+        let sec = Int(t.elapsed)
+        if let i = segment(at: sec) {
+            let sg = timeline[i]
+            let left = sg.start + sg.seconds - sec
+            let color: Color = sg.hard ? .orange : .cyan
+            VStack(spacing: 8) {
+                HStack {
+                    Text(sg.round.map { "Runde \($0) / \(launch.program?.repeats ?? 1)" } ?? (i == 0 ? "Start" : "Ende"))
+                        .font(.caption.weight(.heavy)).foregroundStyle(color)
+                    Spacer()
+                    Text("Abschnitt \(i + 1) / \(timeline.count)").font(.caption).foregroundStyle(Color.mut)
+                }
+                Text(sg.name).font(.sport(44)).textCase(.uppercase).foregroundStyle(color)
+                Text(IntervalProgram.clock(left)).font(.system(size: 84, weight: .heavy).width(.condensed).monospacedDigit())
+                ProgressView(value: Double(sg.seconds - left), total: Double(max(sg.seconds, 1))).tint(color)
+                if i + 1 < timeline.count {
+                    Text("Danach: \(timeline[i + 1].name) · \(IntervalProgram.dur(timeline[i + 1].seconds))")
+                        .font(.footnote).foregroundStyle(Color.mut)
+                }
+            }
+            .padding(16)
+            .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 20))
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(color.opacity(0.4), lineWidth: 1.5))
+        } else {
+            Text("✓ Intervalle geschafft – locker austraben oder beenden.")
+                .font(.headline).foregroundStyle(Color.lime).multilineTextAlignment(.center)
+                .padding(16).frame(maxWidth: .infinity)
+                .background(Color.lime.opacity(0.1), in: RoundedRectangle(cornerRadius: 20))
+        }
     }
 
     private var hrTile: some View {
@@ -339,8 +432,14 @@ struct RunTrackerView: View {
         .background(Color.card, in: RoundedRectangle(cornerRadius: 14))
     }
 
+    private var coachText: String {
+        if !gps { return "Stoppuhr läuft – \(launch.activity.name)" }
+        return coach.message
+    }
+
     private var targetText: String {
         var parts: [String] = []
+        if !gps { return store.s.hrSource != "none" ? "Puls: \(targets.zoneText)" : launch.activity.info }
         if let lo = targets.paceLo, let hi = targets.paceHi { parts.append("Tempo \(Store.pace(lo))–\(Store.pace(hi)) /km") }
         if store.s.hrSource != "none" { parts.append(targets.zoneText) }
         return parts.isEmpty ? "Freier Lauf" : "Ziel: " + parts.joined(separator: " · ")
@@ -351,7 +450,11 @@ struct RunTrackerView: View {
     }
 
     private func finish() {
-        coach.say("Lauf beendet. \(RunCoach.spokenKm(t.km)) Kilometer in \(RunCoach.spokenTime(t.elapsed)). Stark!")
+        if gps {
+            coach.say("Geschafft. \(RunCoach.spokenKm(t.km)) Kilometer in \(RunCoach.spokenTime(t.elapsed)). Stark!")
+        } else {
+            coach.say("Training beendet. \(RunCoach.spokenTime(t.elapsed)). Stark!")
+        }
         t.finish()
         kmInput = String(format: "%.2f", t.km).replacingOccurrences(of: ".", with: ",")
         finished = true
@@ -408,5 +511,34 @@ struct HRPairView: View {
         .navigationTitle("Pulsgurt")
         .onAppear { hr.start(); hr.scan() }
         .onDisappear { hr.stopScan() }
+    }
+}
+
+/// Sprachansagen für Intervalle (auch mit Kopfhörern und bei gesperrtem Bildschirm)
+final class IntervalVoice: ObservableObject {
+    private let synth = AVSpeechSynthesizer()
+
+    func prepare() {
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .voicePrompt, options: [.duckOthers, .mixWithOthers])
+    }
+
+    func say(_ text: String) {
+        try? AVAudioSession.sharedInstance().setActive(true)
+        let u = AVSpeechUtterance(string: text)
+        u.voice = AVSpeechSynthesisVoice(language: "de-DE")
+        u.rate = 0.5
+        synth.speak(u)
+    }
+
+    func stop() {
+        synth.stopSpeaking(at: .immediate)
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+
+    static func spoken(_ s: Int) -> String {
+        if s < 60 { return "\(s) Sekunden" }
+        let m = s / 60, r = s % 60
+        let min = m == 1 ? "eine Minute" : "\(m) Minuten"
+        return r == 0 ? min : "\(min) \(r)"
     }
 }

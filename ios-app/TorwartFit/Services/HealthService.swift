@@ -11,7 +11,7 @@ final class HealthService {
     func requestAccess() async -> Bool {
         guard isAvailable else { return false }
         let read: Set<HKObjectType> = [HKQuantityType(.stepCount), HKQuantityType(.bodyMass), HKQuantityType(.heartRate), HKObjectType.workoutType()]
-        let share: Set<HKSampleType> = [HKObjectType.workoutType(), HKQuantityType(.activeEnergyBurned), HKQuantityType(.distanceWalkingRunning)]
+        let share: Set<HKSampleType> = [HKObjectType.workoutType(), HKQuantityType(.activeEnergyBurned), HKQuantityType(.distanceWalkingRunning), HKQuantityType(.distanceCycling)]
         do {
             try await hs.requestAuthorization(toShare: share, read: read)
             return true
@@ -138,6 +138,23 @@ final class HealthService {
                                                               start: start, end: end)]
         if km > 0 {
             samples.append(HKCumulativeQuantitySample(type: HKQuantityType(.distanceWalkingRunning),
+                                                      quantity: HKQuantity(unit: .meterUnit(with: .kilo), doubleValue: km),
+                                                      start: start, end: end))
+        }
+        await writeWorkout(cfg, start: start, end: end, samples: samples)
+    }
+
+    /// Freies Training oder Lauf mit passender Aktivitätsart speichern
+    func saveActivity(_ a: FreeActivity, start: Date, end: Date, km: Double, kcal: Double) async {
+        guard isAvailable else { return }
+        let cfg = HKWorkoutConfiguration()
+        cfg.activityType = a.healthType
+        cfg.locationType = a.usesGPS ? .outdoor : .indoor
+        var samples: [HKSample] = [HKCumulativeQuantitySample(type: HKQuantityType(.activeEnergyBurned),
+                                                              quantity: HKQuantity(unit: .kilocalorie(), doubleValue: kcal),
+                                                              start: start, end: end)]
+        if km > 0 && a.usesGPS {
+            samples.append(HKCumulativeQuantitySample(type: HKQuantityType(a == .bike ? .distanceCycling : .distanceWalkingRunning),
                                                       quantity: HKQuantity(unit: .meterUnit(with: .kilo), doubleValue: km),
                                                       start: start, end: end))
         }
