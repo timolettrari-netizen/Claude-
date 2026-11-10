@@ -7,6 +7,7 @@ struct TrainingView: View {
     @State private var query = ""
     @State private var category = "Alle"
     @State private var showFree = false
+    @State private var showReaction = false
 
     private var library: [String] {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
@@ -37,10 +38,17 @@ struct TrainingView: View {
                         }
                     }
 
-                    Button { showFree = true } label: {
-                        Label("Freies Training", systemImage: "figure.run.circle.fill")
+                    HStack(spacing: 10) {
+                        Button { showFree = true } label: {
+                            Label("Freies Training", systemImage: "figure.run.circle.fill")
+                        }
+                        .buttonStyle(LimeButton())
+                        Button { showReaction = true } label: {
+                            Label("Reaktion", systemImage: "bolt.fill")
+                        }
+                        .buttonStyle(LimeButton(secondary: true))
+                        .frame(width: 140)
                     }
-                    .buttonStyle(LimeButton())
 
                     RunPlanCard().padding(.top, 6)
 
@@ -88,6 +96,7 @@ struct TrainingView: View {
             .sheet(item: $preview) { s in SessionPreview(session: s.id).environmentObject(store) }
             .sheet(item: $detail) { s in ExerciseDetailView(id: s.id).environmentObject(store) }
             .sheet(isPresented: $showFree) { FreeTrainingSheet().environmentObject(store) }
+            .sheet(isPresented: $showReaction) { ReactionSetupView().environmentObject(store) }
         }
     }
 }
