@@ -112,6 +112,8 @@ struct WeightEntry: Codable, Hashable, Identifiable {
     var id = UUID()
     var date: Date
     var kg: Double
+    /// nil = selbst eingetragen, "health" = aus Apple Health (z. B. Garmin-Waage)
+    var source: String? = nil
 }
 
 extension DateUtil {

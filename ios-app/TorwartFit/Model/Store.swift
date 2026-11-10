@@ -289,6 +289,8 @@ final class Store: ObservableObject {
         let rhr = await hs.restingHeartRate()
         let sleep = await hs.sleepLast24h()
         let week = await hs.dailySteps(days: 7).map { DaySteps(date: $0.date, steps: $0.steps) }
+        let since = DateUtil.calendar.date(byAdding: .day, value: -60, to: Date()) ?? Date()
+        let weightLog = await hs.weightSamples(since: since)
         await MainActor.run {
             self.steps = st
             self.weight = w
@@ -296,6 +298,7 @@ final class Store: ObservableObject {
             self.restingHR = rhr
             self.sleepHours = sleep
             self.stepsWeek = week
+            self.mergeHealthWeights(weightLog)
             // Tagesform „Schlaf“ aus Garmin vorschlagen, solange du sie heute nicht selbst eingetragen hast
             if let h = sleep, self.todayReadiness.sleep == nil {
                 self.setReadiness(\.sleep, Store.sleepScore(hours: h))

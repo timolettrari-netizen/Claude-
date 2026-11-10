@@ -163,6 +163,7 @@ enum CoachContext {
         let typen: [String] = cat.sessions.map { se -> String in "\(se.name) (\(se.label))" }
         let gewicht: Double = (store.currentKg * 10).rounded() / 10
         let soll: Double = (store.targetKg(on: Date()) * 10).rounded() / 10
+        let kalorienAutomatik: String = store.calorieAuto?.text ?? (store.s.autoCalories ? "noch zu wenige Wiegungen" : "aus")
         let spieltag: String = store.s.gameDay < 0 ? "keiner" : DateUtil.weekdays[store.s.gameDay]
         let data: [String: Any] = [
             "name": store.s.name,
@@ -188,6 +189,7 @@ enum CoachContext {
             "zielDatum": DateUtil.format(store.s.body.goalDate, "ddMMyyyy"),
             "sollGewichtHeute": soll,
             "kalorienzielHeute": store.calorieTarget(on: Date()),
+            "kalorienAutomatik": kalorienAutomatik,
             "heuteGegessenKcal": store.eatenKcal(on: Date()).kcal,
             "zusaetzlichGegessenHeute": extraFood,
             "eiweissZielG": store.proteinTarget,

@@ -199,6 +199,16 @@ final class HealthService {
         return out
     }
 
+    /// Gewichtsmessungen seit `since` (ältere zuerst)
+    func weightSamples(since: Date) async -> [(date: Date, kg: Double)] {
+        guard isAvailable else { return [] }
+        let pred = HKQuery.predicateForSamples(withStart: since, end: nil)
+        let q = HKSampleQueryDescriptor(predicates: [.quantitySample(type: HKQuantityType(.bodyMass), predicate: pred)],
+                                        sortDescriptors: [SortDescriptor(\.endDate, order: .forward)], limit: 500)
+        guard let samples = try? await q.result(for: hs) else { return [] }
+        return samples.map { (date: $0.endDate, kg: $0.quantity.doubleValue(for: .gramUnit(with: .kilo))) }
+    }
+
     /// Letzter Ruhepuls (höchstens 3 Tage alt)
     func restingHeartRate() async -> Int? {
         guard isAvailable else { return nil }

@@ -48,6 +48,14 @@ struct WeightCard: View {
             }
             Text("Rechnerisches Tempo: ca. \(String(format: "%.2f", d.perWeek).replacingOccurrences(of: ".", with: ",")) kg pro Woche · Ziel \(fmtKg(store.s.body.goalKg)) kg am \(DateUtil.format(store.s.body.goalDate, "dMMMyyyy"))")
                 .font(.footnote).foregroundStyle(Color.mut)
+            if let auto = store.calorieAuto {
+                Label(auto.text, systemImage: "wand.and.stars")
+                    .font(.footnote).foregroundStyle(auto.adjust == 0 ? Color.lime : auto.adjust < 0 ? Color.orange : Color.cyan)
+            } else if store.s.autoCalories {
+                Label("Automatik startet, sobald du in 10 Tagen mindestens 3× gewogen hast (Waage über Apple Health zählt mit).",
+                      systemImage: "wand.and.stars")
+                    .font(.footnote).foregroundStyle(Color.mut)
+            }
             if d.need > 1000 {
                 Text("Ehrlich: Für dein Zieldatum wären \(Int(d.need)) kcal Defizit pro Tag nötig – zu viel. Ich rechne mit \(d.perDay) kcal. Verschiebe sonst das Zieldatum im Profil.")
                     .font(.footnote).foregroundStyle(.orange)
@@ -145,11 +153,12 @@ struct BodySettingsSection: View {
             numberRow("Zielgewicht (kg)", value: $store.s.body.goalKg, step: 0.5)
             DatePicker("Zieldatum", selection: $store.s.body.goalDate, displayedComponents: .date)
             Stepper("Schrittziel: \(store.s.body.stepGoal)", value: $store.s.body.stepGoal, in: 3000...30000, step: 500)
-            Stepper("Kalorien-Anpassung: \(store.s.body.calorieAdjust > 0 ? "+" : "")\(store.s.body.calorieAdjust) kcal",
+            Toggle("Kalorienziel automatisch anpassen", isOn: $store.s.autoCalories)
+            Stepper("Eigene Anpassung: \(store.s.body.calorieAdjust > 0 ? "+" : "")\(store.s.body.calorieAdjust) kcal",
                     value: $store.s.body.calorieAdjust, in: -300...300, step: 50)
             NavigationLink("Dienstplan") { ShiftCalendarView() }
         } header: { Text("Abnehmen & Dienstplan") } footer: {
-            Text("Grundumsatz nach Mifflin-St Jeor × 1,2 plus Schritte, Defizit aus Ziel und Zieldatum (400–900 kcal/Tag), nie unter 1.800 kcal. An Trainingstagen kommt die Hälfte des Trainingsverbrauchs dazu. Kein Ersatz für ärztliche Beratung.")
+            Text("Grundumsatz nach Mifflin-St Jeor × 1,2 plus Schritte, Defizit aus Ziel und Zieldatum (400–900 kcal/Tag), nie unter 1.800 kcal. An Trainingstagen kommt die Hälfte des Trainingsverbrauchs dazu. Die Automatik vergleicht jeden Montag deinen Gewichtstrend der letzten 4 Wochen mit dem Plan und passt das Ziel um höchstens −300 bis +200 kcal an. Kein Ersatz für ärztliche Beratung.")
         }
     }
 

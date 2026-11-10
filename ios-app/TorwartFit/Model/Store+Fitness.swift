@@ -62,8 +62,80 @@ extension Store {
 
     var baseIntake: Int {
         let stepK = max(0, Double(s.body.stepGoal - 3000)) * currentKg * 0.0004
-        let raw = Int(((bmr * 1.2 + stepK - Double(deficit.perDay)) / 50).rounded()) * 50 + s.body.calorieAdjust
+        let raw = Int(((bmr * 1.2 + stepK - Double(deficit.perDay)) / 50).rounded()) * 50
+            + s.body.calorieAdjust + (calorieAuto?.adjust ?? 0)
         return max(1800, raw)
+    }
+
+    // MARK: Automatische Kalorienanpassung
+
+    struct CalorieAuto {
+        /// kcal pro Tag (negativ = weniger essen)
+        let adjust: Int
+        /// tatsächliche Abnahme in kg pro Woche (negativ = zugenommen)
+        let actualPerWeek: Double
+        let plannedPerWeek: Double
+        let weighIns: Int
+
+        var text: String {
+            func f(_ v: Double) -> String { String(format: "%.1f", abs(v)).replacingOccurrences(of: ".", with: ",") }
+            let trend = actualPerWeek >= 0 ? "\(f(actualPerWeek)) kg/Woche abgenommen" : "\(f(actualPerWeek)) kg/Woche zugenommen"
+            let plan = "Plan: \(f(plannedPerWeek)) kg/Woche"
+            if adjust == 0 { return "Automatik: zuletzt \(trend) (\(plan)) – passt, Ziel bleibt." }
+            if adjust < 0 { return "Automatik: \(adjust) kcal/Tag, weil du zuletzt \(trend) hast (\(plan))." }
+            return "Automatik: +\(adjust) kcal/Tag – zuletzt \(trend), schneller als geplant (\(plan)). Das schont die Muskeln."
+        }
+    }
+
+    /// Wird einmal pro Woche (Stand Montag) aus den Wiegungen der letzten 4 Wochen berechnet.
+    /// Ausgleich nur zur Hälfte (Wasser schwankt), zwischen −300 und +200 kcal/Tag.
+    var calorieAuto: CalorieAuto? {
+        guard s.autoCalories else { return nil }
+        let monday = DateUtil.weekStart(Date())
+        guard let from = DateUtil.calendar.date(byAdding: .day, value: -28, to: monday) else { return nil }
+        let pts = s.weights.filter { $0.date >= from && $0.date < monday }.sorted { $0.date < $1.date }
+        guard pts.count >= 3, let first = pts.first, let last = pts.last,
+              last.date.timeIntervalSince(first.date) >= 10 * 86400 else { return nil }
+        // Trend per linearer Regression (kg über Tage)
+        let xs: [Double] = pts.map { $0.date.timeIntervalSince(first.date) / 86400 }
+        let ys: [Double] = pts.map { $0.kg }
+        let n = Double(pts.count)
+        let mx = xs.reduce(0, +) / n
+        let my = ys.reduce(0, +) / n
+        var num = 0.0, den = 0.0
+        for i in 0..<pts.count {
+            num += (xs[i] - mx) * (ys[i] - my)
+            den += (xs[i] - mx) * (xs[i] - mx)
+        }
+        guard den > 0 else { return nil }
+        let actual = -num / den * 7
+        let planned = deficit.perWeek
+        let gap = planned - actual                       // > 0: langsamer als geplant
+        var adj = -gap * 7700 / 7 * 0.5
+        if actual > currentKg * 0.01 { adj = max(adj, 100) }   // mehr als 1 % pro Woche ist zu schnell
+        let a = max(-300, min(200, Int((adj / 50).rounded()) * 50))
+        return CalorieAuto(adjust: a, actualPerWeek: actual, plannedPerWeek: planned, weighIns: pts.count)
+    }
+
+    /// Übernimmt Gewichte aus Apple Health (z. B. Garmin-Waage) in den Verlauf – je Tag ein Wert,
+    /// selbst eingetragene Werte haben Vorrang.
+    func mergeHealthWeights(_ samples: [(date: Date, kg: Double)]) {
+        var w = s.weights
+        var changed = false
+        for smp in samples {
+            let kg = (smp.kg * 10).rounded() / 10
+            if let i = w.firstIndex(where: { DateUtil.calendar.isDate($0.date, inSameDayAs: smp.date) }) {
+                if w[i].source == "health" && w[i].kg != kg && smp.date > w[i].date {
+                    w[i].kg = kg
+                    w[i].date = smp.date
+                    changed = true
+                }
+            } else {
+                w.append(WeightEntry(date: smp.date, kg: kg, source: "health"))
+                changed = true
+            }
+        }
+        if changed { s.weights = w.sorted { $0.date < $1.date } }
     }
 
     /// Geschätzter Verbrauch einer Einheit (kcal)

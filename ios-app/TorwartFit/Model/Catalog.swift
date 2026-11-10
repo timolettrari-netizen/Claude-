@@ -231,6 +231,8 @@ struct AppState: Codable {
     var intervals: [IntervalProgram] = []
     var analyses: [TechniqueLog] = []
     var foodLog: [FoodEntry] = []
+    /// Kalorienziel wöchentlich an den echten Gewichtsverlauf anpassen
+    var autoCalories = true
 
     init() {}
 
@@ -272,6 +274,7 @@ struct AppState: Codable {
         intervals = try c.decodeIfPresent([IntervalProgram].self, forKey: .intervals) ?? []
         analyses = try c.decodeIfPresent([TechniqueLog].self, forKey: .analyses) ?? []
         foodLog = try c.decodeIfPresent([FoodEntry].self, forKey: .foodLog) ?? []
+        autoCalories = try c.decodeIfPresent(Bool.self, forKey: .autoCalories) ?? true
         if goal != nil && programStart == nil { programStart = blockStart }   // älterer Stand ohne Plan-Daten
     }
 }
