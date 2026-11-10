@@ -157,6 +157,7 @@ struct RunTrackerView: View {
     @State private var confirmQuit = false
     @State private var segIndex = -1
     @StateObject private var voice = IntervalVoice()
+    @State private var liveActivity = RunActivityController()
 
     private var gps: Bool { launch.activity.usesGPS }
     private var timeline: [IntervalProgram.Segment] { launch.program?.timeline ?? [] }
@@ -206,6 +207,7 @@ struct RunTrackerView: View {
             t.useGPS = gps
             t.maxSpeed = launch.activity.maxSpeed
             t.begin()
+            liveActivity.start(title: launch.title, icon: launch.activity.icon, usesGPS: gps, state: activityState())
             UIApplication.shared.isIdleTimerDisabled = true
             if launch.program != nil { voice.prepare() } else if gps { coach.begin() }
             if store.s.hrSource == "ble" { HeartRateMonitor.shared.start() }
@@ -215,6 +217,7 @@ struct RunTrackerView: View {
         }
         .onDisappear {
             t.finish()
+            liveActivity.end()
             coach.stop()
             voice.stop()
             if let q = hrQuery { HealthService.shared.stop(q) }
@@ -224,6 +227,7 @@ struct RunTrackerView: View {
             guard !finished else { return }
             t.recordSecond(hr: hr)
             intervalTick(Int(t.elapsed))
+            liveActivity.update(activityState())
             // Sprach-Coach (Tempo, Puls, Kilometer) nur bei Touren mit GPS
             if t.running && gps { coach.update(elapsed: t.elapsed, km: t.km, rollingPace: t.rollingPace, hr: hr) }
         }
@@ -449,7 +453,48 @@ struct RunTrackerView: View {
         switch k { case .walk: return "Gehen"; case .jog: return "Traben"; case .easy: return "Locker"; case .fast: return "Zügig" }
     }
 
+    /// Inhalt für Sperrbildschirm / Dynamic Island
+    private func activityState() -> RunActivityAttributes.ContentState {
+        let sec = Int(t.elapsed)
+        var phase = launch.activity == .run ? "Lauf" : launch.activity.name
+        var hard = false
+        var end: Date? = nil
+        var next: String? = nil
+        if launch.program != nil {
+            if let i = segment(at: sec) {
+                let sg = timeline[i]
+                phase = sg.name
+                hard = sg.hard
+                end = Date().addingTimeInterval(Double(sg.start + sg.seconds - sec))
+                if i + 1 < timeline.count {
+                    next = "\(timeline[i + 1].name) · \(IntervalProgram.dur(timeline[i + 1].seconds))"
+                }
+            } else {
+                phase = "Geschafft"
+            }
+        } else if let i = coach.phaseIndex, i < targets.phases.count {
+            let kind = targets.phases[i].kind
+            phase = phaseName(kind)
+            hard = kind == .fast || kind == .jog
+            end = Date().addingTimeInterval(Double(coach.phaseRemaining))
+        }
+        var pace = ""
+        if gps {
+            if launch.activity == .bike {
+                if speedText != "–" { pace = speedText + " km/h" }
+            } else if let p = t.rollingPace ?? t.paceMinPerKm {
+                pace = Store.pace(p) + " /km"
+            }
+        }
+        return RunActivityAttributes.ContentState(
+            phase: phase, hard: hard, phaseEnd: t.running ? end : nil,
+            startedAt: Date().addingTimeInterval(-t.elapsed),
+            pausedElapsed: t.running ? nil : t.elapsed,
+            km: gps ? t.km : 0, pace: pace, hr: hr, next: next)
+    }
+
     private func finish() {
+        liveActivity.end()
         if gps {
             coach.say("Geschafft. \(RunCoach.spokenKm(t.km)) Kilometer in \(RunCoach.spokenTime(t.elapsed)). Stark!")
         } else {
