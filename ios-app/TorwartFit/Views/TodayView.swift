@@ -147,7 +147,8 @@ struct GoalCard: View {
                     Text(p.goal.name).font(.headline)
                     let tests = store.s.tests.filter { $0.test == p.goal.test }
                     let td = store.catalog.test(p.goal.test)
-                    Text("\(p.units) Einheiten · \(p.adherence) % erledigt · \(td?.name ?? ""): \(tests.last.map { fmtKg($0.value) + " " + (td?.unit ?? "") } ?? "noch kein Test")")
+                    let testText: String = tests.last.map { fmtKg($0.value) + " " + (td?.unit ?? "") } ?? "noch kein Test"
+                    Text("\(p.units) Einheiten · \(p.adherence) % erledigt · \(td?.name ?? ""): \(testText)")
                         .font(.caption).foregroundStyle(Color.mut)
                     ProgressView(value: p.progress).tint(.lime)
                 } else {
@@ -242,7 +243,7 @@ struct WeekCard: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(DateUtil.weekdays[i] + (i == store.todayIndex ? " · Heute" : ""))
                                     .fontWeight(i == store.todayIndex ? .bold : .medium)
-                                Text(t == "game" ? "Spiel" : t.flatMap { store.catalog.session($0) }.map { "\($0.name) · \($0.label)" } ?? "Ruhetag / Verein")
+                                Text(dayText(t))
                                     .font(.subheadline).foregroundStyle(Color.mut)
                                 ShiftChip(kind: store.dayKind(store.date(forWeekday: i))).scaleEffect(0.9, anchor: .leading)
                             }
@@ -261,6 +262,14 @@ struct WeekCard: View {
             }
             .background(Color.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
+    }
+}
+
+extension WeekCard {
+    func dayText(_ t: String?) -> String {
+        if t == "game" { return "Spiel" }
+        guard let t, let se = store.catalog.session(t) else { return "Ruhetag / Verein" }
+        return "\(se.name) · \(se.label)"
     }
 }
 

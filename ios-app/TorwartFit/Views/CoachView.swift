@@ -132,38 +132,64 @@ enum CoachContext {
                     "minuten": l.minutes, "anstrengung": l.rpe ?? 0, "saetze": sets]
         }
         let r = store.todayReadiness
+        // Teilwerte vorab mit festem Typ berechnen – ein großes [String: Any]-Literal mit vielen Closures
+        // bringt die Typprüfung von Swift sonst an ihre Grenzen.
+        let plan: [String] = (0..<7).map { i -> String in
+            let p = store.plan(for: i)
+            let what: String = p == "game" ? "Spiel" : (p.flatMap { cat.session($0)?.name } ?? "frei")
+            return DateUtil.weekdays[i] + ": " + what
+        }
+        let tagesform: [String: Int] = ["schlaf": r.sleep ?? 0, "beine": r.legs ?? 0, "energie": r.energy ?? 0]
+        let tests: [String] = store.s.tests.suffix(10).map { t -> String in
+            let def = cat.test(t.test)
+            return "\(def?.name ?? t.test): \(fmtKg(t.value)) \(def?.unit ?? "")"
+        }
+        let dienstWoche: [String] = (0..<7).map { i -> String in
+            let kind = NutritionData.shared.kindNames[store.dayKind(store.date(forWeekday: i))] ?? ""
+            return DateUtil.weekdays[i] + ": " + kind
+        }
+        let laufplan: [String] = store.runPlan(weekOf: Date()).map { run -> String in
+            "\(DateUtil.weekdays[DateUtil.dayIndex(run.date)]): \(run.title) \(fmtKg(run.km)) km"
+        }
+        let laeufe: [String] = store.s.runs.suffix(8).map { run -> String in
+            "\(DateUtil.format(run.date, "ddMM")): \(String(format: "%.1f", run.km)) km in \(run.minutes) min"
+        }
+        let mahlzeiten: [String] = store.meals(on: Date()).map { m -> String in
+            "\(m.slot.time) \(m.slot.name): \(m.recipe.name) (\(m.kcal) kcal)"
+        }
+        let typen: [String] = cat.sessions.map { se -> String in "\(se.name) (\(se.label))" }
+        let gewicht: Double = (store.currentKg * 10).rounded() / 10
+        let soll: Double = (store.targetKg(on: Date()) * 10).rounded() / 10
+        let spieltag: String = store.s.gameDay < 0 ? "keiner" : DateUtil.weekdays[store.s.gameDay]
         let data: [String: Any] = [
             "name": store.s.name,
             "ziel": store.goal?.name ?? "nicht gesetzt",
             "einheitenProWoche": store.s.days,
-            "spieltag": store.s.gameDay < 0 ? "keiner" : DateUtil.weekdays[store.s.gameDay],
+            "spieltag": spieltag,
             "ort": store.s.place == "gym" ? "Fitnessstudio" : "Zuhause",
             "blockwoche": "\(store.weekIndex + 1) von 4 (\(store.blockWeek.name))",
             "heute": DateUtil.weekdays[store.todayIndex],
-            "plan": (0..<7).map { i -> String in
-                let p = store.plan(for: i)
-                return DateUtil.weekdays[i] + ": " + (p == "game" ? "Spiel" : p.flatMap { cat.session($0)?.name } ?? "frei")
-            },
-            "tagesform": ["schlaf": r.sleep ?? 0, "beine": r.legs ?? 0, "energie": r.energy ?? 0],
+            "plan": plan,
+            "tagesform": tagesform,
             "dieseWoche": "\(store.logsThisWeek.count) Einheiten",
             "letzteEinheiten": last,
-            "tests": store.s.tests.suffix(10).map { "\(cat.test($0.test)?.name ?? $0.test): \(fmtKg($0.value)) \(cat.test($0.test)?.unit ?? "")" },
+            "tests": tests,
             "schritteHeute": Int(store.steps),
-            "gewichtKg": (store.currentKg * 10).rounded() / 10,
+            "gewichtKg": gewicht,
             "zielGewichtKg": store.s.body.goalKg,
             "zielDatum": DateUtil.format(store.s.body.goalDate, "ddMMyyyy"),
-            "sollGewichtHeute": (store.targetKg(on: Date()) * 10).rounded() / 10,
+            "sollGewichtHeute": soll,
             "kalorienzielHeute": store.calorieTarget(on: Date()),
             "heuteGegessenKcal": store.eatenKcal(on: Date()).kcal,
             "eiweissZielG": store.proteinTarget,
             "dienstHeute": NutritionData.shared.kindNames[store.dayKind(Date())] ?? "",
-            "dienstWoche": (0..<7).map { i in DateUtil.weekdays[i] + ": " + (NutritionData.shared.kindNames[store.dayKind(store.date(forWeekday: i))] ?? "") },
-            "laufplanWoche": store.runPlan(weekOf: Date()).map { "\(DateUtil.weekdays[DateUtil.dayIndex($0.date)]): \($0.title) \(fmtKg($0.km)) km" },
-            "letzteLaeufe": store.s.runs.suffix(8).map { "\(DateUtil.format($0.date, "ddMM")): \(String(format: "%.1f", $0.km)) km in \($0.minutes) min" },
+            "dienstWoche": dienstWoche,
+            "laufplanWoche": laufplan,
+            "letzteLaeufe": laeufe,
             "tempoMinProKm": Store.pace(store.paceMinPerKm),
-            "mahlzeitenHeute": store.meals(on: Date()).map { "\($0.slot.time) \($0.slot.name): \($0.recipe.name) (\($0.kcal) kcal)" },
+            "mahlzeitenHeute": mahlzeiten,
             "hintergrund": "Läuft regelmäßig 5–10 km (~6:20/km), will abnehmen (Ziel ca. 100 kg), arbeitet im Schichtdienst.",
-            "einheitenTypen": cat.sessions.map { "\($0.name) (\($0.label))" },
+            "einheitenTypen": typen,
         ]
         let json = (try? JSONSerialization.data(withJSONObject: data, options: [.sortedKeys]))
             .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"

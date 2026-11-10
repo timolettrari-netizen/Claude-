@@ -133,22 +133,15 @@ final class HealthService {
         let cfg = HKWorkoutConfiguration()
         cfg.activityType = .running
         cfg.locationType = .outdoor
-        let builder = HKWorkoutBuilder(healthStore: hs, configuration: cfg, device: .local())
-        do {
-            try await builder.beginCollection(at: start)
-            var samples: [HKSample] = [HKCumulativeQuantitySample(type: HKQuantityType(.activeEnergyBurned),
-                                                                  quantity: HKQuantity(unit: .kilocalorie(), doubleValue: kcal),
-                                                                  start: start, end: end)]
-            if km > 0 {
-                samples.append(HKCumulativeQuantitySample(type: HKQuantityType(.distanceWalkingRunning),
-                                                          quantity: HKQuantity(unit: .meterUnit(with: .kilo), doubleValue: km),
-                                                          start: start, end: end))
-            }
-            try await builder.addSamples(samples)
-            try await builder.endCollection(at: end)
-            _ = try await builder.finishWorkout()
-        } catch {
+        var samples: [HKSample] = [HKCumulativeQuantitySample(type: HKQuantityType(.activeEnergyBurned),
+                                                              quantity: HKQuantity(unit: .kilocalorie(), doubleValue: kcal),
+                                                              start: start, end: end)]
+        if km > 0 {
+            samples.append(HKCumulativeQuantitySample(type: HKQuantityType(.distanceWalkingRunning),
+                                                      quantity: HKQuantity(unit: .meterUnit(with: .kilo), doubleValue: km),
+                                                      start: start, end: end))
         }
+        await writeWorkout(cfg, start: start, end: end, samples: samples)
     }
 
     func saveWorkout(start: Date, end: Date, kcal: Double) async {
@@ -156,15 +149,32 @@ final class HealthService {
         let cfg = HKWorkoutConfiguration()
         cfg.activityType = .traditionalStrengthTraining
         cfg.locationType = .indoor
+        let energy = HKCumulativeQuantitySample(type: HKQuantityType(.activeEnergyBurned),
+                                                quantity: HKQuantity(unit: .kilocalorie(), doubleValue: kcal),
+                                                start: start, end: end)
+        await writeWorkout(cfg, start: start, end: end, samples: [energy])
+    }
+
+    /// Legt ein Training über HKWorkoutBuilder an (Completion-Handler-API, in allen SDK-Versionen gleich benannt).
+    private func writeWorkout(_ cfg: HKWorkoutConfiguration, start: Date, end: Date, samples: [HKSample]) async {
         let builder = HKWorkoutBuilder(healthStore: hs, configuration: cfg, device: .local())
         do {
-            try await builder.beginCollection(at: start)
-            let energy = HKCumulativeQuantitySample(type: HKQuantityType(.activeEnergyBurned),
-                                                    quantity: HKQuantity(unit: .kilocalorie(), doubleValue: kcal),
-                                                    start: start, end: end)
-            try await builder.addSamples([energy])
-            try await builder.endCollection(at: end)
-            _ = try await builder.finishWorkout()
+            try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, Error>) in
+                builder.beginCollection(withStart: start) { _, error in
+                    if let error { c.resume(throwing: error) } else { c.resume() }
+                }
+            }
+            try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, Error>) in
+                builder.add(samples) { _, error in
+                    if let error { c.resume(throwing: error) } else { c.resume() }
+                }
+            }
+            try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, Error>) in
+                builder.endCollection(withEnd: end) { _, error in
+                    if let error { c.resume(throwing: error) } else { c.resume() }
+                }
+            }
+            builder.finishWorkout { _, _ in }
         } catch {
             // Speichern in Health ist optional – Fehler ignorieren.
         }

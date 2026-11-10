@@ -26,10 +26,10 @@ struct StatsView: View {
                     Text("Überblick").sectionTitle()
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                         kpi("Einheiten", "\(store.s.logs.count)", "")
-                        kpi("Trainingszeit", String(format: "%.1f", Double(store.s.logs.reduce(0) { $0 + $1.minutes } + store.s.runs.reduce(0) { $0 + $1.minutes }) / 60), "h")
-                        kpi("Gelaufen", String(format: "%.1f", store.s.runs.reduce(0) { $0 + $1.km }), "km")
+                        kpi("Trainingszeit", String(format: "%.1f", totalHours), "h")
+                        kpi("Gelaufen", String(format: "%.1f", totalRunKm), "km")
                         kpi("Läufe", "\(store.s.runs.count)", "")
-                        kpi("Bewegtes Gewicht", String(format: "%.1f", store.s.logs.reduce(0) { $0 + $1.volume } / 1000), "t")
+                        kpi("Bewegtes Gewicht", String(format: "%.1f", totalTonnes), "t")
                         let rp = store.s.logs.compactMap(\.rpe)
                         kpi("Ø Anstrengung", rp.isEmpty ? "–" : String(format: "%.1f", Double(rp.reduce(0, +)) / Double(rp.count)), "/10")
                     }
@@ -67,6 +67,30 @@ struct StatsView: View {
             .sheet(isPresented: $showTest) { AddTestView().environmentObject(store).presentationDetents([.medium, .large]) }
             .sheet(item: $detail) { s in ExerciseDetailView(id: s.id).environmentObject(store) }
         }
+    }
+
+    private var totalHours: Double {
+        let workoutMin: Int = store.s.logs.reduce(0) { $0 + $1.minutes }
+        let runMin: Int = store.s.runs.reduce(0) { $0 + $1.minutes }
+        return Double(workoutMin + runMin) / 60
+    }
+    private var totalRunKm: Double { store.s.runs.reduce(0.0) { $0 + $1.km } }
+    private var totalTonnes: Double { store.s.logs.reduce(0.0) { $0 + $1.volume } / 1000 }
+
+    private func runLine(_ r: RunLog) -> String {
+        var t: String = DateUtil.format(r.date, "EEEdMMM") + " · " + String(format: "%.2f", r.km) + " km · \(r.minutes) min"
+        if let p = r.paceMinPerKm { t += " · " + Store.pace(p) + " /km" }
+        if let hr = r.avgHR { t += " · ♥ \(hr)" }
+        return t
+    }
+
+    private func logLine(_ l: WorkoutLog) -> String {
+        var t: String = DateUtil.format(l.date, "EEEdMMM") + " · \(l.minutes) min"
+        if l.healthID == nil { t += " · \(l.sets.count) Übungen" }
+        if let k = l.kcal { t += " · \(k) kcal" }
+        if let hr = l.avgHR { t += " · ♥ \(hr)" }
+        if let r = l.rpe { t += " · RPE \(r)" }
+        return t
     }
 
     private var rings: some View {
@@ -181,7 +205,7 @@ struct StatsView: View {
                     Text("🏃").frame(width: 34, height: 34).background(Color(hex: "#FF375F").opacity(0.25), in: RoundedRectangle(cornerRadius: 9))
                     VStack(alignment: .leading, spacing: 2) {
                         Text(r.title)
-                        Text("\(DateUtil.format(r.date, "EEEdMMM")) · \(String(format: "%.2f", r.km)) km · \(r.minutes) min\(r.paceMinPerKm.map { " · " + Store.pace($0) + " /km" } ?? "")\(r.avgHR.map { " · ♥ \($0)" } ?? "")")
+                        Text(runLine(r))
                             .font(.footnote).foregroundStyle(Color.mut)
                     }
                     Spacer()
@@ -211,8 +235,7 @@ struct StatsView: View {
                         }
                         VStack(alignment: .leading, spacing: 2) {
                             Text(l.title ?? se?.name ?? l.session)
-                            Text("\(DateUtil.format(l.date, "EEEdMMM")) · \(l.minutes) min" + (l.healthID == nil ? " · \(l.sets.count) Übungen" : "")
-                                 + (l.kcal.map { " · \($0) kcal" } ?? "") + (l.avgHR.map { " · ♥ \($0)" } ?? "") + (l.rpe.map { " · RPE \($0)" } ?? ""))
+                            Text(logLine(l))
                                 .font(.footnote).foregroundStyle(Color.mut)
                         }
                         Spacer()
