@@ -25,5 +25,16 @@ enum Reminders {
                                             trigger: UNCalendarNotificationTrigger(dateMatching: dc, repeats: true))
             center.add(req)
         }
+        // Sonntag 18:30: Wochenrückblick
+        let review = UNMutableNotificationContent()
+        review.title = "📋 Dein Wochenrückblick ist bereit"
+        review.body = "Der Coach wertet deine Woche aus und plant die nächste – in der App auf „Heute“."
+        review.sound = .default
+        var rc = DateComponents()
+        rc.weekday = 1
+        rc.hour = 18
+        rc.minute = 30
+        center.add(UNNotificationRequest(identifier: "weekly-review", content: review,
+                                         trigger: UNCalendarNotificationTrigger(dateMatching: rc, repeats: true)))
     }
 }

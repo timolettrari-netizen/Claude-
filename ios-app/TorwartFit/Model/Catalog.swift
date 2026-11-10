@@ -158,6 +158,14 @@ struct FoodEntry: Codable, Identifiable, Hashable {
     var note: String?
 }
 
+/// Wochenrückblick des KI-Coachs
+struct WeeklyReview: Codable, Identifiable, Hashable {
+    var id = UUID()
+    var weekStart: Date      // Montag der ausgewerteten Woche
+    var created: Date
+    var text: String
+}
+
 /// Gespeicherte Video-Technikanalyse
 struct TechniqueLog: Codable, Identifiable, Hashable {
     var id = UUID()
@@ -233,6 +241,7 @@ struct AppState: Codable {
     var foodLog: [FoodEntry] = []
     /// Kalorienziel wöchentlich an den echten Gewichtsverlauf anpassen
     var autoCalories = true
+    var reviews: [WeeklyReview] = []
 
     init() {}
 
@@ -275,6 +284,7 @@ struct AppState: Codable {
         analyses = try c.decodeIfPresent([TechniqueLog].self, forKey: .analyses) ?? []
         foodLog = try c.decodeIfPresent([FoodEntry].self, forKey: .foodLog) ?? []
         autoCalories = try c.decodeIfPresent(Bool.self, forKey: .autoCalories) ?? true
+        reviews = try c.decodeIfPresent([WeeklyReview].self, forKey: .reviews) ?? []
         if goal != nil && programStart == nil { programStart = blockStart }   // älterer Stand ohne Plan-Daten
     }
 }

@@ -4,6 +4,7 @@ import Charts
 struct StatsView: View {
     @EnvironmentObject var store: Store
     @State private var showTest = false
+    @State private var showReviews = false
     @State private var detail: Sel?
 
     private struct WeekBar: Identifiable { let id: Int; let label: String; let count: Int; let current: Bool }
@@ -21,7 +22,13 @@ struct StatsView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Statistik").font(.sport(40)).textCase(.uppercase).padding(.top, 8)
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Statistik").font(.sport(40)).textCase(.uppercase)
+                        Spacer()
+                        Button { showReviews = true } label: { Label("Rückblicke", systemImage: "doc.text.magnifyingglass") }
+                            .font(.subheadline.weight(.semibold))
+                    }
+                    .padding(.top, 8)
                     rings
                     Text("Überblick").sectionTitle()
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
@@ -68,6 +75,7 @@ struct StatsView: View {
             }
             .background(Color.bg)
             .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $showReviews) { WeeklyReviewView(weekStart: store.reviewWeekStart).environmentObject(store) }
             .sheet(isPresented: $showTest) { AddTestView().environmentObject(store).presentationDetents([.medium, .large]) }
             .sheet(item: $detail) { s in ExerciseDetailView(id: s.id).environmentObject(store) }
         }

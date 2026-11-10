@@ -183,12 +183,18 @@ final class HealthService {
 
     /// Schritte pro Tag, die letzten `days` Tage (ältester zuerst, heute zuletzt)
     func dailySteps(days: Int) async -> [(date: Date, steps: Int)] {
+        let first = Calendar.current.date(byAdding: .day, value: -(days - 1), to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        return await dailySteps(from: first, days: days)
+    }
+
+    /// Schritte pro Tag ab `from` (Tagesbeginn) für `days` Tage
+    func dailySteps(from: Date, days: Int) async -> [(date: Date, steps: Int)] {
         guard isAvailable else { return [] }
         let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
+        let first = cal.startOfDay(for: from)
         var out: [(date: Date, steps: Int)] = []
-        for i in stride(from: days - 1, through: 0, by: -1) {
-            guard let start = cal.date(byAdding: .day, value: -i, to: today),
+        for i in 0..<days {
+            guard let start = cal.date(byAdding: .day, value: i, to: first), start <= Date(),
                   let end = cal.date(byAdding: .day, value: 1, to: start) else { continue }
             let pred = HKQuery.predicateForSamples(withStart: start, end: end)
             let q = HKStatisticsQueryDescriptor(predicate: .quantitySample(type: HKQuantityType(.stepCount), predicate: pred),

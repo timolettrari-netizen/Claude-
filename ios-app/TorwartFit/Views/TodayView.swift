@@ -38,6 +38,7 @@ struct TodayView: View {
                     RunTodayCard()
                     CaloriesCard()
                     GoalCard().onTapGesture { if store.program != nil { showPlan = true } else { showGoal = true } }
+                    WeeklyReviewCard()
                     if store.s.healthEnabled { HealthCard() }
                     ReadinessCard()
                     WeekCard(preview: $preview)
