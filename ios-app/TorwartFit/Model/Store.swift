@@ -50,6 +50,12 @@ final class Store: ObservableObject {
     @Published var runLaunch: RunLaunch?
     @Published var steps: Double = 0
     @Published var weight: Double?
+    // Tageswerte aus Apple Health (Garmin, Apple Watch, iPhone)
+    @Published var activeKcal: Double = 0
+    @Published var restingHR: Int?
+    @Published var sleepHours: Double?
+    @Published var stepsWeek: [DaySteps] = []
+    private var healthAuthChecked = false
 
     private var saveWork: DispatchWorkItem?
     private static let fileURL: URL = {
@@ -241,16 +247,6 @@ final class Store: ObservableObject {
     var todayReadiness: Readiness { s.readiness[DateUtil.dayKey()] ?? Readiness() }
     var isTired: Bool { (todayReadiness.score ?? 5) < 2.7 }
 
-    var streak: Int {
-        let ws = DateUtil.weekStart(Date())
-        var n = 0
-        for w in 0..<300 {
-            guard let a = DateUtil.calendar.date(byAdding: .day, value: -7 * w, to: ws),
-                  let b = DateUtil.calendar.date(byAdding: .day, value: 7, to: a) else { break }
-            if s.logs.contains(where: { $0.date >= a && $0.date < b }) { n += 1 } else if w > 0 { break }
-        }
-        return n
-    }
     var logsThisWeek: [WorkoutLog] { let ws = DateUtil.weekStart(Date()); return s.logs.filter { $0.date >= ws } }
 
     var adherence: Int {
@@ -281,11 +277,37 @@ final class Store: ObservableObject {
 
     func refreshHealth() async {
         guard s.healthEnabled else { return }
-        let st = await HealthService.shared.stepsToday()
-        let w = await HealthService.shared.latestWeight()
-        await MainActor.run { self.steps = st; self.weight = w }
+        // Einmal pro Start: fragt nur nach Datenarten, die neu dazugekommen sind (z. B. Schlaf, Ruhepuls)
+        if !healthAuthChecked {
+            healthAuthChecked = true
+            _ = await HealthService.shared.requestAccess()
+        }
+        let hs = HealthService.shared
+        let st = await hs.stepsToday()
+        let w = await hs.latestWeight()
+        let kcal = await hs.activeEnergyToday()
+        let rhr = await hs.restingHeartRate()
+        let sleep = await hs.sleepLast24h()
+        let week = await hs.dailySteps(days: 7).map { DaySteps(date: $0.date, steps: $0.steps) }
+        await MainActor.run {
+            self.steps = st
+            self.weight = w
+            self.activeKcal = kcal
+            self.restingHR = rhr
+            self.sleepHours = sleep
+            self.stepsWeek = week
+            // Tagesform „Schlaf“ aus Garmin vorschlagen, solange du sie heute nicht selbst eingetragen hast
+            if let h = sleep, self.todayReadiness.sleep == nil {
+                self.setReadiness(\.sleep, Store.sleepScore(hours: h))
+            }
+        }
         await importHealthRuns()
         await importHealthStrength()
+    }
+
+    /// Schlafdauer → Tagesform 1–5
+    static func sleepScore(hours h: Double) -> Int {
+        h < 5 ? 1 : h < 6 ? 2 : h < 7 ? 3 : h < 8 ? 4 : 5
     }
 
     // MARK: Backup
@@ -332,6 +354,26 @@ final class Store: ObservableObject {
         s = st
         return true
     }
+}
+
+struct DaySteps: Identifiable, Hashable {
+    let date: Date
+    let steps: Int
+    var id: Date { date }
+}
+
+/// Zahl mit Tausenderpunkt (8.432)
+func fmtInt(_ v: Int) -> String {
+    let f = NumberFormatter()
+    f.locale = Locale(identifier: "de_DE")
+    f.numberStyle = .decimal
+    return f.string(from: NSNumber(value: v)) ?? String(v)
+}
+
+/// Stunden als 7:25 h
+func fmtHours(_ h: Double) -> String {
+    let m = Int((h * 60).rounded())
+    return String(format: "%d:%02d h", m / 60, m % 60)
 }
 
 func fmtKg(_ v: Double) -> String {

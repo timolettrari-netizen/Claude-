@@ -163,22 +163,44 @@ struct GoalCard: View {
     }
 }
 
+/// Tageswerte aus Apple Health (Garmin, Apple Watch, iPhone): Schrittziel als Ring, Kalorien, Schlaf, Ruhepuls
 struct HealthCard: View {
     @EnvironmentObject var store: Store
     var body: some View {
-        HStack {
-            stat("Schritte heute", "\(Int(store.steps))", "figure.walk")
-            Divider().overlay(Color.line)
-            stat("Gewicht", store.weight.map { fmtKg(($0 * 10).rounded() / 10) + " kg" } ?? "–", "scalemass")
+        let goal = max(1, store.s.body.stepGoal)
+        let steps = Int(store.steps)
+        let progress = min(1, Double(steps) / Double(goal))
+        HStack(spacing: 18) {
+            ZStack {
+                Circle().stroke(Color.cyan.opacity(0.18), lineWidth: 11)
+                Circle().trim(from: 0, to: max(0.001, progress))
+                    .stroke(Color.cyan, style: StrokeStyle(lineWidth: 11, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                VStack(spacing: 1) {
+                    Image(systemName: steps >= goal ? "checkmark" : "figure.walk").font(.caption.weight(.bold)).foregroundStyle(Color.cyan)
+                    Text(fmtInt(steps)).font(.sport(22)).minimumScaleFactor(0.6).lineLimit(1)
+                    Text("von \(fmtInt(goal))").font(.system(size: 10)).foregroundStyle(Color.mut)
+                }
+                .padding(.horizontal, 14)
+            }
+            .frame(width: 112, height: 112)
+            VStack(alignment: .leading, spacing: 9) {
+                Text("SCHRITTE & GARMIN").font(.caption2.weight(.heavy)).foregroundStyle(Color.mut)
+                row("flame.fill", .orange, "\(fmtInt(Int(store.activeKcal))) kcal", "aktiv verbrannt")
+                row("bed.double.fill", .indigo, store.sleepHours.map { fmtHours($0) } ?? "–", "Schlaf (24 h)")
+                row("heart.fill", .red, store.restingHR.map { "\($0) bpm" } ?? "–", "Ruhepuls")
+            }
+            Spacer(minLength: 0)
         }
         .card()
     }
-    private func stat(_ t: String, _ v: String, _ icon: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Label(t, systemImage: icon).font(.caption).foregroundStyle(Color.mut)
-            Text(v).font(.sport(30))
+
+    private func row(_ icon: String, _ color: Color, _ value: String, _ label: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon).font(.caption).foregroundStyle(color).frame(width: 16)
+            Text(value).font(.subheadline.weight(.bold))
+            Text(label).font(.caption).foregroundStyle(Color.mut)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

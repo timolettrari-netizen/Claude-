@@ -160,12 +160,13 @@ extension Store {
         return runOnly.filter { $0.date >= ws }.reduce(0) { $0 + $1.km }
     }
 
-    /// Übernimmt Läufe aus Apple Health (Strava, Garmin Connect, Apple Watch …). Gibt die Anzahl neuer Läufe zurück.
+    /// Übernimmt Läufe, Gehen, Wandern und Radfahren aus Apple Health (Garmin Connect, Strava, Apple Watch …).
+    /// Gibt die Anzahl neuer Einträge zurück.
     @discardableResult
     func importHealthRuns(days: Int = 120) async -> Int {
         guard s.healthEnabled else { return 0 }
         let since = DateUtil.calendar.date(byAdding: .day, value: -days, to: Date()) ?? Date()
-        let found = await HealthService.shared.runningWorkouts(since: since)
+        let found = await HealthService.shared.distanceWorkouts(since: since)
         return await MainActor.run {
             var added = 0
             var runs = self.s.runs
@@ -174,9 +175,11 @@ extension Store {
                 // gleicher Lauf aus zwei Quellen (z. B. Garmin + Strava) oder schon in der App aufgezeichnet
                 if runs.contains(where: { abs($0.date.timeIntervalSince(r.start)) < 300 && (r.km == 0 || abs($0.km - r.km) < max(0.5, r.km * 0.1)) }) { continue }
                 let seconds = r.end.timeIntervalSince(r.start)
-                let kcal = r.kcal.map { Int($0) } ?? Int(0.92 * self.currentKg * r.km)
+                let kcal = r.kcal.map { Int($0) } ?? r.activity.kcal(kg: self.currentKg, km: r.km, seconds: seconds)
+                let isRun = r.activity == .run
                 runs.append(RunLog(date: r.start, km: (r.km * 100).rounded() / 100, minutes: max(1, Int(seconds / 60)), kcal: kcal,
-                                   type: "import", title: "Lauf (\(r.source))", route: [], avgHR: r.avgHR, maxHR: r.maxHR,
+                                   type: isRun ? "import" : r.activity.rawValue,
+                                   title: "\(isRun ? "Lauf" : r.activity.name) (\(r.source))", route: [], avgHR: r.avgHR, maxHR: r.maxHR,
                                    healthID: r.id, source: r.source))
                 added += 1
             }
@@ -185,12 +188,12 @@ extension Store {
         }
     }
 
-    /// Übernimmt Kraft- und Fitnesstrainings aus Apple Health (Strava, Garmin Connect …). Gibt die Anzahl neuer Einheiten zurück.
+    /// Übernimmt alle anderen Trainings aus Apple Health (Kraft, Fußball, HIIT, Schwimmen …). Gibt die Anzahl neuer Einheiten zurück.
     @discardableResult
     func importHealthStrength(days: Int = 120) async -> Int {
         guard s.healthEnabled else { return 0 }
         let since = DateUtil.calendar.date(byAdding: .day, value: -days, to: Date()) ?? Date()
-        let found = await HealthService.shared.strengthWorkouts(since: since)
+        let found = await HealthService.shared.otherWorkouts(since: since)
         return await MainActor.run {
             var added = 0
             var logs = self.s.logs

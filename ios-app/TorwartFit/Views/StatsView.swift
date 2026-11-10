@@ -46,6 +46,10 @@ struct StatsView: View {
                     }
                     .frame(height: 180)
                     .card()
+                    if store.s.healthEnabled && !store.stepsWeek.isEmpty {
+                        Text("Schritte (7 Tage)").sectionTitle()
+                        stepsChart
+                    }
                     HStack {
                         Text("Leistungstests").sectionTitle()
                         Button { showTest = true } label: { Image(systemName: "plus.circle.fill").font(.title2) }
@@ -96,20 +100,43 @@ struct StatsView: View {
     private var rings: some View {
         let week = store.logsThisWeek.count, goal = store.weeklyGoal
         let mins = store.logsThisWeek.reduce(0) { $0 + $1.minutes }, mgoal = goal * 40
+        let steps = Int(store.steps), sgoal = max(1, store.s.body.stepGoal)
         return HStack(spacing: 20) {
             ZStack {
                 ring(Double(week) / Double(max(goal, 1)), .pink, 120)
                 ring(Double(mins) / Double(max(mgoal, 1)), .green, 88)
-                ring(Double(min(store.streak, 4)) / 4, .cyan, 56)
+                ring(Double(steps) / Double(sgoal), .cyan, 56)
             }
             .frame(width: 130, height: 130)
             VStack(alignment: .leading, spacing: 8) {
                 legend("EINHEITEN", "\(week)/\(goal)", .pink)
                 legend("MINUTEN", "\(mins)/\(mgoal)", .green)
-                legend("SERIE", "\(store.streak) \(store.streak == 1 ? "Woche" : "Wochen")", .cyan)
+                legend("SCHRITTE HEUTE", store.s.healthEnabled ? "\(fmtInt(steps))/\(fmtInt(sgoal))" : "Health aus", .cyan)
             }
         }
         .card(padding: 18)
+    }
+
+    private var stepsChart: some View {
+        let goal = store.s.body.stepGoal
+        let days = store.stepsWeek
+        let avg = days.isEmpty ? 0 : days.reduce(0) { $0 + $1.steps } / days.count
+        let reached = days.filter { $0.steps >= goal }.count
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Ø \(fmtInt(avg)) pro Tag · Ziel an \(reached) von \(days.count) Tagen erreicht")
+                .font(.footnote).foregroundStyle(Color.mut)
+            Chart {
+                ForEach(days) { d in
+                    BarMark(x: .value("Tag", DateUtil.weekdaysShort[DateUtil.dayIndex(d.date)]), y: .value("Schritte", d.steps))
+                        .foregroundStyle(d.steps >= goal ? Color.cyan : Color.white.opacity(0.3))
+                        .cornerRadius(6)
+                }
+                RuleMark(y: .value("Ziel", goal))
+                    .foregroundStyle(Color.cyan.opacity(0.7)).lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+            }
+            .frame(height: 160)
+        }
+        .card()
     }
 
     private func ring(_ v: Double, _ c: Color, _ size: CGFloat) -> some View {

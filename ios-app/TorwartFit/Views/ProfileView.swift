@@ -93,18 +93,18 @@ struct ProfileView: View {
                         } else { store.s.healthEnabled = false }
                     }))
                     if store.s.healthEnabled {
-                        Button("Trainings aus Strava / Garmin übernehmen") {
+                        Button("Garmin-/Strava-Trainings jetzt übernehmen") {
                             Task {
                                 let r = await store.importHealthRuns(days: 365)
                                 let k = await store.importHealthStrength(days: 365)
                                 await MainActor.run {
-                                    message = r + k == 0 ? "Keine neuen Trainings gefunden." : "Übernommen: \(r) Läufe, \(k) Kraft-/Fitnesseinheiten."
+                                    message = r + k == 0 ? "Keine neuen Trainings gefunden." : "Übernommen: \(r) Läufe/Touren (Laufen, Gehen, Wandern, Rad) und \(k) weitere Trainings (z. B. Fußball, Kraft)."
                                 }
                             }
                         }
                     }
                 } header: { Text("Apple Health") } footer: {
-                    Text("Liest Schritte, Gewicht und Puls, speichert deine Einheiten in Health und übernimmt Läufe und Krafttraining aus Strava und Garmin Connect automatisch. Dafür in Strava (Einstellungen → Anwendungen, Dienste und Geräte → Health) bzw. Garmin Connect (Einstellungen → Apple Health) die Verbindung zu Apple Health einschalten.")
+                    Text("Liest Schritte, aktive Kalorien, Schlaf, Ruhepuls, Gewicht und Puls und übernimmt alle Aktivitäten aus Garmin Connect und Strava automatisch (Laufen, Rad, Gehen, Wandern, Fußball, Kraft …). Der Schlaf füllt deine Tagesform vor. Dafür in Garmin Connect (Mehr → Einstellungen → Verbundene Apps → Apple Health) bzw. Strava (Einstellungen → Anwendungen, Dienste und Geräte → Health) die Verbindung zu Apple Health einschalten und alle Datenarten erlauben.")
                 }
 
                 Section("Erinnerungen") {
