@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-BUNDLE_ID="de.timolettrari.torwartfit"
+BUNDLE_ID="de.timo.torwartfit"
 
 echo "== Xcode"
 xcodebuild -version
