@@ -1,0 +1,768 @@
+diff --git a/ios-app/TorwartFit-Info.plist b/ios-app/TorwartFit-Info.plist
+index db761d0..07e2749 100644
+--- a/ios-app/TorwartFit-Info.plist
++++ b/ios-app/TorwartFit-Info.plist
+@@ -5,6 +5,7 @@
+ 	<key>UIBackgroundModes</key>
+ 	<array>
+ 		<string>location</string>
++		<string>audio</string>
+ 	</array>
+ </dict>
+ </plist>
+diff --git a/ios-app/TorwartFit.xcodeproj/project.pbxproj b/ios-app/TorwartFit.xcodeproj/project.pbxproj
+index 539ca47..9f52999 100644
+--- a/ios-app/TorwartFit.xcodeproj/project.pbxproj
++++ b/ios-app/TorwartFit.xcodeproj/project.pbxproj
+@@ -199,16 +199,19 @@
+ 				DEVELOPMENT_TEAM = "";
+ 				ENABLE_PREVIEWS = YES;
+ 				GENERATE_INFOPLIST_FILE = YES;
++				INFOPLIST_FILE = "TorwartFit-Info.plist";
+ 				INFOPLIST_KEY_CFBundleDisplayName = TorwartFit;
++				INFOPLIST_KEY_NSCameraUsageDescription = "TorwartFit filmt deine Übung, damit der KI-Coach die Technik prüfen kann.";
+ 				INFOPLIST_KEY_NSHealthShareUsageDescription = "TorwartFit liest Schritte, Gewicht und Trainings aus Apple Health, um deinen Plan und dein Kalorienziel anzupassen.";
+ 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "TorwartFit speichert deine Trainings und Läufe in Apple Health.";
+ 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "TorwartFit zeichnet beim Laufen Strecke und Tempo per GPS auf.";
+-				INFOPLIST_FILE = "TorwartFit-Info.plist";
++				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Beim Filmen wird auch Ton aufgenommen. Für die Technikanalyse wird er nicht verwendet.";
+ 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+ 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+ 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
+ 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+ 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
++				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
+ 				LD_RUNPATH_SEARCH_PATHS = (
+ 					"$(inherited)",
+ 					"@executable_path/Frameworks",
+@@ -233,16 +236,19 @@
+ 				DEVELOPMENT_TEAM = "";
+ 				ENABLE_PREVIEWS = YES;
+ 				GENERATE_INFOPLIST_FILE = YES;
++				INFOPLIST_FILE = "TorwartFit-Info.plist";
+ 				INFOPLIST_KEY_CFBundleDisplayName = TorwartFit;
++				INFOPLIST_KEY_NSCameraUsageDescription = "TorwartFit filmt deine Übung, damit der KI-Coach die Technik prüfen kann.";
+ 				INFOPLIST_KEY_NSHealthShareUsageDescription = "TorwartFit liest Schritte, Gewicht und Trainings aus Apple Health, um deinen Plan und dein Kalorienziel anzupassen.";
+ 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "TorwartFit speichert deine Trainings und Läufe in Apple Health.";
+ 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "TorwartFit zeichnet beim Laufen Strecke und Tempo per GPS auf.";
+-				INFOPLIST_FILE = "TorwartFit-Info.plist";
++				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Beim Filmen wird auch Ton aufgenommen. Für die Technikanalyse wird er nicht verwendet.";
+ 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+ 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+ 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
+ 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+ 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
++				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
+ 				LD_RUNPATH_SEARCH_PATHS = (
+ 					"$(inherited)",
+ 					"@executable_path/Frameworks",
+diff --git a/ios-app/TorwartFit/Model/Catalog.swift b/ios-app/TorwartFit/Model/Catalog.swift
+index 98b62b0..92f5d29 100644
+--- a/ios-app/TorwartFit/Model/Catalog.swift
++++ b/ios-app/TorwartFit/Model/Catalog.swift
+@@ -116,12 +116,20 @@ struct RunLog: Codable, Identifiable, Hashable {
+     var km: Double
+     var minutes: Int
+     var kcal: Int
+-    var type: String          // wr, easy, long, int, free
++    var type: String          // wr, easy, long, int, free oder FreeActivity.rawValue
+     var title: String
+     var route: [RunCoordinate] = []
+     var paceMinPerKm: Double? { km > 0.2 ? Double(minutes) / km : nil }
+ }
+ 
++/// Gespeicherte Video-Technikanalyse
++struct TechniqueLog: Codable, Identifiable, Hashable {
++    var id = UUID()
++    var exercise: String
++    var date: Date
++    var text: String
++}
++
+ struct TestEntry: Codable, Identifiable, Hashable {
+     var id = UUID()
+     var test: String
+@@ -174,6 +182,8 @@ struct AppState: Codable {
+     var runsPerWeek = 2
+     var runPlanStart = DateUtil.weekStart(Date())
+     var runs: [RunLog] = []
++    var intervals: [IntervalProgram] = []
++    var analyses: [TechniqueLog] = []
+ 
+     init() {}
+ 
+@@ -205,6 +215,8 @@ struct AppState: Codable {
+         runsPerWeek = try c.decodeIfPresent(Int.self, forKey: .runsPerWeek) ?? d.runsPerWeek
+         runPlanStart = try c.decodeIfPresent(Date.self, forKey: .runPlanStart) ?? d.runPlanStart
+         runs = try c.decodeIfPresent([RunLog].self, forKey: .runs) ?? []
++        intervals = try c.decodeIfPresent([IntervalProgram].self, forKey: .intervals) ?? []
++        analyses = try c.decodeIfPresent([TechniqueLog].self, forKey: .analyses) ?? []
+     }
+ }
+ 
+diff --git a/ios-app/TorwartFit/Model/Store+Run.swift b/ios-app/TorwartFit/Model/Store+Run.swift
+index fe70dbc..a488587 100644
+--- a/ios-app/TorwartFit/Model/Store+Run.swift
++++ b/ios-app/TorwartFit/Model/Store+Run.swift
+@@ -12,18 +12,23 @@ struct PlannedRun: Identifiable, Hashable {
+     let kcal: Int
+     let details: [String]
+     let timeHint: String
++    var program: IntervalProgram? = nil
+ }
+ 
+ /// Starten eines GPS-Laufs (für fullScreenCover)
+ struct RunLaunch: Identifiable, Hashable {
+     let id = UUID()
+     let plan: PlannedRun?
++    var activity: FreeActivity = .run
++    var program: IntervalProgram? = nil
++
++    var title: String { plan?.title ?? program?.name ?? activity.name }
+ }
+ 
+ extension Store {
+     /// Ø-Tempo in min/km aus den letzten Läufen (sonst 6:20 aus Strava)
+     var paceMinPerKm: Double {
+-        let r = s.runs.filter { $0.km > 3 && $0.minutes > 0 }.suffix(6)
++        let r = runOnly.filter { $0.km > 3 && $0.minutes > 0 }.suffix(6)
+         guard !r.isEmpty else { return 6.33 }
+         return r.map { Double($0.minutes) / $0.km }.reduce(0, +) / Double(r.count)
+     }
+@@ -87,7 +92,11 @@ extension Store {
+                                                 "Traben heißt: so langsam, dass du dich noch unterhalten kannst. Das Gehen gehört dazu.",
+                                                 "5 Min. gehen zum Auslaufen.",
+                                                 "Bei Schmerzen in Knie, Hüfte oder Schienbein sofort auf Gehen wechseln."],
+-                                      timeHint: hint))
++                                      timeHint: hint,
++                                      program: IntervalProgram(name: "Lauf-Geh-Intervalle", warmup: 300,
++                                                               steps: [IntervalStep(name: "Traben", seconds: Int(a) * 60, hard: true),
++                                                                       IntervalStep(name: "Gehen", seconds: Int(b) * 60, hard: false)],
++                                                               repeats: reps, cooldown: 300)))
+             case "long":
+                 let km = (min(14, 5 + 0.6 * Double(max(0, w - 3))) * f * 2).rounded() / 2
+                 out.append(PlannedRun(key: key, date: c.date, type: type, title: "Langer Lauf", km: km,
+@@ -102,7 +111,11 @@ extension Store {
+                                       minutes: minutes, kcal: Int(0.97 * kg * km),
+                                       details: ["10 Min. locker einlaufen.", "\(reps) × (2 Min. zügig / 2 Min. Trab).",
+                                                 "Zügig = Tempo, bei dem nur kurze Sätze gehen.", "10 Min. locker auslaufen."],
+-                                      timeHint: hint))
++                                      timeHint: hint,
++                                      program: IntervalProgram(name: "Intervall-Lauf", warmup: 600,
++                                                               steps: [IntervalStep(name: "Zügig", seconds: 120, hard: true),
++                                                                       IntervalStep(name: "Trab", seconds: 120, hard: false)],
++                                                               repeats: reps, cooldown: 600)))
+             default:
+                 var km = (min(8, 4 + 0.5 * Double(max(0, w - 3))) * f * (c.kind == "F1" ? 0.85 : 1) * 2).rounded() / 2
+                 if c.kind == "N" { km = min(km, 4) }
+@@ -122,25 +135,27 @@ extension Store {
+     }
+ 
+     func runDone(on date: Date) -> Bool {
+-        s.runs.contains { DateUtil.calendar.isDate($0.date, inSameDayAs: date) }
++        runOnly.contains { DateUtil.calendar.isDate($0.date, inSameDayAs: date) }
+     }
+ 
+-    func startRun(_ plan: PlannedRun?) { runLaunch = RunLaunch(plan: plan) }
++    func startRun(_ plan: PlannedRun?) {
++        runLaunch = RunLaunch(plan: plan, activity: plan?.program == nil ? .run : .interval, program: plan?.program)
++    }
+ 
+-    func saveRun(plan: PlannedRun?, start: Date, km: Double, seconds: Double, route: [RunCoordinate]) {
++    func saveRun(_ launch: RunLaunch, start: Date, km: Double, seconds: Double, route: [RunCoordinate]) {
+         let minutes = max(1, Int(seconds / 60))
+-        let kg = currentKg
+-        let kcal = km > 0.2 ? Int(0.92 * kg * km) : Int(8.5 * kg * seconds / 3600)
++        let a = launch.activity
++        let kcal = a.kcal(kg: currentKg, km: km, seconds: seconds)
+         s.runs.append(RunLog(date: start, km: (km * 100).rounded() / 100, minutes: minutes, kcal: kcal,
+-                             type: plan?.type ?? "free", title: plan?.title ?? "Freier Lauf", route: route))
++                             type: launch.plan?.type ?? a.rawValue, title: launch.title, route: route))
+         s.runs.sort { $0.date < $1.date }
+         if s.healthEnabled {
+-            Task { await HealthService.shared.saveRun(start: start, end: start.addingTimeInterval(seconds), km: km, kcal: Double(kcal)) }
++            Task { await HealthService.shared.saveActivity(a, start: start, end: start.addingTimeInterval(seconds), km: km, kcal: Double(kcal)) }
+         }
+     }
+ 
+     var runKmThisWeek: Double {
+         let ws = DateUtil.weekStart(Date())
+-        return s.runs.filter { $0.date >= ws }.reduce(0) { $0 + $1.km }
++        return runOnly.filter { $0.date >= ws }.reduce(0) { $0 + $1.km }
+     }
+ }
+diff --git a/ios-app/TorwartFit/Resources/catalog.json b/ios-app/TorwartFit/Resources/catalog.json
+index 7910f63..4a7efbb 100644
+--- a/ios-app/TorwartFit/Resources/catalog.json
++++ b/ios-app/TorwartFit/Resources/catalog.json
+@@ -1 +1 @@
+-{"exercises":{"gob":{"name":"Goblet Squat","equipment":"Kurzhantel oder Kettlebell (zuhause: gefüllter Rucksack)","steps":["Hüftbreit stellen, Fußspitzen leicht nach außen.","Gewicht senkrecht vor der Brust halten, Ellbogen zeigen nach unten.","Hüfte nach hinten-unten setzen, bis die Oberschenkel mindestens waagerecht sind.","Über die ganze Fußsohle kraftvoll nach oben drücken."],"mistakes":"Knie zeigen in Richtung Fußspitzen, Fersen bleiben am Boden, Brust bleibt oben.","why":"Grundkraft der Beine für Absprung und stabile Grundstellung.","sets":3,"reps":10,"unit":"reps","prop":"db1","gym":{"name":"Kniebeuge mit Langhantel","equipment":"Langhantel im Rack","steps":["Stange auf den oberen Rücken legen, schulterbreit greifen.","Aus dem Rack lösen, 2 Schritte zurück, hüftbreit stehen.","Hüfte nach hinten-unten setzen, bis Oberschenkel waagerecht.","Kraftvoll hochdrücken."],"mistakes":"Knie Richtung Zehen, Rücken gerade, Fersen unten."},"home":"Goblet Squat mit Rucksack","photo":"Goblet_Squat","photoGym":"Barbell_Squat","anim":{"a":"stG","b":"sq","hop":0,"period":3}},"bss":{"name":"Bulgarian Split Squat","equipment":"Bank oder Stuhl, optional Kurzhanteln","steps":["Mit dem Rücken zur Bank stellen, einen Fußrücken hinten auf die Bank legen.","Vorderen Fuß so weit nach vorne setzen, dass das Knie unten über dem Fuß steht.","Senkrecht nach unten gehen, bis das hintere Knie fast den Boden berührt.","Über die vordere Ferse hochdrücken. Erst alle Wdh. einer Seite."],"mistakes":"Vorderes Knie nicht nach innen fallen lassen. Oberkörper leicht nach vorne geneigt.","why":"Einbeinige Kraft – jeder Absprung zur Parade ist einbeinig.","sets":3,"reps":8,"unit":"reps","prop":"benchB","gym":null,"home":null,"photo":"Split_Squat_with_Dumbbells","photoGym":null,"anim":{"a":"lunT","b":"lunB","hop":0,"period":3}},"rdl":{"name":"Einbeiniges Kreuzheben","equipment":"1–2 Kurzhanteln","steps":["Auf einem Bein stehen, Knie minimal gebeugt.","Oberkörper nach vorne kippen, freies Bein streckt sich nach hinten – wie eine Wippe.","Gewichte nah am Standbein nach unten führen, bis Rücken und Bein fast waagerecht sind.","Mit Gesäß und Oberschenkelrückseite wieder aufrichten."],"mistakes":"Rücken bleibt gerade, Hüfte bleibt parallel zum Boden (nicht aufdrehen).","why":"Starke Oberschenkelrückseite schützt vor Zerrungen beim Antritt.","sets":3,"reps":8,"unit":"reps","prop":"db2","gym":{"name":"Rumänisches Kreuzheben","equipment":"Langhantel","steps":["Stange schulterbreit vor den Oberschenkeln halten.","Knie leicht gebeugt, Hüfte weit nach hinten schieben.","Stange gleitet nah an den Beinen bis unter die Knie.","Mit dem Gesäß nach vorne aufrichten."],"mistakes":"Rücken gerade, Stange bleibt am Körper."},"home":null,"photo":"Kettlebell_One-Legged_Deadlift","photoGym":"Romanian_Deadlift","anim":{"a":"st","b":"rdl","hop":0,"period":3.4}},"cop":{"name":"Copenhagen Plank","equipment":"Bank oder Stuhl, Matte","steps":["Seitlich auf den Unterarm legen, Ellbogen unter der Schulter.","Oberes Bein mit der Innenseite des Knies (leichter) oder des Fußes (schwer) auf die Bank legen.","Hüfte anheben, bis der Körper eine gerade Linie bildet.","Position halten, ruhig atmen. Dann Seite wechseln."],"mistakes":"Hüfte nicht durchhängen lassen. Bei Leistenschmerz sofort stoppen.","why":"Kräftigt die Adduktoren – die häufigste Verletzungsstelle bei Torhütern.","sets":3,"reps":20,"unit":"s","prop":"benchF","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"spl1","b":"spl2","hop":0,"period":3}},"nord":{"name":"Nordic Hamstring Curl","equipment":"Matte + Partner oder Sprossenwand/Sofa zum Fixieren der Fersen","steps":["Aufrecht knien, Fersen werden festgehalten oder eingeklemmt.","Körper als gerade Linie langsam nach vorne sinken lassen.","So lange wie möglich bremsen, dann mit den Händen abfangen.","Mit den Händen leicht abdrücken und zurück in die Ausgangsposition."],"mistakes":"Hüfte bleibt gestreckt (nicht abknicken). Langsam ist wichtiger als tief.","why":"Beste Übung zur Vorbeugung von Oberschenkelzerrungen.","sets":3,"reps":5,"unit":"reps","prop":"pad","gym":null,"home":null,"photo":"Natural_Glute_Ham_Raise","photoGym":null,"anim":{"a":"nor1","b":"nor2","hop":0,"period":4}},"calf":{"name":"Wadenheben einbeinig","equipment":"Stufe oder Treppe","steps":["Mit dem Fußballen auf eine Stufe stellen, an der Wand festhalten.","Ferse langsam unter Stufenhöhe absenken.","Explosiv auf die Zehenspitzen drücken und oben 1 Sekunde halten."],"mistakes":"Volle Bewegung, Knie gestreckt, nicht wippen.","why":"Schnellkraft aus dem Sprunggelenk für den ersten Schritt.","sets":3,"reps":12,"unit":"reps","prop":"step","gym":{"name":"Wadenheben an der Maschine","equipment":"Wadenmaschine oder Stufe + Kurzhantel","steps":null,"mistakes":null},"home":null,"photo":"Standing_Dumbbell_Calf_Raise","photoGym":"Standing_Calf_Raises","anim":{"a":"st","b":"toe","hop":8,"period":2}},"lat":{"name":"Seitliche Ausfallschritte","equipment":"Optional Kurzhantel","steps":["Breiter Stand, Hände vor der Brust.","Gewicht auf ein Bein verlagern und dort tief in die Hocke gehen, anderes Bein bleibt gestreckt.","Kraftvoll zurück in die Mitte drücken."],"mistakes":"Ferse des gebeugten Beins bleibt am Boden, Brust bleibt oben.","why":"Kraft für seitliche Bewegungen auf der Torlinie.","sets":3,"reps":8,"unit":"reps","prop":"db1","gym":null,"home":null,"photo":"Barbell_Side_Split_Squat","photoGym":null,"anim":{"a":"lat1","b":"lat2","hop":0,"period":3}},"push":{"name":"Liegestütz","equipment":"Matte","steps":["Hände etwas breiter als schulterbreit, Körper bildet eine gerade Linie.","Brust kontrolliert bis knapp über den Boden senken, Ellbogen ca. 45° vom Körper.","Kraftvoll hochdrücken."],"mistakes":"Bauch und Gesäß fest – kein Hohlkreuz. Zu schwer? Knie ablegen.","why":"Stabile Arme und Schultern zum Abwehren und Fausten.","sets":3,"reps":12,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":"Pushups","photoGym":null,"anim":{"a":"pu1","b":"pu2","hop":0,"period":2.4}},"row":{"name":"Kurzhantel-Rudern","equipment":"Kurzhanteln (zuhause: Wasserkanister)","steps":["Leicht in die Knie, Oberkörper ca. 45° nach vorne, Rücken gerade.","Gewichte hängen unter den Schultern.","Ellbogen nach hinten zur Hüfte ziehen, Schulterblätter zusammen.","Langsam ablassen."],"mistakes":"Nicht mit Schwung arbeiten, Nacken lang lassen.","why":"Starker oberer Rücken für weite Abwürfe und gesunde Schultern.","sets":3,"reps":10,"unit":"reps","prop":"db2","gym":{"name":"Kabelrudern sitzend","equipment":"Kabelzug mit Griff","steps":["Aufrecht sitzen, Füße an die Platte.","Griff zum Bauch ziehen, Schulterblätter zusammen.","Langsam nach vorne zurückführen."],"mistakes":"Oberkörper bleibt ruhig."},"home":null,"photo":"Bent_Over_Two-Dumbbell_Row","photoGym":"Seated_Cable_Rows","anim":{"a":"row1","b":"row2","hop":0,"period":2.4}},"ohp":{"name":"Schulterdrücken stehend","equipment":"Kurzhanteln","steps":["Aufrecht stehen, Hanteln auf Schulterhöhe.","Bauch und Gesäß anspannen.","Gewichte senkrecht über den Kopf drücken, bis die Arme gestreckt sind.","Kontrolliert zurück zu den Schultern."],"mistakes":"Kein Hohlkreuz, Rippen unten lassen.","why":"Kraft über Kopf – hohe Bälle fangen und fausten.","sets":3,"reps":8,"unit":"reps","prop":"db2","gym":null,"home":"Pike Push-up","photo":"Dumbbell_Shoulder_Press","photoGym":null,"anim":{"a":"oh1","b":"oh2","hop":0,"period":2.6}},"pall":{"name":"Pallof Press","equipment":"Widerstandsband (Gym: Kabelzug)","steps":["Seitlich zur Befestigung stehen, Band mit beiden Händen vor der Brust.","Arme langsam gerade nach vorne strecken – das Band zieht zur Seite.","2 Sekunden halten, nicht verdrehen lassen.","Zurück zur Brust. Seiten wechseln."],"mistakes":"Hüfte und Schultern zeigen immer nach vorne.","why":"Rumpfstabilität bei Zusammenstößen und Paraden.","sets":3,"reps":10,"unit":"reps","prop":"band","gym":{"name":"Pallof Press am Kabelzug","equipment":"Kabelzug auf Brusthöhe","steps":null,"mistakes":null},"home":null,"photo":"Pallof_Press","photoGym":null,"anim":{"a":"pa1","b":"pa2","hop":0,"period":2.6}},"side":{"name":"Seitstütz","equipment":"Matte","steps":["Seitlich auf den Unterarm, Ellbogen unter der Schulter.","Füße übereinander, Hüfte hochdrücken.","Gerade Linie von Kopf bis Fuß halten."],"mistakes":"Hüfte nicht absinken lassen, nicht nach vorne kippen.","why":"Seitliche Rumpfkraft für die Landung nach Paraden.","sets":3,"reps":30,"unit":"s","prop":"mat","gym":null,"home":null,"photo":"Side_Bridge","photoGym":null,"anim":{"a":"spl1","b":"spl2","hop":0,"period":3}},"dead":{"name":"Dead Bug","equipment":"Matte","steps":["Rückenlage, Arme zur Decke, Beine im 90°-Winkel angehoben.","Unteren Rücken fest in den Boden drücken.","Gegengleich einen Arm nach hinten und das andere Bein nach vorne strecken.","Zurück und Seite wechseln."],"mistakes":"Langsam! Der untere Rücken darf nicht abheben.","why":"Bauchkraft und Koordination von Armen und Beinen.","sets":3,"reps":10,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":"Dead_Bug","photoGym":null,"anim":{"a":"db1","b":"db2","hop":0,"period":3}},"ytw":{"name":"Y-T-W Schulterübung","equipment":"Matte, leichte Gewichte oder keine","steps":["Bauchlage, Stirn auf einem Handtuch.","Arme als „Y“ schräg nach vorne anheben, kurz halten.","Dann als „T“ seitlich und als „W“ (Ellbogen gebeugt) anheben.","Das ist 1 Wiederholung."],"mistakes":"Schultern weg von den Ohren, Daumen zeigen nach oben.","why":"Gesunde Schultern trotz vieler Würfe und Stürze.","sets":2,"reps":8,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"yt1","b":"yt2","hop":0,"period":2.6}},"cmj":{"name":"Strecksprung","equipment":"Keine","steps":["Hüftbreit stehen.","Schnell in die Viertel-Hocke gehen und die Arme nach hinten schwingen.","Explosiv nach oben springen, Arme nach oben reißen.","Weich auf den Fußballen landen, Knie federn ab."],"mistakes":"Jeder Sprung maximal – lieber weniger Wiederholungen.","why":"Sprunghöhe für Flanken und hohe Bälle.","sets":4,"reps":5,"unit":"reps","prop":"","gym":null,"home":null,"photo":"Freehand_Jump_Squat","photoGym":null,"anim":{"a":"cr","b":"up","hop":28,"period":1.8}},"latb":{"name":"Seitliche Sprünge (Skater)","equipment":"2 Hütchen ca. 1 m auseinander","steps":["Auf einem Bein stehen, leicht gebeugt.","Kraftvoll seitlich auf das andere Bein springen.","Landung auf einem Bein 1 Sekunde stabil halten.","Zurückspringen. Hin und zurück = 1 Wdh."],"mistakes":"Knie bei der Landung über dem Fuß, nicht nach innen.","why":"Genau die Bewegung beim Abdruck zur Parade.","sets":4,"reps":5,"unit":"reps","prop":"cones","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"sk1","b":"sk2","hop":10,"period":1.6}},"box":{"name":"Box Jump","equipment":"Box, stabile Bank oder Treppe","steps":["Ca. 30 cm vor der Box stehen.","Ausholen, explosiv auf die Box springen.","Leise und tief auf der Box landen.","Herunter*steigen*, nicht springen."],"mistakes":"Qualität vor Höhe. Lieber niedrige Box und sauber.","why":"Explosive Hüftstreckung – schneller Absprung.","sets":4,"reps":4,"unit":"reps","prop":"box","gym":{"name":"Box Jump auf Plyo-Box","equipment":"Plyo-Box 40–60 cm","steps":null,"mistakes":null},"home":"Treppensprung","photo":"Front_Box_Jump","photoGym":null,"anim":{"a":"cr","b":"up","hop":22,"period":1.8}},"mbt":{"name":"Medizinball-Rotationswurf","equipment":"Medizinball 3–5 kg und eine Wand","steps":["Seitlich ca. 1 m vor der Wand stehen.","Ball mit beiden Händen an die hintere Hüfte führen.","Aus der Hüfte drehen und den Ball kraftvoll gegen die Wand werfen.","Ball fangen und direkt wiederholen. Seite wechseln."],"mistakes":"Die Kraft kommt aus Beinen und Hüfte, nicht aus den Armen.","why":"Rotationskraft für Abschläge und weite Würfe.","sets":3,"reps":6,"unit":"reps","prop":"ball","gym":{"name":"Medizinball-Rotationswurf","equipment":"Medizinball, Wand","steps":null,"mistakes":null},"home":null,"photo":"Medicine_Ball_Full_Twist","photoGym":null,"anim":{"a":"mb1","b":"mb2","hop":0,"period":1.6}},"dive":{"name":"Abdruck + Hechtbewegung","equipment":"Weiche Matte oder Rasen, Ball","steps":["Torwart-Grundstellung einnehmen.","Mit dem ballnahen Bein seitlich abdrücken.","Körper streckt sich, Hände greifen nach vorne.","Seitlich auf Hüfte und Schulter landen – nie auf Ellbogen oder Bauch."],"mistakes":"Nur auf weichem Untergrund. Mit niedrigen Hechtern beginnen.","why":"Technik und Kraft für Paraden.","sets":3,"reps":4,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"gk","b":"fly","hop":18,"period":2.2}},"spr":{"name":"Antritt 5 m","equipment":"2 Hütchen 5 m auseinander","steps":["Torwart-Grundstellung.","Auf Signal maximal schnell 5 m sprinten.","Zurückgehen und voll erholen (ca. 45 s)."],"mistakes":"Erste Schritte kurz und kraftvoll.","why":"Schnell raus bei Steilpässen und Eins-gegen-Eins.","sets":6,"reps":1,"unit":"reps","prop":"cones","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"r1","b":"r2","hop":4,"period":0.6}},"ladder":{"name":"Schnelle Füße","equipment":"Koordinationsleiter (oder Kreide)","steps":["Vor die Leiter stellen.","In jedes Feld schnell beide Füße setzen.","Varianten: seitlich, rein-raus, ein Fuß pro Feld."],"mistakes":"Auf den Fußballen bleiben, Arme mitnehmen.","why":"Schnelle Fußarbeit beim Verschieben im Tor.","sets":4,"reps":15,"unit":"s","prop":"ladder","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"r1","b":"r2","hop":3,"period":0.4}},"shuf":{"name":"Side-Shuffle mit Signal","equipment":"2 Hütchen 3 m auseinander","steps":["Torwart-Grundstellung zwischen den Hütchen.","Schnell seitlich zu einem Hütchen schieben, ohne die Beine zu kreuzen.","Auf Zuruf/Signal sofort die Richtung wechseln."],"mistakes":"Tief bleiben, Hände vorne bereit.","why":"Verschieben auf der Linie.","sets":4,"reps":15,"unit":"s","prop":"cones","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"sh1","b":"sh2","hop":4,"period":0.8}},"wall":{"name":"Ball gegen Wand fangen","equipment":"Ball (oder Tennisball) und eine Wand","steps":["1–2 m vor der Wand in Grundstellung.","Ball gegen die Wand werfen und sicher fangen.","Tempo steigern, Höhe und Seite variieren."],"mistakes":"Hände bilden ein „W“ hinter dem Ball.","why":"Reaktion und sichere Hände.","sets":3,"reps":40,"unit":"s","prop":"wall","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"ca1","b":"ca2","hop":0,"period":0.8}},"drop":{"name":"Fallender Ball","equipment":"Tennisball, Partner","steps":["Partner hält auf Schulterhöhe einen Ball in jeder Hand.","Er lässt ohne Vorwarnung einen fallen.","Ball fangen, bevor er ein zweites Mal aufspringt."],"mistakes":"Aus der Grundstellung starten, nicht vorher bewegen.","why":"Reaktionsschnelligkeit.","sets":3,"reps":10,"unit":"reps","prop":"ball","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"ca1","b":"dr2","hop":0,"period":1.6}},"w90":{"name":"90/90 Hüftrotation","equipment":"Matte","steps":["Sitzen, vorderes Bein 90° vor dir, hinteres 90° zur Seite.","Aufrecht sitzen, Hände hinter dir abstützen.","Beide Knie langsam auf die andere Seite drehen."],"mistakes":"Aufrecht bleiben, langsam bewegen.","why":"Bewegliche Hüfte für tiefe Paraden.","sets":2,"reps":10,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"se1","b":"se2","hop":0,"period":3.4}},"frog":{"name":"Frog Stretch","equipment":"Matte","steps":["Vierfüßlerstand, Knie so weit wie angenehm auseinander.","Unterschenkel parallel, Füße zeigen nach außen.","Hüfte langsam nach hinten schieben, bis du die Innenseite spürst."],"mistakes":"Kein stechender Schmerz – nur Zug.","why":"Adduktoren-Beweglichkeit für Spagat-Paraden.","sets":2,"reps":45,"unit":"s","prop":"mat","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"fr1","b":"fr2","hop":0,"period":4}},"couch":{"name":"Couch Stretch","equipment":"Matte, Wand oder Sofa","steps":["Ein Knie vor der Wand auf die Matte, Fußrücken an die Wand.","Anderes Bein vorne aufstellen.","Oberkörper aufrichten, Gesäß anspannen."],"mistakes":"Kein Hohlkreuz – Becken nach vorne schieben.","why":"Löst den Hüftbeuger, mehr Streckung beim Abschlag.","sets":2,"reps":45,"unit":"s","prop":"mat","gym":null,"home":null,"photo":"Intermediate_Hip_Flexor_and_Quad_Stretch","photoGym":null,"anim":{"a":"cou1","b":"cou2","hop":0,"period":4}},"pige":{"name":"Taube (Pigeon)","equipment":"Matte","steps":["Vorderes Bein gebeugt quer vor dir ablegen.","Hinteres Bein lang nach hinten strecken.","Oberkörper langsam nach vorne ablegen."],"mistakes":"Hüfte gerade halten.","why":"Beweglichkeit im Gesäß, entlastet den Rücken.","sets":2,"reps":45,"unit":"s","prop":"mat","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"pg1","b":"pg2","hop":0,"period":4}},"cosk":{"name":"Cossack Squat","equipment":"Matte","steps":["Sehr breit stehen.","Zu einer Seite tief absitzen, anderes Bein gestreckt, Zehen nach oben.","Über die Mitte zur anderen Seite wechseln."],"mistakes":"Ferse unten, Brust oben.","why":"Kraft und Beweglichkeit in tiefen Seitpositionen.","sets":2,"reps":8,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"co1","b":"co2","hop":0,"period":3.4}},"tsp":{"name":"Open Book","equipment":"Matte","steps":["Seitlich liegen, Knie angewinkelt, Arme gestreckt übereinander.","Oberen Arm in einem Bogen zur anderen Seite öffnen, Blick folgt der Hand.","Kurz halten und zurück."],"mistakes":"Knie bleiben aufeinander liegen.","why":"Drehbewegliche Brustwirbelsäule für Paraden und Würfe.","sets":2,"reps":8,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"ob1","b":"ob2","hop":0,"period":3.4}},"shd":{"name":"Schulter-Dislocates","equipment":"Stab oder Widerstandsband","steps":["Stab breit vor dem Körper halten.","Arme gestreckt in einem Bogen über den Kopf nach hinten führen.","Und wieder zurück nach vorne."],"mistakes":"Je enger der Griff, desto schwerer.","why":"Freie Schultern für hohe Bälle.","sets":2,"reps":12,"unit":"reps","prop":"stick","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"di1","b":"di2","hop":0,"period":2.6}},"ham":{"name":"Hamstring-Dehnung","equipment":"Bank oder Stuhl","steps":["Ferse auf eine Bank legen, Bein gestreckt.","Rücken gerade, Oberkörper aus der Hüfte nach vorne neigen.","Halten, wenn du die Oberschenkelrückseite spürst."],"mistakes":"Nicht den Rücken rund machen.","why":"Beweglichkeit für Abschläge und Hechter.","sets":2,"reps":40,"unit":"s","prop":"benchF","gym":null,"home":null,"photo":"Leg-Up_Hamstring_Stretch","photoGym":null,"anim":{"a":"hm1","b":"hm2","hop":0,"period":4}},"wgs":{"name":"World's Greatest Stretch","equipment":"Matte","steps":["Großer Ausfallschritt nach vorne.","Ellbogen neben dem vorderen Fuß Richtung Boden senken.","Arm auf der gleichen Seite zur Decke aufdrehen.","Zurück und Seite wechseln."],"mistakes":"Hinteres Bein gestreckt halten.","why":"Komplettes Aufwärmen in einer Übung.","sets":2,"reps":5,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":"Worlds_Greatest_Stretch","photoGym":null,"anim":{"a":"wg1","b":"wg2","hop":0,"period":3.4}},"ank":{"name":"Sprunggelenk-Mobilisation","equipment":"Wand","steps":["Halbknien vor einer Wand, vorderer Fuß ca. 10 cm entfernt.","Knie Richtung Wand schieben, Ferse bleibt am Boden.","Zurück und wiederholen."],"mistakes":"Ferse bleibt unten.","why":"Tiefere Hocke, bessere Grundstellung.","sets":2,"reps":10,"unit":"reps","prop":"wall","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"an1","b":"an2","hop":0,"period":2.6}},"jog":{"name":"Lockerer Dauerlauf","equipment":"Laufschuhe","steps":["Im Gesprächstempo laufen – etwa dein Strava-Tempo von 6:20 /km.","Du solltest dich unterhalten können."],"mistakes":"Nicht zu schnell werden.","why":"Grundlagenausdauer für 90 Minuten.","sets":1,"reps":25,"unit":"min","prop":"","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"r1","b":"r2","hop":5,"period":0.8}},"int":{"name":"Intervalle 15/45","equipment":"Laufschuhe, Uhr","steps":["15 Sekunden sehr schnell laufen.","45 Sekunden locker traben.","Das ist 1 Runde."],"mistakes":"Sprints wirklich schnell.","why":"Spielnahe Belastung: kurz, intensiv, Pause.","sets":8,"reps":1,"unit":"min","prop":"","gym":null,"home":null,"photo":null,"photoGym":null,"anim":{"a":"r1","b":"r2","hop":6,"period":0.5}},"thrust":{"name":"Hip Thrust","equipment":"Langhantel mit Polster, Bank","steps":["Schulterblätter an die Bank lehnen, Stange mit Polster über der Hüfte.","Füße hüftbreit aufstellen, Knie ca. 90°.","Hüfte hochdrücken, bis der Körper von Schulter bis Knie gerade ist.","Oben 1 s Gesäß anspannen, langsam ablassen."],"mistakes":"Kinn zur Brust, kein Hohlkreuz oben.","why":"Stärkste Übung für Hüftstreckung und Absprungkraft.","sets":3,"reps":10,"unit":"reps","prop":"thrust","gym":null,"home":null,"photo":"Barbell_Hip_Thrust","photoGym":null,"anim":{"a":"th1","b":"th2","hop":0,"period":2.6}},"lpull":{"name":"Latzug","equipment":"Latzugmaschine","steps":["Oberschenkel unter das Polster klemmen, Stange breit greifen.","Brust raus, leicht nach hinten lehnen.","Stange zur oberen Brust ziehen.","Langsam nach oben zurückführen."],"mistakes":"Nicht mit Schwung, Stange nicht in den Nacken.","why":"Kraft für weite Abwürfe.","sets":3,"reps":10,"unit":"reps","prop":"lat","gym":null,"home":null,"photo":"Wide-Grip_Lat_Pulldown","photoGym":null,"anim":{"a":"lp1","b":"lp2","hop":0,"period":2.6}},"add":{"name":"Adduktoren-Maschine","equipment":"Adduktorenmaschine","steps":["Aufrecht sitzen, Polster an der Knieinnenseite.","Beine kontrolliert zusammendrücken.","Langsam öffnen."],"mistakes":"Nur so weit öffnen, wie es angenehm ist.","why":"Schützt die Leiste.","sets":3,"reps":12,"unit":"reps","prop":"","gym":null,"home":null,"photo":"Thigh_Adductor","photoGym":null,"anim":{"a":"ad1","b":"ad2","hop":0,"period":2.6}},"legp":{"name":"Beinpresse einbeinig","equipment":"Beinpresse","steps":["Einen Fuß mittig auf die Platte.","Langsam beugen, bis das Knie etwa 90° hat.","Kraftvoll wegdrücken, Knie nicht ganz durchstrecken."],"mistakes":"Knie zeigt in Richtung Fußspitze.","why":"Einbeinige Kraft mit sicherer Führung.","sets":3,"reps":10,"unit":"reps","prop":"sled","gym":null,"home":null,"photo":"Leg_Press","photoGym":null,"anim":{"a":"bp1","b":"bp2","hop":0,"period":2.6}},"sqb":{"name":"Kniebeuge mit Langhantel","equipment":"Langhantel im Squat-Rack","steps":["Stange auf den oberen Rücken legen (nicht auf den Nacken), schulterbreit greifen.","Aus dem Rack heben, zwei Schritte zurück, schulterbreit stehen.","Hüfte nach hinten-unten setzen, bis die Oberschenkel mindestens waagerecht sind.","Über die ganze Fußsohle kraftvoll hochdrücken."],"mistakes":"Knie zeigen Richtung Zehen, Rücken bleibt gerade, Fersen bleiben unten. Sicherungsstangen im Rack auf passende Höhe stellen.","why":"Die Grundübung für Beinkraft – verbrennt durch die große Muskelmasse viele Kalorien.","sets":4,"reps":8,"unit":"reps","prop":"bbS","gym":null,"home":null,"photo":"Barbell_Squat","photoGym":null,"anim":null},"dbbench":{"name":"Kurzhantel-Bankdrücken","equipment":"Flachbank, 2 Kurzhanteln","steps":["Auf die Bank legen, Füße fest am Boden, Hanteln auf Brusthöhe.","Schulterblätter zusammen und nach unten ziehen.","Hanteln senkrecht nach oben drücken, bis die Arme fast gestreckt sind.","Langsam bis auf Brusthöhe absenken."],"mistakes":"Ellbogen ca. 45° vom Körper, nicht 90°. Gesäß bleibt auf der Bank.","why":"Brust, Schultern und Trizeps – Kraft zum Abwehren und Wegdrücken.","sets":3,"reps":10,"unit":"reps","prop":"db2","gym":null,"home":null,"photo":"Dumbbell_Bench_Press","photoGym":null,"anim":null},"rdlbb":{"name":"Rumänisches Kreuzheben","equipment":"Langhantel","steps":["Stange schulterbreit vor den Oberschenkeln halten, Knie leicht gebeugt.","Hüfte weit nach hinten schieben, Stange gleitet nah an den Beinen nach unten.","Bis knapp unter die Knie bzw. bis zur Dehnung hinten im Oberschenkel.","Mit dem Gesäß nach vorne aufrichten."],"mistakes":"Rücken bleibt gerade, kein Rundrücken. Stange bleibt immer am Körper.","why":"Oberschenkelrückseite und Gesäß – stark und verletzungsfest.","sets":3,"reps":10,"unit":"reps","prop":"bbH","gym":null,"home":null,"photo":"Romanian_Deadlift","photoGym":null,"anim":null},"plank":{"name":"Unterarmstütz (Plank)","equipment":"Matte","steps":["Unterarme unter den Schultern auf die Matte.","Beine gestreckt, auf den Zehen.","Körper bildet eine gerade Linie von Kopf bis Fuß, Bauch und Gesäß fest."],"mistakes":"Hüfte nicht durchhängen lassen und nicht zu hoch schieben. Ruhig weiteratmen.","why":"Stabiler Rumpf für jede andere Übung.","sets":3,"reps":40,"unit":"s","prop":"mat","gym":null,"home":null,"photo":"Plank","photoGym":null,"anim":null},"incpress":{"name":"Schrägbankdrücken Kurzhantel","equipment":"Schrägbank (30–45°), 2 Kurzhanteln","steps":["Bank auf ca. 30° stellen, Hanteln auf Schulterhöhe.","Schulterblätter zusammen, Brust raus.","Hanteln nach oben drücken, oben leicht zueinander führen.","Kontrolliert absenken."],"mistakes":"Nicht zu steil stellen, sonst arbeiten vor allem die Schultern.","why":"Obere Brust und Schultern.","sets":3,"reps":10,"unit":"reps","prop":"db2","gym":null,"home":null,"photo":"Incline_Dumbbell_Press","photoGym":null,"anim":null},"lcurl":{"name":"Beinbeuger liegend","equipment":"Beinbeuger-Maschine","steps":["Bauchlage, Polster knapp über den Fersen.","Hüfte fest auf das Polster drücken.","Fersen zum Gesäß ziehen, kurz halten.","Langsam zurück."],"mistakes":"Hüfte nicht anheben, kein Schwung.","why":"Schützt vor Oberschenkelzerrungen.","sets":3,"reps":12,"unit":"reps","prop":"","gym":null,"home":null,"photo":"Lying_Leg_Curls","photoGym":null,"anim":null},"face":{"name":"Face Pull","equipment":"Kabelzug mit Seil, Höhe Gesicht","steps":["Seil am oberen Kabelzug auf Kopfhöhe, mit beiden Händen greifen.","Einen Schritt zurück, Arme gestreckt.","Seil zum Gesicht ziehen, Ellbogen hoch und nach außen.","Hände am Ende neben die Ohren, kurz halten."],"mistakes":"Leichtes Gewicht, sauber ziehen, nicht ins Hohlkreuz.","why":"Gesunde Schultern und gute Haltung.","sets":3,"reps":15,"unit":"reps","prop":"cable","gym":null,"home":null,"photo":"Face_Pull","photoGym":null,"anim":null},"ccrunch":{"name":"Kabel-Crunch kniend","equipment":"Kabelzug mit Seil, oben","steps":["Vor dem Kabelzug knien, Seil neben dem Kopf halten.","Hüfte bleibt ruhig.","Oberkörper einrollen, Ellbogen Richtung Oberschenkel.","Langsam zurück."],"mistakes":"Die Bewegung kommt aus dem Bauch, nicht aus den Armen.","why":"Kräftige Bauchmuskeln.","sets":3,"reps":15,"unit":"reps","prop":"cable","gym":null,"home":null,"photo":"Cable_Crunch","photoGym":null,"anim":null},"lunge":{"name":"Ausfallschritte mit Kurzhanteln","equipment":"2 Kurzhanteln","steps":["Aufrecht stehen, Hanteln seitlich.","Großen Schritt nach vorne.","Hinteres Knie Richtung Boden senken, beide Knie ca. 90°.","Über die vordere Ferse zurückdrücken, Bein wechseln."],"mistakes":"Vorderes Knie bleibt über dem Fuß, Oberkörper aufrecht.","why":"Beinkraft und Gleichgewicht.","sets":3,"reps":10,"unit":"reps","prop":"db2","gym":null,"home":null,"photo":"Dumbbell_Lunges","photoGym":null,"anim":null},"apull":{"name":"Klimmzug mit Unterstützung","equipment":"Klimmzugstange mit Band oder Klimmzug-Maschine","steps":["Stange etwas breiter als schulterbreit greifen, Knie oder Fuß ins Band.","Schultern nach unten ziehen.","Kinn über die Stange ziehen.","Langsam ganz ablassen."],"mistakes":"Voller Bewegungsumfang, kein Schwung. Mit jeder Woche weniger Unterstützung.","why":"Rückenkraft – großer Kalorienverbraucher.","sets":3,"reps":8,"unit":"reps","prop":"","gym":null,"home":null,"photo":"Band_Assisted_Pull-Up","photoGym":null,"anim":null},"lext":{"name":"Beinstrecker","equipment":"Beinstrecker-Maschine","steps":["Aufrecht sitzen, Polster vorne über den Knöcheln.","Beine strecken, oben kurz halten.","Langsam zurück."],"mistakes":"Nicht ruckartig, Rücken an der Lehne.","why":"Vordere Oberschenkel, schützt das Knie.","sets":3,"reps":12,"unit":"reps","prop":"","gym":null,"home":null,"photo":"Leg_Extensions","photoGym":null,"anim":null},"hammer":{"name":"Hammer-Curls","equipment":"2 Kurzhanteln","steps":["Aufrecht stehen, Hanteln seitlich, Daumen zeigen nach vorne.","Abwechselnd zur Schulter beugen.","Langsam ablassen."],"mistakes":"Ellbogen bleiben am Körper, nicht schwingen.","why":"Bizeps und Unterarme – fester Griff.","sets":3,"reps":12,"unit":"reps","prop":"db2","gym":null,"home":null,"photo":"Alternate_Hammer_Curl","photoGym":null,"anim":null},"tpush":{"name":"Trizepsdrücken am Kabel","equipment":"Kabelzug mit Stange oder Seil, oben","steps":["Vor den Kabelzug stellen, Griff auf Brusthöhe.","Ellbogen eng am Körper.","Arme nach unten strecken.","Langsam zurück bis Brusthöhe."],"mistakes":"Nur die Unterarme bewegen sich.","why":"Kräftige Arme zum Abwerfen.","sets":3,"reps":12,"unit":"reps","prop":"cable","gym":null,"home":null,"photo":"Triceps_Pushdown","photoGym":null,"anim":null},"mclimb":{"name":"Mountain Climbers","equipment":"Matte","steps":["Liegestützposition, Hände unter den Schultern.","Abwechselnd die Knie schnell zur Brust ziehen.","Hüfte bleibt tief."],"mistakes":"Rumpf fest, nicht mit der Hüfte wippen.","why":"Puls hoch, Fett verbrennen.","sets":3,"reps":30,"unit":"s","prop":"mat","gym":null,"home":null,"photo":"Mountain_Climbers","photoGym":null,"anim":null},"latraise":{"name":"Seitheben","equipment":"2 leichte Kurzhanteln","steps":["Aufrecht stehen, Hanteln seitlich, Ellbogen leicht gebeugt.","Arme seitlich bis Schulterhöhe heben.","Langsam ablassen."],"mistakes":"Leichtes Gewicht, nicht mit Schwung, Schultern unten.","why":"Breite Schultern, stabile Schultergelenke.","sets":3,"reps":12,"unit":"reps","prop":"db2","gym":null,"home":null,"photo":"Side_Lateral_Raise","photoGym":null,"anim":null}},"sessions":[{"id":"kraftA","name":"Kraft A","label":"Beine & Rumpf","icon":"🦵","colors":["#34C759","#0FA968"],"category":"Kraft","exercises":["gob","rdl","cop","lat","pall","side","calf"],"info":"Absprungkraft und Stabilität.","gymExtra":["thrust","legp"]},{"id":"kraftB","name":"Kraft B","label":"Oberkörper & Hüfte","icon":"💪","colors":["#0A84FF","#0055D4"],"category":"Kraft","exercises":["bss","nord","push","row","ohp","dead","ytw"],"info":"Rücken und Schultern für Abwürfe, Oberschenkel schützen.","gymExtra":["lpull","add"]},{"id":"explo","name":"Explosivität","label":"Sprung & Antritt","icon":"⚡️","colors":["#FF9F0A","#FF6A00"],"category":"Explosiv","exercises":["wgs","cmj","latb","box","mbt","dive","spr"],"info":"Ausgeruht machen, volle Pausen.","gymExtra":[]},{"id":"react","name":"Reaktion","label":"Hände & Füße","icon":"🧤","colors":["#BF5AF2","#8E3BD8"],"category":"Reaktion","exercises":["ladder","shuf","wall","drop","latb"],"info":"Kurz und frisch – ideal vor dem Vereinstraining.","gymExtra":[]},{"id":"mob","name":"Beweglichkeit","label":"Hüfte & Schulter","icon":"🧘","colors":["#64D2FF","#2AA5D8"],"category":"Beweglichkeit","exercises":["ank","w90","cosk","frog","couch","pige","ham","tsp","shd"],"info":"Mehr Reichweite bei Paraden, schnellere Regeneration.","gymExtra":[]},{"id":"mobS","name":"Aktivierung","label":"10 Minuten","icon":"⏱️","colors":["#5AC8FA","#30B0C7"],"category":"Beweglichkeit","exercises":["wgs","w90","cosk","tsp","ank"],"info":"Vor dem Spiel oder als Aufwärmen.","gymExtra":[]},{"id":"run","name":"Lauf + Dehnen","label":"Grundlage","icon":"🏃","colors":["#FF375F","#D70F4A"],"category":"Ausdauer","exercises":["jog","frog","couch","ham"],"info":"Grundlagenausdauer halten.","gymExtra":[]},{"id":"gymA","name":"Gym A","label":"Ganzkörper · Beine & Drücken","icon":"🏋️","colors":["#FF6B35","#D9431A"],"category":"Gym","exercises":["sqb","dbbench","row","rdlbb","latraise","plank"],"info":"Grundübungen schwer und sauber. 90 s Pause, Gewicht steigern, wenn alle Wiederholungen klappen.","gymExtra":[]},{"id":"gymB","name":"Gym B","label":"Ganzkörper · Maschinen & Ziehen","icon":"💪","colors":["#5E5CE6","#3634A3"],"category":"Gym","exercises":["legp","lpull","incpress","lcurl","face","ccrunch"],"info":"Gelenkschonend an Maschinen – ideal nach anstrengenden Diensten.","gymExtra":[]},{"id":"gymC","name":"Gym C","label":"Ganzkörper · Kraft & Puls","icon":"🔥","colors":["#00C7BE","#008F88"],"category":"Gym","exercises":["thrust","lunge","apull","ohp","tpush","hammer","mclimb"],"info":"Etwas kürzere Pausen (60 s) – mehr Kalorienverbrauch.","gymExtra":[]},{"id":"hiit","name":"Spielnahe Ausdauer","label":"Intervalle","icon":"🔥","colors":["#FF453A","#C9201A"],"category":"Ausdauer","exercises":["wgs","int","spr","w90","cosk","tsp"],"info":"Kurz, hart, wie im Spiel.","gymExtra":[]}],"goals":[{"id":"sprung","name":"Sprungkraft","icon":"🚀","info":"Höher springen, explosiver abdrücken","priority":["kraftA","explo","kraftB","mob","react"],"test":"jump"},{"id":"speed","name":"Schnelligkeit","icon":"⚡️","info":"Schneller reagieren und antreten","priority":["explo","react","kraftA","mob","kraftB"],"test":"sprint"},{"id":"kraft","name":"Kraft & Athletik","icon":"🏋️","info":"Stärker im Zweikampf und bei Paraden","priority":["kraftA","kraftB","explo","mob","kraftA"],"test":"squat"},{"id":"mobil","name":"Beweglichkeit","icon":"🧘","info":"Mehr Reichweite, tiefere Paraden","priority":["mob","kraftA","mob","kraftB","mobS"],"test":"reach"},{"id":"praev","name":"Verletzungsschutz","icon":"🛡️","info":"Leiste, Oberschenkel und Schultern stärken","priority":["kraftA","mob","kraftB","react","mob"],"test":"plank"},{"id":"gym","name":"Gym & Abnehmen","icon":"🏋️","info":"Muskeln aufbauen, Fett verlieren – 3er-Ganzkörperplan im Studio","priority":["gymA","gymB","gymC","mob","gymA"],"test":"squat"},{"id":"fit","name":"Fitness & Ausdauer","icon":"❤️","info":"90 Minuten fit und konzentriert","priority":["kraftA","hiit","kraftB","run","mob"],"test":"cooper"}],"tests":[{"id":"jump","name":"Strecksprung","unit":"cm","higherIsBetter":true,"hint":"Mit Kreide an der Wand: Reichhöhe stehend vs. gesprungen."},{"id":"sprint","name":"5-m-Sprint","unit":"s","higherIsBetter":false,"hint":"Aus der Grundstellung, Handy-Stoppuhr oder Partner."},{"id":"squat","name":"Kniebeuge 5 Wdh.","unit":"kg","higherIsBetter":true,"hint":"Höchstes Gewicht für 5 saubere Wiederholungen."},{"id":"reach","name":"Sitz-Reichtest","unit":"cm","higherIsBetter":true,"hint":"Beine gestreckt, Zentimeter über (+) oder vor (−) den Zehen."},{"id":"plank","name":"Seitstütz","unit":"s","higherIsBetter":true,"hint":"Maximale Haltezeit, schwächere Seite zählt."},{"id":"cooper","name":"Cooper-Test 12 min","unit":"m","higherIsBetter":true,"hint":"So weit wie möglich in 12 Minuten laufen (Strava!)."}],"poses":{"st":[180,0,0,0,0,0,0,0,0],"stG":[180,25,165,25,165,0,0,0,0],"sq":[150,60,160,60,160,85,-10,85,-10],"lunT":[180,0,0,0,0,40,-15,-35,-90],"lunB":[180,0,0,0,0,85,5,-10,-85],"rdl":[95,0,0,0,0,10,0,-80,-85],"spl1":[120,0,90,0,90,-60,-60,-62,-62],"spl2":[103,0,90,0,90,-77,-77,-79,-79],"nor1":[180,90,90,90,90,0,-90,0,-90],"nor2":[125,110,110,110,110,-55,-90,-55,-90],"toe":[180,0,0,0,0,0,0,0,0],"lat1":[175,40,40,-40,-40,25,0,-25,0],"lat2":[160,60,60,20,20,60,-15,-50,-50],"pu1":[96,0,0,0,0,-84,-84,-86,-86],"pu2":[92,-45,35,-45,35,-88,-88,-89,-89],"row1":[130,0,0,0,0,20,-10,20,-10],"row2":[130,-70,40,-70,40,20,-10,20,-10],"oh1":[180,20,170,20,170,0,0,0,0],"oh2":[180,178,180,178,180,0,0,0,0],"pa1":[180,40,110,40,110,10,-5,10,-5],"pa2":[180,90,90,90,90,10,-5,10,-5],"db1":[90,180,180,180,180,180,90,180,90],"db2":[90,95,95,180,180,180,90,-95,-95],"yt1":[92,100,100,100,100,-90,-90,-90,-90],"yt2":[92,150,150,150,150,-90,-90,-90,-90],"cr":[150,-45,-45,-45,-45,70,-15,70,-15],"up":[180,175,180,175,180,0,0,0,0],"sk1":[160,40,40,-60,-60,-15,-10,25,-70],"sk2":[200,60,60,-40,-40,15,10,-25,70],"mb1":[170,-60,-60,-50,-50,15,0,-15,0],"mb2":[195,80,80,70,70,15,0,-15,0],"gk":[160,60,100,60,100,40,-15,-40,15],"fly":[75,80,80,75,75,-95,-95,-105,-105],"r1":[165,40,100,-40,10,55,-35,-30,-70],"r2":[165,-40,10,40,100,-30,-70,55,-35],"sh1":[175,60,90,60,90,30,10,-30,-10],"sh2":[175,60,90,60,90,15,0,-45,-25],"ca1":[175,80,120,80,120,25,0,-25,0],"ca2":[175,100,100,100,100,25,0,-25,0],"dr2":[120,30,20,30,20,60,-20,60,-20],"se1":[170,0,0,0,0,90,90,-90,-90],"se2":[205,60,60,-60,-60,90,90,-90,-90],"fr1":[95,0,90,0,90,0,-90,0,-90],"fr2":[78,10,100,10,100,45,-90,45,-90],"cou1":[180,0,0,0,0,90,0,-10,-170],"cou2":[190,-20,-20,-20,-20,90,0,-5,-170],"pg1":[180,0,0,0,0,90,0,-90,-90],"pg2":[115,60,60,60,60,90,0,-90,-90],"co1":[170,90,90,90,90,60,-10,-60,-60],"co2":[190,90,90,90,90,60,60,-60,10],"ob1":[90,180,180,180,180,-45,-135,-45,-135],"ob2":[90,180,180,-90,-90,-45,-135,-45,-135],"di1":[150,150,150,150,150,0,0,0,0],"di2":[150,210,210,210,210,0,0,0,0],"hm1":[180,0,0,0,0,90,90,0,0],"hm2":[125,85,85,85,85,90,90,0,0],"wg1":[140,0,0,0,0,85,0,-60,-60],"wg2":[160,180,180,0,0,85,0,-60,-60],"an1":[180,0,0,0,0,90,0,0,-90],"an2":[180,0,0,0,0,105,25,0,-90],"th1":[120,90,90,90,90,-150,5,-150,5],"th2":[90,90,90,90,90,-100,0,-100,0],"lp1":[180,175,180,175,180,90,0,90,0],"lp2":[180,30,150,30,150,90,0,90,0],"ad1":[180,0,0,0,0,45,45,-45,-45],"ad2":[180,0,0,0,0,8,8,-8,-8],"bp1":[-130,90,90,90,90,155,45,155,45],"bp2":[-130,90,90,90,90,115,115,115,115]}}
+\ No newline at end of file
++{"exercises":{"gob":{"name":"Goblet Squat","equipment":"Kurzhantel oder Kettlebell (zuhause: gefüllter Rucksack)","steps":["Hüftbreit stellen, Fußspitzen leicht nach außen.","Gewicht senkrecht vor der Brust halten, Ellbogen zeigen nach unten.","Hüfte nach hinten-unten setzen, bis die Oberschenkel mindestens waagerecht sind.","Über die ganze Fußsohle kraftvoll nach oben drücken."],"mistakes":"Knie zeigen in Richtung Fußspitzen, Fersen bleiben am Boden, Brust bleibt oben.","why":"Grundkraft der Beine für Absprung und stabile Grundstellung.","sets":3,"reps":10,"unit":"reps","prop":"db1","gym":{"name":"Kniebeuge mit Langhantel","equipment":"Langhantel im Rack","steps":["Stange auf den oberen Rücken legen, schulterbreit greifen.","Aus dem Rack lösen, 2 Schritte zurück, hüftbreit stehen.","Hüfte nach hinten-unten setzen, bis Oberschenkel waagerecht.","Kraftvoll hochdrücken."],"mistakes":"Knie Richtung Zehen, Rücken gerade, Fersen unten."},"home":"Goblet Squat mit Rucksack","photo":"Goblet_Squat","photoGym":"Barbell_Squat","anim":{"a":"stG","b":"sq","hop":0,"period":3}},"bss":{"name":"Bulgarian Split Squat","equipment":"Bank oder Stuhl, optional Kurzhanteln","steps":["Mit dem Rücken zur Bank stellen, einen Fußrücken hinten auf die Bank legen.","Vorderen Fuß so weit nach vorne setzen, dass das Knie unten über dem Fuß steht.","Senkrecht nach unten gehen, bis das hintere Knie fast den Boden berührt.","Über die vordere Ferse hochdrücken. Erst alle Wdh. einer Seite."],"mistakes":"Vorderes Knie nicht nach innen fallen lassen. Oberkörper leicht nach vorne geneigt.","why":"Einbeinige Kraft – jeder Absprung zur Parade ist einbeinig.","sets":3,"reps":8,"unit":"reps","prop":"benchB","gym":null,"home":null,"photo":"Split_Squat_with_Dumbbells","photoGym":null,"anim":{"a":"lunT","b":"lunB","hop":0,"period":3}},"rdl":{"name":"Einbeiniges Kreuzheben","equipment":"1–2 Kurzhanteln","steps":["Auf einem Bein stehen, Knie minimal gebeugt.","Oberkörper nach vorne kippen, freies Bein streckt sich nach hinten – wie eine Wippe.","Gewichte nah am Standbein nach unten führen, bis Rücken und Bein fast waagerecht sind.","Mit Gesäß und Oberschenkelrückseite wieder aufrichten."],"mistakes":"Rücken bleibt gerade, Hüfte bleibt parallel zum Boden (nicht aufdrehen).","why":"Starke Oberschenkelrückseite schützt vor Zerrungen beim Antritt.","sets":3,"reps":8,"unit":"reps","prop":"db2","gym":{"name":"Rumänisches Kreuzheben","equipment":"Langhantel","steps":["Stange schulterbreit vor den Oberschenkeln halten.","Knie leicht gebeugt, Hüfte weit nach hinten schieben.","Stange gleitet nah an den Beinen bis unter die Knie.","Mit dem Gesäß nach vorne aufrichten."],"mistakes":"Rücken gerade, Stange bleibt am Körper."},"home":null,"photo":"Kettlebell_One-Legged_Deadlift","photoGym":"Romanian_Deadlift","anim":{"a":"st","b":"rdl","hop":0,"period":3.4}},"cop":{"name":"Copenhagen Plank","equipment":"Bank oder Stuhl, Matte","steps":["Seitlich auf den Unterarm legen, Ellbogen unter der Schulter.","Oberes Bein mit der Innenseite des Knies (leichter) oder des Fußes (schwer) auf die Bank legen.","Hüfte anheben, bis der Körper eine gerade Linie bildet.","Position halten, ruhig atmen. Dann Seite wechseln."],"mistakes":"Hüfte nicht durchhängen lassen. Bei Leistenschmerz sofort stoppen.","why":"Kräftigt die Adduktoren – die häufigste Verletzungsstelle bei Torhütern.","sets":3,"reps":20,"unit":"s","prop":"benchF","gym":null,"home":null,"photo":"Gen_cop","photoGym":null,"anim":{"a":"spl1","b":"spl2","hop":0,"period":3}},"nord":{"name":"Nordic Hamstring Curl","equipment":"Matte + Partner oder Sprossenwand/Sofa zum Fixieren der Fersen","steps":["Aufrecht knien, Fersen werden festgehalten oder eingeklemmt.","Körper als gerade Linie langsam nach vorne sinken lassen.","So lange wie möglich bremsen, dann mit den Händen abfangen.","Mit den Händen leicht abdrücken und zurück in die Ausgangsposition."],"mistakes":"Hüfte bleibt gestreckt (nicht abknicken). Langsam ist wichtiger als tief.","why":"Beste Übung zur Vorbeugung von Oberschenkelzerrungen.","sets":3,"reps":5,"unit":"reps","prop":"pad","gym":null,"home":null,"photo":"Natural_Glute_Ham_Raise","photoGym":null,"anim":{"a":"nor1","b":"nor2","hop":0,"period":4}},"calf":{"name":"Wadenheben einbeinig","equipment":"Stufe oder Treppe","steps":["Mit dem Fußballen auf eine Stufe stellen, an der Wand festhalten.","Ferse langsam unter Stufenhöhe absenken.","Explosiv auf die Zehenspitzen drücken und oben 1 Sekunde halten."],"mistakes":"Volle Bewegung, Knie gestreckt, nicht wippen.","why":"Schnellkraft aus dem Sprunggelenk für den ersten Schritt.","sets":3,"reps":12,"unit":"reps","prop":"step","gym":{"name":"Wadenheben an der Maschine","equipment":"Wadenmaschine oder Stufe + Kurzhantel","steps":null,"mistakes":null},"home":null,"photo":"Standing_Dumbbell_Calf_Raise","photoGym":"Standing_Calf_Raises","anim":{"a":"st","b":"toe","hop":8,"period":2}},"lat":{"name":"Seitliche Ausfallschritte","equipment":"Optional Kurzhantel","steps":["Breiter Stand, Hände vor der Brust.","Gewicht auf ein Bein verlagern und dort tief in die Hocke gehen, anderes Bein bleibt gestreckt.","Kraftvoll zurück in die Mitte drücken."],"mistakes":"Ferse des gebeugten Beins bleibt am Boden, Brust bleibt oben.","why":"Kraft für seitliche Bewegungen auf der Torlinie.","sets":3,"reps":8,"unit":"reps","prop":"db1","gym":null,"home":null,"photo":"Barbell_Side_Split_Squat","photoGym":null,"anim":{"a":"lat1","b":"lat2","hop":0,"period":3}},"push":{"name":"Liegestütz","equipment":"Matte","steps":["Hände etwas breiter als schulterbreit, Körper bildet eine gerade Linie.","Brust kontrolliert bis knapp über den Boden senken, Ellbogen ca. 45° vom Körper.","Kraftvoll hochdrücken."],"mistakes":"Bauch und Gesäß fest – kein Hohlkreuz. Zu schwer? Knie ablegen.","why":"Stabile Arme und Schultern zum Abwehren und Fausten.","sets":3,"reps":12,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":"Pushups","photoGym":null,"anim":{"a":"pu1","b":"pu2","hop":0,"period":2.4}},"row":{"name":"Kurzhantel-Rudern","equipment":"Kurzhanteln (zuhause: Wasserkanister)","steps":["Leicht in die Knie, Oberkörper ca. 45° nach vorne, Rücken gerade.","Gewichte hängen unter den Schultern.","Ellbogen nach hinten zur Hüfte ziehen, Schulterblätter zusammen.","Langsam ablassen."],"mistakes":"Nicht mit Schwung arbeiten, Nacken lang lassen.","why":"Starker oberer Rücken für weite Abwürfe und gesunde Schultern.","sets":3,"reps":10,"unit":"reps","prop":"db2","gym":{"name":"Kabelrudern sitzend","equipment":"Kabelzug mit Griff","steps":["Aufrecht sitzen, Füße an die Platte.","Griff zum Bauch ziehen, Schulterblätter zusammen.","Langsam nach vorne zurückführen."],"mistakes":"Oberkörper bleibt ruhig."},"home":null,"photo":"Bent_Over_Two-Dumbbell_Row","photoGym":"Seated_Cable_Rows","anim":{"a":"row1","b":"row2","hop":0,"period":2.4}},"ohp":{"name":"Schulterdrücken stehend","equipment":"Kurzhanteln","steps":["Aufrecht stehen, Hanteln auf Schulterhöhe.","Bauch und Gesäß anspannen.","Gewichte senkrecht über den Kopf drücken, bis die Arme gestreckt sind.","Kontrolliert zurück zu den Schultern."],"mistakes":"Kein Hohlkreuz, Rippen unten lassen.","why":"Kraft über Kopf – hohe Bälle fangen und fausten.","sets":3,"reps":8,"unit":"reps","prop":"db2","gym":null,"home":"Pike Push-up","photo":"Dumbbell_Shoulder_Press","photoGym":null,"anim":{"a":"oh1","b":"oh2","hop":0,"period":2.6}},"pall":{"name":"Pallof Press","equipment":"Widerstandsband (Gym: Kabelzug)","steps":["Seitlich zur Befestigung stehen, Band mit beiden Händen vor der Brust.","Arme langsam gerade nach vorne strecken – das Band zieht zur Seite.","2 Sekunden halten, nicht verdrehen lassen.","Zurück zur Brust. Seiten wechseln."],"mistakes":"Hüfte und Schultern zeigen immer nach vorne.","why":"Rumpfstabilität bei Zusammenstößen und Paraden.","sets":3,"reps":10,"unit":"reps","prop":"band","gym":{"name":"Pallof Press am Kabelzug","equipment":"Kabelzug auf Brusthöhe","steps":null,"mistakes":null},"home":null,"photo":"Pallof_Press","photoGym":null,"anim":{"a":"pa1","b":"pa2","hop":0,"period":2.6}},"side":{"name":"Seitstütz","equipment":"Matte","steps":["Seitlich auf den Unterarm, Ellbogen unter der Schulter.","Füße übereinander, Hüfte hochdrücken.","Gerade Linie von Kopf bis Fuß halten."],"mistakes":"Hüfte nicht absinken lassen, nicht nach vorne kippen.","why":"Seitliche Rumpfkraft für die Landung nach Paraden.","sets":3,"reps":30,"unit":"s","prop":"mat","gym":null,"home":null,"photo":"Side_Bridge","photoGym":null,"anim":{"a":"spl1","b":"spl2","hop":0,"period":3}},"dead":{"name":"Dead Bug","equipment":"Matte","steps":["Rückenlage, Arme zur Decke, Beine im 90°-Winkel angehoben.","Unteren Rücken fest in den Boden drücken.","Gegengleich einen Arm nach hinten und das andere Bein nach vorne strecken.","Zurück und Seite wechseln."],"mistakes":"Langsam! Der untere Rücken darf nicht abheben.","why":"Bauchkraft und Koordination von Armen und Beinen.","sets":3,"reps":10,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":"Dead_Bug","photoGym":null,"anim":{"a":"db1","b":"db2","hop":0,"period":3}},"ytw":{"name":"Y-T-W Schulterübung","equipment":"Matte, leichte Gewichte oder keine","steps":["Bauchlage, Stirn auf einem Handtuch.","Arme als „Y“ schräg nach vorne anheben, kurz halten.","Dann als „T“ seitlich und als „W“ (Ellbogen gebeugt) anheben.","Das ist 1 Wiederholung."],"mistakes":"Schultern weg von den Ohren, Daumen zeigen nach oben.","why":"Gesunde Schultern trotz vieler Würfe und Stürze.","sets":2,"reps":8,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":"Gen_ytw","photoGym":null,"anim":{"a":"yt1","b":"yt2","hop":0,"period":2.6}},"cmj":{"name":"Strecksprung","equipment":"Keine","steps":["Hüftbreit stehen.","Schnell in die Viertel-Hocke gehen und die Arme nach hinten schwingen.","Explosiv nach oben springen, Arme nach oben reißen.","Weich auf den Fußballen landen, Knie federn ab."],"mistakes":"Jeder Sprung maximal – lieber weniger Wiederholungen.","why":"Sprunghöhe für Flanken und hohe Bälle.","sets":4,"reps":5,"unit":"reps","prop":"","gym":null,"home":null,"photo":"Freehand_Jump_Squat","photoGym":null,"anim":{"a":"cr","b":"up","hop":28,"period":1.8}},"latb":{"name":"Seitliche Sprünge (Skater)","equipment":"2 Hütchen ca. 1 m auseinander","steps":["Auf einem Bein stehen, leicht gebeugt.","Kraftvoll seitlich auf das andere Bein springen.","Landung auf einem Bein 1 Sekunde stabil halten.","Zurückspringen. Hin und zurück = 1 Wdh."],"mistakes":"Knie bei der Landung über dem Fuß, nicht nach innen.","why":"Genau die Bewegung beim Abdruck zur Parade.","sets":4,"reps":5,"unit":"reps","prop":"cones","gym":null,"home":null,"photo":"Gen_latb","photoGym":null,"anim":{"a":"sk1","b":"sk2","hop":10,"period":1.6}},"box":{"name":"Box Jump","equipment":"Box, stabile Bank oder Treppe","steps":["Ca. 30 cm vor der Box stehen.","Ausholen, explosiv auf die Box springen.","Leise und tief auf der Box landen.","Herunter*steigen*, nicht springen."],"mistakes":"Qualität vor Höhe. Lieber niedrige Box und sauber.","why":"Explosive Hüftstreckung – schneller Absprung.","sets":4,"reps":4,"unit":"reps","prop":"box","gym":{"name":"Box Jump auf Plyo-Box","equipment":"Plyo-Box 40–60 cm","steps":null,"mistakes":null},"home":"Treppensprung","photo":"Front_Box_Jump","photoGym":null,"anim":{"a":"cr","b":"up","hop":22,"period":1.8}},"mbt":{"name":"Medizinball-Rotationswurf","equipment":"Medizinball 3–5 kg und eine Wand","steps":["Seitlich ca. 1 m vor der Wand stehen.","Ball mit beiden Händen an die hintere Hüfte führen.","Aus der Hüfte drehen und den Ball kraftvoll gegen die Wand werfen.","Ball fangen und direkt wiederholen. Seite wechseln."],"mistakes":"Die Kraft kommt aus Beinen und Hüfte, nicht aus den Armen.","why":"Rotationskraft für Abschläge und weite Würfe.","sets":3,"reps":6,"unit":"reps","prop":"ball","gym":{"name":"Medizinball-Rotationswurf","equipment":"Medizinball, Wand","steps":null,"mistakes":null},"home":null,"photo":"Medicine_Ball_Full_Twist","photoGym":null,"anim":{"a":"mb1","b":"mb2","hop":0,"period":1.6}},"dive":{"name":"Abdruck + Hechtbewegung","equipment":"Weiche Matte oder Rasen, Ball","steps":["Torwart-Grundstellung einnehmen.","Mit dem ballnahen Bein seitlich abdrücken.","Körper streckt sich, Hände greifen nach vorne.","Seitlich auf Hüfte und Schulter landen – nie auf Ellbogen oder Bauch."],"mistakes":"Nur auf weichem Untergrund. Mit niedrigen Hechtern beginnen.","why":"Technik und Kraft für Paraden.","sets":3,"reps":4,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":"Gen_dive","photoGym":null,"anim":{"a":"gk","b":"fly","hop":18,"period":2.2}},"spr":{"name":"Antritt 5 m","equipment":"2 Hütchen 5 m auseinander","steps":["Torwart-Grundstellung.","Auf Signal maximal schnell 5 m sprinten.","Zurückgehen und voll erholen (ca. 45 s)."],"mistakes":"Erste Schritte kurz und kraftvoll.","why":"Schnell raus bei Steilpässen und Eins-gegen-Eins.","sets":6,"reps":1,"unit":"reps","prop":"cones","gym":null,"home":null,"photo":"Gen_spr","photoGym":null,"anim":{"a":"r1","b":"r2","hop":4,"period":0.6}},"ladder":{"name":"Schnelle Füße","equipment":"Koordinationsleiter (oder Kreide)","steps":["Vor die Leiter stellen.","In jedes Feld schnell beide Füße setzen.","Varianten: seitlich, rein-raus, ein Fuß pro Feld."],"mistakes":"Auf den Fußballen bleiben, Arme mitnehmen.","why":"Schnelle Fußarbeit beim Verschieben im Tor.","sets":4,"reps":15,"unit":"s","prop":"ladder","gym":null,"home":null,"photo":"Gen_ladder","photoGym":null,"anim":{"a":"r1","b":"r2","hop":3,"period":0.4}},"shuf":{"name":"Side-Shuffle mit Signal","equipment":"2 Hütchen 3 m auseinander","steps":["Torwart-Grundstellung zwischen den Hütchen.","Schnell seitlich zu einem Hütchen schieben, ohne die Beine zu kreuzen.","Auf Zuruf/Signal sofort die Richtung wechseln."],"mistakes":"Tief bleiben, Hände vorne bereit.","why":"Verschieben auf der Linie.","sets":4,"reps":15,"unit":"s","prop":"cones","gym":null,"home":null,"photo":"Gen_shuf","photoGym":null,"anim":{"a":"sh1","b":"sh2","hop":4,"period":0.8}},"wall":{"name":"Ball gegen Wand fangen","equipment":"Ball (oder Tennisball) und eine Wand","steps":["1–2 m vor der Wand in Grundstellung.","Ball gegen die Wand werfen und sicher fangen.","Tempo steigern, Höhe und Seite variieren."],"mistakes":"Hände bilden ein „W“ hinter dem Ball.","why":"Reaktion und sichere Hände.","sets":3,"reps":40,"unit":"s","prop":"wall","gym":null,"home":null,"photo":"Gen_wall","photoGym":null,"anim":{"a":"ca1","b":"ca2","hop":0,"period":0.8}},"drop":{"name":"Fallender Ball","equipment":"Tennisball, Partner","steps":["Partner hält auf Schulterhöhe einen Ball in jeder Hand.","Er lässt ohne Vorwarnung einen fallen.","Ball fangen, bevor er ein zweites Mal aufspringt."],"mistakes":"Aus der Grundstellung starten, nicht vorher bewegen.","why":"Reaktionsschnelligkeit.","sets":3,"reps":10,"unit":"reps","prop":"ball","gym":null,"home":null,"photo":"Gen_drop","photoGym":null,"anim":{"a":"ca1","b":"dr2","hop":0,"period":1.6}},"w90":{"name":"90/90 Hüftrotation","equipment":"Matte","steps":["Sitzen, vorderes Bein 90° vor dir, hinteres 90° zur Seite.","Aufrecht sitzen, Hände hinter dir abstützen.","Beide Knie langsam auf die andere Seite drehen."],"mistakes":"Aufrecht bleiben, langsam bewegen.","why":"Bewegliche Hüfte für tiefe Paraden.","sets":2,"reps":10,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":"Gen_w90","photoGym":null,"anim":{"a":"se1","b":"se2","hop":0,"period":3.4}},"frog":{"name":"Frog Stretch","equipment":"Matte","steps":["Vierfüßlerstand, Knie so weit wie angenehm auseinander.","Unterschenkel parallel, Füße zeigen nach außen.","Hüfte langsam nach hinten schieben, bis du die Innenseite spürst."],"mistakes":"Kein stechender Schmerz – nur Zug.","why":"Adduktoren-Beweglichkeit für Spagat-Paraden.","sets":2,"reps":45,"unit":"s","prop":"mat","gym":null,"home":null,"photo":"Gen_frog","photoGym":null,"anim":{"a":"fr1","b":"fr2","hop":0,"period":4}},"couch":{"name":"Couch Stretch","equipment":"Matte, Wand oder Sofa","steps":["Ein Knie vor der Wand auf die Matte, Fußrücken an die Wand.","Anderes Bein vorne aufstellen.","Oberkörper aufrichten, Gesäß anspannen."],"mistakes":"Kein Hohlkreuz – Becken nach vorne schieben.","why":"Löst den Hüftbeuger, mehr Streckung beim Abschlag.","sets":2,"reps":45,"unit":"s","prop":"mat","gym":null,"home":null,"photo":"Intermediate_Hip_Flexor_and_Quad_Stretch","photoGym":null,"anim":{"a":"cou1","b":"cou2","hop":0,"period":4}},"pige":{"name":"Taube (Pigeon)","equipment":"Matte","steps":["Vorderes Bein gebeugt quer vor dir ablegen.","Hinteres Bein lang nach hinten strecken.","Oberkörper langsam nach vorne ablegen."],"mistakes":"Hüfte gerade halten.","why":"Beweglichkeit im Gesäß, entlastet den Rücken.","sets":2,"reps":45,"unit":"s","prop":"mat","gym":null,"home":null,"photo":"Gen_pige","photoGym":null,"anim":{"a":"pg1","b":"pg2","hop":0,"period":4}},"cosk":{"name":"Cossack Squat","equipment":"Matte","steps":["Sehr breit stehen.","Zu einer Seite tief absitzen, anderes Bein gestreckt, Zehen nach oben.","Über die Mitte zur anderen Seite wechseln."],"mistakes":"Ferse unten, Brust oben.","why":"Kraft und Beweglichkeit in tiefen Seitpositionen.","sets":2,"reps":8,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":"Gen_cosk","photoGym":null,"anim":{"a":"co1","b":"co2","hop":0,"period":3.4}},"tsp":{"name":"Open Book","equipment":"Matte","steps":["Seitlich liegen, Knie angewinkelt, Arme gestreckt übereinander.","Oberen Arm in einem Bogen zur anderen Seite öffnen, Blick folgt der Hand.","Kurz halten und zurück."],"mistakes":"Knie bleiben aufeinander liegen.","why":"Drehbewegliche Brustwirbelsäule für Paraden und Würfe.","sets":2,"reps":8,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":"Gen_tsp","photoGym":null,"anim":{"a":"ob1","b":"ob2","hop":0,"period":3.4}},"shd":{"name":"Schulter-Dislocates","equipment":"Stab oder Widerstandsband","steps":["Stab breit vor dem Körper halten.","Arme gestreckt in einem Bogen über den Kopf nach hinten führen.","Und wieder zurück nach vorne."],"mistakes":"Je enger der Griff, desto schwerer.","why":"Freie Schultern für hohe Bälle.","sets":2,"reps":12,"unit":"reps","prop":"stick","gym":null,"home":null,"photo":"Gen_shd","photoGym":null,"anim":{"a":"di1","b":"di2","hop":0,"period":2.6}},"ham":{"name":"Hamstring-Dehnung","equipment":"Bank oder Stuhl","steps":["Ferse auf eine Bank legen, Bein gestreckt.","Rücken gerade, Oberkörper aus der Hüfte nach vorne neigen.","Halten, wenn du die Oberschenkelrückseite spürst."],"mistakes":"Nicht den Rücken rund machen.","why":"Beweglichkeit für Abschläge und Hechter.","sets":2,"reps":40,"unit":"s","prop":"benchF","gym":null,"home":null,"photo":"Leg-Up_Hamstring_Stretch","photoGym":null,"anim":{"a":"hm1","b":"hm2","hop":0,"period":4}},"wgs":{"name":"World's Greatest Stretch","equipment":"Matte","steps":["Großer Ausfallschritt nach vorne.","Ellbogen neben dem vorderen Fuß Richtung Boden senken.","Arm auf der gleichen Seite zur Decke aufdrehen.","Zurück und Seite wechseln."],"mistakes":"Hinteres Bein gestreckt halten.","why":"Komplettes Aufwärmen in einer Übung.","sets":2,"reps":5,"unit":"reps","prop":"mat","gym":null,"home":null,"photo":"Worlds_Greatest_Stretch","photoGym":null,"anim":{"a":"wg1","b":"wg2","hop":0,"period":3.4}},"ank":{"name":"Sprunggelenk-Mobilisation","equipment":"Wand","steps":["Halbknien vor einer Wand, vorderer Fuß ca. 10 cm entfernt.","Knie Richtung Wand schieben, Ferse bleibt am Boden.","Zurück und wiederholen."],"mistakes":"Ferse bleibt unten.","why":"Tiefere Hocke, bessere Grundstellung.","sets":2,"reps":10,"unit":"reps","prop":"wall","gym":null,"home":null,"photo":"Gen_ank","photoGym":null,"anim":{"a":"an1","b":"an2","hop":0,"period":2.6}},"jog":{"name":"Lockerer Dauerlauf","equipment":"Laufschuhe","steps":["Im Gesprächstempo laufen – etwa dein Strava-Tempo von 6:20 /km.","Du solltest dich unterhalten können."],"mistakes":"Nicht zu schnell werden.","why":"Grundlagenausdauer für 90 Minuten.","sets":1,"reps":25,"unit":"min","prop":"","gym":null,"home":null,"photo":"Gen_jog","photoGym":null,"anim":{"a":"r1","b":"r2","hop":5,"period":0.8}},"int":{"name":"Intervalle 15/45","equipment":"Laufschuhe, Uhr","steps":["15 Sekunden sehr schnell laufen.","45 Sekunden locker traben.","Das ist 1 Runde."],"mistakes":"Sprints wirklich schnell.","why":"Spielnahe Belastung: kurz, intensiv, Pause.","sets":8,"reps":1,"unit":"min","prop":"","gym":null,"home":null,"photo":"Gen_int","photoGym":null,"anim":{"a":"r1","b":"r2","hop":6,"period":0.5}},"thrust":{"name":"Hip Thrust","equipment":"Langhantel mit Polster, Bank","steps":["Schulterblätter an die Bank lehnen, Stange mit Polster über der Hüfte.","Füße hüftbreit aufstellen, Knie ca. 90°.","Hüfte hochdrücken, bis der Körper von Schulter bis Knie gerade ist.","Oben 1 s Gesäß anspannen, langsam ablassen."],"mistakes":"Kinn zur Brust, kein Hohlkreuz oben.","why":"Stärkste Übung für Hüftstreckung und Absprungkraft.","sets":3,"reps":10,"unit":"reps","prop":"thrust","gym":null,"home":null,"photo":"Barbell_Hip_Thrust","photoGym":null,"anim":{"a":"th1","b":"th2","hop":0,"period":2.6}},"lpull":{"name":"Latzug","equipment":"Latzugmaschine","steps":["Oberschenkel unter das Polster klemmen, Stange breit greifen.","Brust raus, leicht nach hinten lehnen.","Stange zur oberen Brust ziehen.","Langsam nach oben zurückführen."],"mistakes":"Nicht mit Schwung, Stange nicht in den Nacken.","why":"Kraft für weite Abwürfe.","sets":3,"reps":10,"unit":"reps","prop":"lat","gym":null,"home":null,"photo":"Wide-Grip_Lat_Pulldown","photoGym":null,"anim":{"a":"lp1","b":"lp2","hop":0,"period":2.6}},"add":{"name":"Adduktoren-Maschine","equipment":"Adduktorenmaschine","steps":["Aufrecht sitzen, Polster an der Knieinnenseite.","Beine kontrolliert zusammendrücken.","Langsam öffnen."],"mistakes":"Nur so weit öffnen, wie es angenehm ist.","why":"Schützt die Leiste.","sets":3,"reps":12,"unit":"reps","prop":"","gym":null,"home":null,"photo":"Thigh_Adductor","photoGym":null,"anim":{"a":"ad1","b":"ad2","hop":0,"period":2.6}},"legp":{"name":"Beinpresse einbeinig","equipment":"Beinpresse","steps":["Einen Fuß mittig auf die Platte.","Langsam beugen, bis das Knie etwa 90° hat.","Kraftvoll wegdrücken, Knie nicht ganz durchstrecken."],"mistakes":"Knie zeigt in Richtung Fußspitze.","why":"Einbeinige Kraft mit sicherer Führung.","sets":3,"reps":10,"unit":"reps","prop":"sled","gym":null,"home":null,"photo":"Leg_Press","photoGym":null,"anim":{"a":"bp1","b":"bp2","hop":0,"period":2.6}},"sqb":{"name":"Kniebeuge mit Langhantel","equipment":"Langhantel im Squat-Rack","steps":["Stange auf den oberen Rücken legen (nicht auf den Nacken), schulterbreit greifen.","Aus dem Rack heben, zwei Schritte zurück, schulterbreit stehen.","Hüfte nach hinten-unten setzen, bis die Oberschenkel mindestens waagerecht sind.","Über die ganze Fußsohle kraftvoll hochdrücken."],"mistakes":"Knie zeigen Richtung Zehen, Rücken bleibt gerade, Fersen bleiben unten. Sicherungsstangen im Rack auf passende Höhe stellen.","why":"Die Grundübung für Beinkraft – verbrennt durch die große Muskelmasse viele Kalorien.","sets":4,"reps":8,"unit":"reps","prop":"bbS","gym":null,"home":null,"photo":"Barbell_Squat","photoGym":null,"anim":null},"dbbench":{"name":"Kurzhantel-Bankdrücken","equipment":"Flachbank, 2 Kurzhanteln","steps":["Auf die Bank legen, Füße fest am Boden, Hanteln auf Brusthöhe.","Schulterblätter zusammen und nach unten ziehen.","Hanteln senkrecht nach oben drücken, bis die Arme fast gestreckt sind.","Langsam bis auf Brusthöhe absenken."],"mistakes":"Ellbogen ca. 45° vom Körper, nicht 90°. Gesäß bleibt auf der Bank.","why":"Brust, Schultern und Trizeps – Kraft zum Abwehren und Wegdrücken.","sets":3,"reps":10,"unit":"reps","prop":"db2","gym":null,"home":null,"photo":"Dumbbell_Bench_Press","photoGym":null,"anim":null},"rdlbb":{"name":"Rumänisches Kreuzheben","equipment":"Langhantel","steps":["Stange schulterbreit vor den Oberschenkeln halten, Knie leicht gebeugt.","Hüfte weit nach hinten schieben, Stange gleitet nah an den Beinen nach unten.","Bis knapp unter die Knie bzw. bis zur Dehnung hinten im Oberschenkel.","Mit dem Gesäß nach vorne aufrichten."],"mistakes":"Rücken bleibt gerade, kein Rundrücken. Stange bleibt immer am Körper.","why":"Oberschenkelrückseite und Gesäß – stark und verletzungsfest.","sets":3,"reps":10,"unit":"reps","prop":"bbH","gym":null,"home":null,"photo":"Romanian_Deadlift","photoGym":null,"anim":null},"plank":{"name":"Unterarmstütz (Plank)","equipment":"Matte","steps":["Unterarme unter den Schultern auf die Matte.","Beine gestreckt, auf den Zehen.","Körper bildet eine gerade Linie von Kopf bis Fuß, Bauch und Gesäß fest."],"mistakes":"Hüfte nicht durchhängen lassen und nicht zu hoch schieben. Ruhig weiteratmen.","why":"Stabiler Rumpf für jede andere Übung.","sets":3,"reps":40,"unit":"s","prop":"mat","gym":null,"home":null,"photo":"Plank","photoGym":null,"anim":null},"incpress":{"name":"Schrägbankdrücken Kurzhantel","equipment":"Schrägbank (30–45°), 2 Kurzhanteln","steps":["Bank auf ca. 30° stellen, Hanteln auf Schulterhöhe.","Schulterblätter zusammen, Brust raus.","Hanteln nach oben drücken, oben leicht zueinander führen.","Kontrolliert absenken."],"mistakes":"Nicht zu steil stellen, sonst arbeiten vor allem die Schultern.","why":"Obere Brust und Schultern.","sets":3,"reps":10,"unit":"reps","prop":"db2","gym":null,"home":null,"photo":"Incline_Dumbbell_Press","photoGym":null,"anim":null},"lcurl":{"name":"Beinbeuger liegend","equipment":"Beinbeuger-Maschine","steps":["Bauchlage, Polster knapp über den Fersen.","Hüfte fest auf das Polster drücken.","Fersen zum Gesäß ziehen, kurz halten.","Langsam zurück."],"mistakes":"Hüfte nicht anheben, kein Schwung.","why":"Schützt vor Oberschenkelzerrungen.","sets":3,"reps":12,"unit":"reps","prop":"","gym":null,"home":null,"photo":"Lying_Leg_Curls","photoGym":null,"anim":null},"face":{"name":"Face Pull","equipment":"Kabelzug mit Seil, Höhe Gesicht","steps":["Seil am oberen Kabelzug auf Kopfhöhe, mit beiden Händen greifen.","Einen Schritt zurück, Arme gestreckt.","Seil zum Gesicht ziehen, Ellbogen hoch und nach außen.","Hände am Ende neben die Ohren, kurz halten."],"mistakes":"Leichtes Gewicht, sauber ziehen, nicht ins Hohlkreuz.","why":"Gesunde Schultern und gute Haltung.","sets":3,"reps":15,"unit":"reps","prop":"cable","gym":null,"home":null,"photo":"Face_Pull","photoGym":null,"anim":null},"ccrunch":{"name":"Kabel-Crunch kniend","equipment":"Kabelzug mit Seil, oben","steps":["Vor dem Kabelzug knien, Seil neben dem Kopf halten.","Hüfte bleibt ruhig.","Oberkörper einrollen, Ellbogen Richtung Oberschenkel.","Langsam zurück."],"mistakes":"Die Bewegung kommt aus dem Bauch, nicht aus den Armen.","why":"Kräftige Bauchmuskeln.","sets":3,"reps":15,"unit":"reps","prop":"cable","gym":null,"home":null,"photo":"Cable_Crunch","photoGym":null,"anim":null},"lunge":{"name":"Ausfallschritte mit Kurzhanteln","equipment":"2 Kurzhanteln","steps":["Aufrecht stehen, Hanteln seitlich.","Großen Schritt nach vorne.","Hinteres Knie Richtung Boden senken, beide Knie ca. 90°.","Über die vordere Ferse zurückdrücken, Bein wechseln."],"mistakes":"Vorderes Knie bleibt über dem Fuß, Oberkörper aufrecht.","why":"Beinkraft und Gleichgewicht.","sets":3,"reps":10,"unit":"reps","prop":"db2","gym":null,"home":null,"photo":"Dumbbell_Lunges","photoGym":null,"anim":null},"apull":{"name":"Klimmzug mit Unterstützung","equipment":"Klimmzugstange mit Band oder Klimmzug-Maschine","steps":["Stange etwas breiter als schulterbreit greifen, Knie oder Fuß ins Band.","Schultern nach unten ziehen.","Kinn über die Stange ziehen.","Langsam ganz ablassen."],"mistakes":"Voller Bewegungsumfang, kein Schwung. Mit jeder Woche weniger Unterstützung.","why":"Rückenkraft – großer Kalorienverbraucher.","sets":3,"reps":8,"unit":"reps","prop":"","gym":null,"home":null,"photo":"Band_Assisted_Pull-Up","photoGym":null,"anim":null},"lext":{"name":"Beinstrecker","equipment":"Beinstrecker-Maschine","steps":["Aufrecht sitzen, Polster vorne über den Knöcheln.","Beine strecken, oben kurz halten.","Langsam zurück."],"mistakes":"Nicht ruckartig, Rücken an der Lehne.","why":"Vordere Oberschenkel, schützt das Knie.","sets":3,"reps":12,"unit":"reps","prop":"","gym":null,"home":null,"photo":"Leg_Extensions","photoGym":null,"anim":null},"hammer":{"name":"Hammer-Curls","equipment":"2 Kurzhanteln","steps":["Aufrecht stehen, Hanteln seitlich, Daumen zeigen nach vorne.","Abwechselnd zur Schulter beugen.","Langsam ablassen."],"mistakes":"Ellbogen bleiben am Körper, nicht schwingen.","why":"Bizeps und Unterarme – fester Griff.","sets":3,"reps":12,"unit":"reps","prop":"db2","gym":null,"home":null,"photo":"Alternate_Hammer_Curl","photoGym":null,"anim":null},"tpush":{"name":"Trizepsdrücken am Kabel","equipment":"Kabelzug mit Stange oder Seil, oben","steps":["Vor den Kabelzug stellen, Griff auf Brusthöhe.","Ellbogen eng am Körper.","Arme nach unten strecken.","Langsam zurück bis Brusthöhe."],"mistakes":"Nur die Unterarme bewegen sich.","why":"Kräftige Arme zum Abwerfen.","sets":3,"reps":12,"unit":"reps","prop":"cable","gym":null,"home":null,"photo":"Triceps_Pushdown","photoGym":null,"anim":null},"mclimb":{"name":"Mountain Climbers","equipment":"Matte","steps":["Liegestützposition, Hände unter den Schultern.","Abwechselnd die Knie schnell zur Brust ziehen.","Hüfte bleibt tief."],"mistakes":"Rumpf fest, nicht mit der Hüfte wippen.","why":"Puls hoch, Fett verbrennen.","sets":3,"reps":30,"unit":"s","prop":"mat","gym":null,"home":null,"photo":"Mountain_Climbers","photoGym":null,"anim":null},"latraise":{"name":"Seitheben","equipment":"2 leichte Kurzhanteln","steps":["Aufrecht stehen, Hanteln seitlich, Ellbogen leicht gebeugt.","Arme seitlich bis Schulterhöhe heben.","Langsam ablassen."],"mistakes":"Leichtes Gewicht, nicht mit Schwung, Schultern unten.","why":"Breite Schultern, stabile Schultergelenke.","sets":3,"reps":12,"unit":"reps","prop":"db2","gym":null,"home":null,"photo":"Side_Lateral_Raise","photoGym":null,"anim":null}},"sessions":[{"id":"kraftA","name":"Kraft A","label":"Beine & Rumpf","icon":"🦵","colors":["#34C759","#0FA968"],"category":"Kraft","exercises":["gob","rdl","cop","lat","pall","side","calf"],"info":"Absprungkraft und Stabilität.","gymExtra":["thrust","legp"]},{"id":"kraftB","name":"Kraft B","label":"Oberkörper & Hüfte","icon":"💪","colors":["#0A84FF","#0055D4"],"category":"Kraft","exercises":["bss","nord","push","row","ohp","dead","ytw"],"info":"Rücken und Schultern für Abwürfe, Oberschenkel schützen.","gymExtra":["lpull","add"]},{"id":"explo","name":"Explosivität","label":"Sprung & Antritt","icon":"⚡️","colors":["#FF9F0A","#FF6A00"],"category":"Explosiv","exercises":["wgs","cmj","latb","box","mbt","dive","spr"],"info":"Ausgeruht machen, volle Pausen.","gymExtra":[]},{"id":"react","name":"Reaktion","label":"Hände & Füße","icon":"🧤","colors":["#BF5AF2","#8E3BD8"],"category":"Reaktion","exercises":["ladder","shuf","wall","drop","latb"],"info":"Kurz und frisch – ideal vor dem Vereinstraining.","gymExtra":[]},{"id":"mob","name":"Beweglichkeit","label":"Hüfte & Schulter","icon":"🧘","colors":["#64D2FF","#2AA5D8"],"category":"Beweglichkeit","exercises":["ank","w90","cosk","frog","couch","pige","ham","tsp","shd"],"info":"Mehr Reichweite bei Paraden, schnellere Regeneration.","gymExtra":[]},{"id":"mobS","name":"Aktivierung","label":"10 Minuten","icon":"⏱️","colors":["#5AC8FA","#30B0C7"],"category":"Beweglichkeit","exercises":["wgs","w90","cosk","tsp","ank"],"info":"Vor dem Spiel oder als Aufwärmen.","gymExtra":[]},{"id":"run","name":"Lauf + Dehnen","label":"Grundlage","icon":"🏃","colors":["#FF375F","#D70F4A"],"category":"Ausdauer","exercises":["jog","frog","couch","ham"],"info":"Grundlagenausdauer halten.","gymExtra":[]},{"id":"gymA","name":"Gym A","label":"Ganzkörper · Beine & Drücken","icon":"🏋️","colors":["#FF6B35","#D9431A"],"category":"Gym","exercises":["sqb","dbbench","row","rdlbb","latraise","plank"],"info":"Grundübungen schwer und sauber. 90 s Pause, Gewicht steigern, wenn alle Wiederholungen klappen.","gymExtra":[]},{"id":"gymB","name":"Gym B","label":"Ganzkörper · Maschinen & Ziehen","icon":"💪","colors":["#5E5CE6","#3634A3"],"category":"Gym","exercises":["legp","lpull","incpress","lcurl","face","ccrunch"],"info":"Gelenkschonend an Maschinen – ideal nach anstrengenden Diensten.","gymExtra":[]},{"id":"gymC","name":"Gym C","label":"Ganzkörper · Kraft & Puls","icon":"🔥","colors":["#00C7BE","#008F88"],"category":"Gym","exercises":["thrust","lunge","apull","ohp","tpush","hammer","mclimb"],"info":"Etwas kürzere Pausen (60 s) – mehr Kalorienverbrauch.","gymExtra":[]},{"id":"hiit","name":"Spielnahe Ausdauer","label":"Intervalle","icon":"🔥","colors":["#FF453A","#C9201A"],"category":"Ausdauer","exercises":["wgs","int","spr","w90","cosk","tsp"],"info":"Kurz, hart, wie im Spiel.","gymExtra":[]}],"goals":[{"id":"sprung","name":"Sprungkraft","icon":"🚀","info":"Höher springen, explosiver abdrücken","priority":["kraftA","explo","kraftB","mob","react"],"test":"jump"},{"id":"speed","name":"Schnelligkeit","icon":"⚡️","info":"Schneller reagieren und antreten","priority":["explo","react","kraftA","mob","kraftB"],"test":"sprint"},{"id":"kraft","name":"Kraft & Athletik","icon":"🏋️","info":"Stärker im Zweikampf und bei Paraden","priority":["kraftA","kraftB","explo","mob","kraftA"],"test":"squat"},{"id":"mobil","name":"Beweglichkeit","icon":"🧘","info":"Mehr Reichweite, tiefere Paraden","priority":["mob","kraftA","mob","kraftB","mobS"],"test":"reach"},{"id":"praev","name":"Verletzungsschutz","icon":"🛡️","info":"Leiste, Oberschenkel und Schultern stärken","priority":["kraftA","mob","kraftB","react","mob"],"test":"plank"},{"id":"gym","name":"Gym & Abnehmen","icon":"🏋️","info":"Muskeln aufbauen, Fett verlieren – 3er-Ganzkörperplan im Studio","priority":["gymA","gymB","gymC","mob","gymA"],"test":"squat"},{"id":"fit","name":"Fitness & Ausdauer","icon":"❤️","info":"90 Minuten fit und konzentriert","priority":["kraftA","hiit","kraftB","run","mob"],"test":"cooper"}],"tests":[{"id":"jump","name":"Strecksprung","unit":"cm","higherIsBetter":true,"hint":"Mit Kreide an der Wand: Reichhöhe stehend vs. gesprungen."},{"id":"sprint","name":"5-m-Sprint","unit":"s","higherIsBetter":false,"hint":"Aus der Grundstellung, Handy-Stoppuhr oder Partner."},{"id":"squat","name":"Kniebeuge 5 Wdh.","unit":"kg","higherIsBetter":true,"hint":"Höchstes Gewicht für 5 saubere Wiederholungen."},{"id":"reach","name":"Sitz-Reichtest","unit":"cm","higherIsBetter":true,"hint":"Beine gestreckt, Zentimeter über (+) oder vor (−) den Zehen."},{"id":"plank","name":"Seitstütz","unit":"s","higherIsBetter":true,"hint":"Maximale Haltezeit, schwächere Seite zählt."},{"id":"cooper","name":"Cooper-Test 12 min","unit":"m","higherIsBetter":true,"hint":"So weit wie möglich in 12 Minuten laufen (Strava!)."}],"poses":{"st":[180,0,0,0,0,0,0,0,0],"stG":[180,25,165,25,165,0,0,0,0],"sq":[150,60,160,60,160,85,-10,85,-10],"lunT":[180,0,0,0,0,40,-15,-35,-90],"lunB":[180,0,0,0,0,85,5,-10,-85],"rdl":[95,0,0,0,0,10,0,-80,-85],"spl1":[120,0,90,0,90,-60,-60,-62,-62],"spl2":[103,0,90,0,90,-77,-77,-79,-79],"nor1":[180,90,90,90,90,0,-90,0,-90],"nor2":[125,110,110,110,110,-55,-90,-55,-90],"toe":[180,0,0,0,0,0,0,0,0],"lat1":[175,40,40,-40,-40,25,0,-25,0],"lat2":[160,60,60,20,20,60,-15,-50,-50],"pu1":[96,0,0,0,0,-84,-84,-86,-86],"pu2":[92,-45,35,-45,35,-88,-88,-89,-89],"row1":[130,0,0,0,0,20,-10,20,-10],"row2":[130,-70,40,-70,40,20,-10,20,-10],"oh1":[180,20,170,20,170,0,0,0,0],"oh2":[180,178,180,178,180,0,0,0,0],"pa1":[180,40,110,40,110,10,-5,10,-5],"pa2":[180,90,90,90,90,10,-5,10,-5],"db1":[90,180,180,180,180,180,90,180,90],"db2":[90,95,95,180,180,180,90,-95,-95],"yt1":[92,100,100,100,100,-90,-90,-90,-90],"yt2":[92,150,150,150,150,-90,-90,-90,-90],"cr":[150,-45,-45,-45,-45,70,-15,70,-15],"up":[180,175,180,175,180,0,0,0,0],"sk1":[160,40,40,-60,-60,-15,-10,25,-70],"sk2":[200,60,60,-40,-40,15,10,-25,70],"mb1":[170,-60,-60,-50,-50,15,0,-15,0],"mb2":[195,80,80,70,70,15,0,-15,0],"gk":[160,60,100,60,100,40,-15,-40,15],"fly":[75,80,80,75,75,-95,-95,-105,-105],"r1":[165,40,100,-40,10,55,-35,-30,-70],"r2":[165,-40,10,40,100,-30,-70,55,-35],"sh1":[175,60,90,60,90,30,10,-30,-10],"sh2":[175,60,90,60,90,15,0,-45,-25],"ca1":[175,80,120,80,120,25,0,-25,0],"ca2":[175,100,100,100,100,25,0,-25,0],"dr2":[120,30,20,30,20,60,-20,60,-20],"se1":[170,0,0,0,0,90,90,-90,-90],"se2":[205,60,60,-60,-60,90,90,-90,-90],"fr1":[95,0,90,0,90,0,-90,0,-90],"fr2":[78,10,100,10,100,45,-90,45,-90],"cou1":[180,0,0,0,0,90,0,-10,-170],"cou2":[190,-20,-20,-20,-20,90,0,-5,-170],"pg1":[180,0,0,0,0,90,0,-90,-90],"pg2":[115,60,60,60,60,90,0,-90,-90],"co1":[170,90,90,90,90,60,-10,-60,-60],"co2":[190,90,90,90,90,60,60,-60,10],"ob1":[90,180,180,180,180,-45,-135,-45,-135],"ob2":[90,180,180,-90,-90,-45,-135,-45,-135],"di1":[150,150,150,150,150,0,0,0,0],"di2":[150,210,210,210,210,0,0,0,0],"hm1":[180,0,0,0,0,90,90,0,0],"hm2":[125,85,85,85,85,90,90,0,0],"wg1":[140,0,0,0,0,85,0,-60,-60],"wg2":[160,180,180,0,0,85,0,-60,-60],"an1":[180,0,0,0,0,90,0,0,-90],"an2":[180,0,0,0,0,105,25,0,-90],"th1":[120,90,90,90,90,-150,5,-150,5],"th2":[90,90,90,90,90,-100,0,-100,0],"lp1":[180,175,180,175,180,90,0,90,0],"lp2":[180,30,150,30,150,90,0,90,0],"ad1":[180,0,0,0,0,45,45,-45,-45],"ad2":[180,0,0,0,0,8,8,-8,-8],"bp1":[-130,90,90,90,90,155,45,155,45],"bp2":[-130,90,90,90,90,115,115,115,115]}}
+\ No newline at end of file
+diff --git a/ios-app/TorwartFit/Services/ClaudeClient.swift b/ios-app/TorwartFit/Services/ClaudeClient.swift
+index 6196afe..c0719ff 100644
+--- a/ios-app/TorwartFit/Services/ClaudeClient.swift
++++ b/ios-app/TorwartFit/Services/ClaudeClient.swift
+@@ -26,6 +26,18 @@ enum ClaudeClient {
+ 
+     /// Sendet den Chatverlauf und liefert den Text Stück für Stück über `onText` (immer der ganze bisherige Text).
+     static func stream(system: String, messages: [ChatMessage], onText: @escaping (String) -> Void) async throws -> String {
++        try await stream(system: system, rawMessages: messages.map { ["role": $0.role, "content": $0.text] },
++                         effort: "low", maxTokens: 4000, onText: onText)
++    }
++
++    /// Bild als Inhaltsblock (JPEG, base64)
++    static func imageBlock(_ jpeg: Data) -> [String: Any] {
++        ["type": "image", "source": ["type": "base64", "media_type": "image/jpeg", "data": jpeg.base64EncodedString()]]
++    }
++
++    /// Allgemeine Variante: Nachrichten mit beliebigen Inhaltsblöcken (Text, Bilder).
++    static func stream(system: String, rawMessages: [[String: Any]], effort: String, maxTokens: Int,
++                       onText: @escaping (String) -> Void) async throws -> String {
+         guard let key = Keychain.get("anthropic_api_key"), !key.isEmpty else { throw ClaudeError.noKey }
+ 
+         var req = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+@@ -38,12 +50,12 @@ enum ClaudeClient {
+ 
+         let body: [String: Any] = [
+             "model": model,
+-            "max_tokens": 4000,
++            "max_tokens": maxTokens,
+             "stream": true,
+             "system": system,
+-            "output_config": ["effort": "low"],   // Chat: kurze, schnelle Antworten
++            "output_config": ["effort": effort],
+             "fallbacks": "default",                 // bei Ablehnung serverseitig auf Ersatzmodell ausweichen
+-            "messages": messages.map { ["role": $0.role, "content": $0.text] },
++            "messages": rawMessages,
+         ]
+         req.httpBody = try JSONSerialization.data(withJSONObject: body)
+ 
+diff --git a/ios-app/TorwartFit/Services/HealthService.swift b/ios-app/TorwartFit/Services/HealthService.swift
+index b6d84af..447cd25 100644
+--- a/ios-app/TorwartFit/Services/HealthService.swift
++++ b/ios-app/TorwartFit/Services/HealthService.swift
+@@ -11,7 +11,7 @@ final class HealthService {
+     func requestAccess() async -> Bool {
+         guard isAvailable else { return false }
+         let read: Set<HKObjectType> = [HKQuantityType(.stepCount), HKQuantityType(.bodyMass), HKObjectType.workoutType()]
+-        let share: Set<HKSampleType> = [HKObjectType.workoutType(), HKQuantityType(.activeEnergyBurned), HKQuantityType(.distanceWalkingRunning)]
++        let share: Set<HKSampleType> = [HKObjectType.workoutType(), HKQuantityType(.activeEnergyBurned), HKQuantityType(.distanceWalkingRunning), HKQuantityType(.distanceCycling)]
+         do {
+             try await hs.requestAuthorization(toShare: share, read: read)
+             return true
+@@ -62,6 +62,31 @@ final class HealthService {
+         }
+     }
+ 
++    /// Freies Training oder Lauf mit passender Aktivitätsart speichern
++    func saveActivity(_ a: FreeActivity, start: Date, end: Date, km: Double, kcal: Double) async {
++        guard isAvailable else { return }
++        let cfg = HKWorkoutConfiguration()
++        cfg.activityType = a.healthType
++        cfg.locationType = a.usesGPS ? .outdoor : .indoor
++        let builder = HKWorkoutBuilder(healthStore: hs, configuration: cfg, device: .local())
++        do {
++            try await builder.beginCollection(at: start)
++            var samples: [HKSample] = [HKCumulativeQuantitySample(type: HKQuantityType(.activeEnergyBurned),
++                                                                  quantity: HKQuantity(unit: .kilocalorie(), doubleValue: kcal),
++                                                                  start: start, end: end)]
++            if km > 0 && a.usesGPS {
++                samples.append(HKCumulativeQuantitySample(type: HKQuantityType(a == .bike ? .distanceCycling : .distanceWalkingRunning),
++                                                          quantity: HKQuantity(unit: .meterUnit(with: .kilo), doubleValue: km),
++                                                          start: start, end: end))
++            }
++            try await builder.addSamples(samples)
++            try await builder.endCollection(at: end)
++            _ = try await builder.finishWorkout()
++        } catch {
++            // Speichern in Health ist optional – Fehler ignorieren.
++        }
++    }
++
+     func saveWorkout(start: Date, end: Date, kcal: Double) async {
+         guard isAvailable else { return }
+         let cfg = HKWorkoutConfiguration()
+diff --git a/ios-app/TorwartFit/Services/RunTracker.swift b/ios-app/TorwartFit/Services/RunTracker.swift
+index 5f6687e..7207a21 100644
+--- a/ios-app/TorwartFit/Services/RunTracker.swift
++++ b/ios-app/TorwartFit/Services/RunTracker.swift
+@@ -12,6 +12,9 @@ final class RunTracker: NSObject, ObservableObject, CLLocationManagerDelegate {
+     @Published var now = Date()
+ 
+     let start = Date()
++    /// GPS aus (Stoppuhr-Training) und Höchstgeschwindigkeit für Sprünge
++    var useGPS = true
++    var maxSpeed: Double = 7
+     private var accumulated: TimeInterval = 0
+     private var resumedAt: Date?
+     private var last: CLLocation?
+@@ -37,8 +40,10 @@ final class RunTracker: NSObject, ObservableObject, CLLocationManagerDelegate {
+     var paceMinPerKm: Double? { km > 0.05 ? elapsed / 60 / km : nil }
+ 
+     func begin() {
+-        manager.requestWhenInUseAuthorization()
+-        manager.startUpdatingLocation()
++        if useGPS {
++            manager.requestWhenInUseAuthorization()
++            manager.startUpdatingLocation()
++        }
+         resume()
+         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.now = Date() }
+     }
+@@ -80,8 +85,8 @@ final class RunTracker: NSObject, ObservableObject, CLLocationManagerDelegate {
+             if let prev = last {
+                 let d = loc.distance(from: prev)
+                 let dt = loc.timestamp.timeIntervalSince(prev.timestamp)
+-                // Sprünge und unrealistische Geschwindigkeiten (> 25 km/h) ignorieren
+-                guard dt > 0, d > 2, d / dt < 7 else { continue }
++                // Sprünge und unrealistische Geschwindigkeiten ignorieren
++                guard dt > 0, d > 2, d / dt < maxSpeed else { continue }
+                 distance += d
+             }
+             last = loc
+diff --git a/ios-app/TorwartFit/Views/ExerciseDetailView.swift b/ios-app/TorwartFit/Views/ExerciseDetailView.swift
+index c5b176b..9f9c9b6 100644
+--- a/ios-app/TorwartFit/Views/ExerciseDetailView.swift
++++ b/ios-app/TorwartFit/Views/ExerciseDetailView.swift
+@@ -5,6 +5,7 @@ struct ExerciseDetailView: View {
+     @Environment(\.dismiss) private var dismiss
+     let id: String
+     var short = false
++    @State private var showAnalysis = false
+ 
+     var body: some View {
+         NavigationStack {
+@@ -41,13 +42,22 @@ struct ExerciseDetailView: View {
+                     }
+                     section("Achte auf") { row("!", store.mistakes(id), .orange) }
+                     section("Warum") { row("🧤", store.ex(id)?.why ?? "", .lime) }
++                    Button { showAnalysis = true } label: {
++                        Label("Technik per Video prüfen", systemImage: "video.badge.checkmark")
++                    }
++                    .buttonStyle(LimeButton())
++                    let n = store.s.analyses.filter { $0.exercise == id }.count
++                    if n > 0 {
++                        Text("\(n) frühere Analyse\(n == 1 ? "" : "n") gespeichert").font(.caption).foregroundStyle(Color.mut)
++                    }
+                     if let url = URL(string: "https://www.youtube.com/results?search_query=" +
+                                      (store.name(id) + " Ausführung").addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!) {
+                         Link(destination: url) { Label("Video auf YouTube", systemImage: "play.rectangle.fill") }
+                             .buttonStyle(LimeButton(secondary: true))
+                     }
+-                    if store.photo(id) != nil {
+-                        Text("Fotos: Free Exercise DB (gemeinfrei)").font(.caption2).foregroundStyle(Color.mut)
++                    if let p = store.photo(id) {
++                        Text(p.hasPrefix("Gen_") ? "Fotos: KI-generierte Beispielbilder" : "Fotos: Free Exercise DB (gemeinfrei)")
++                            .font(.caption2).foregroundStyle(Color.mut)
+                     }
+                 }
+                 .padding(16)
+@@ -56,6 +66,7 @@ struct ExerciseDetailView: View {
+             .navigationTitle(store.name(id))
+             .navigationBarTitleDisplayMode(.inline)
+             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Fertig") { dismiss() } } }
++            .sheet(isPresented: $showAnalysis) { TechniqueAnalysisView(id: id).environmentObject(store) }
+         }
+     }
+ 
+diff --git a/ios-app/TorwartFit/Views/NutritionView.swift b/ios-app/TorwartFit/Views/NutritionView.swift
+index 9a52486..7b6a5aa 100644
+--- a/ios-app/TorwartFit/Views/NutritionView.swift
++++ b/ios-app/TorwartFit/Views/NutritionView.swift
+@@ -100,14 +100,35 @@ struct NutritionView: View {
+     private func mealCard(_ m: PlannedMeal) -> some View {
+         let eaten = store.s.eaten.contains(m.key)
+         return VStack(alignment: .leading, spacing: 10) {
+-            HStack {
+-                Text("\(m.slot.name) · \(m.slot.time) Uhr").font(.caption.weight(.semibold))
+-                    .padding(.horizontal, 8).padding(.vertical, 3).background(Color.card2, in: Capsule())
+-                Spacer()
+-                Text("⏱ \(m.recipe.minutes) Min.").font(.caption).foregroundStyle(Color.mut)
++            if FoodPhoto.has(m.recipe) {
++                Button { recipe = m } label: {
++                    FoodPhoto(recipe: m.recipe, height: 190)
++                        .overlay(alignment: .topLeading) {
++                            Text("\(m.slot.name) · \(m.slot.time) Uhr").font(.caption.weight(.semibold))
++                                .padding(.horizontal, 8).padding(.vertical, 4).background(.ultraThinMaterial, in: Capsule()).padding(10)
++                        }
++                        .overlay(alignment: .topTrailing) {
++                            Text("⏱ \(m.recipe.minutes) Min.").font(.caption.weight(.semibold))
++                                .padding(.horizontal, 8).padding(.vertical, 4).background(.ultraThinMaterial, in: Capsule()).padding(10)
++                        }
++                        .overlay(alignment: .bottomTrailing) {
++                            if eaten {
++                                Image(systemName: "checkmark.circle.fill").font(.title).foregroundStyle(Color.lime)
++                                    .background(Circle().fill(.black)).padding(10)
++                            }
++                        }
++                }
++                .buttonStyle(.plain)
++            } else {
++                HStack {
++                    Text("\(m.slot.name) · \(m.slot.time) Uhr").font(.caption.weight(.semibold))
++                        .padding(.horizontal, 8).padding(.vertical, 3).background(Color.card2, in: Capsule())
++                    Spacer()
++                    Text("⏱ \(m.recipe.minutes) Min.").font(.caption).foregroundStyle(Color.mut)
++                }
+             }
+             HStack(spacing: 14) {
+-                Plate(emoji: m.recipe.emoji)
++                if !FoodPhoto.has(m.recipe) { Plate(emoji: m.recipe.emoji) }
+                 VStack(alignment: .leading, spacing: 4) {
+                     Text(m.recipe.name).font(.headline)
+                     Text("\(m.kcal) kcal · \(m.protein) g Eiweiß · \(m.carbs) g KH").font(.footnote).foregroundStyle(Color.mut)
+@@ -153,6 +174,22 @@ struct Plate: View {
+     }
+ }
+ 
++/// Echtes Foto eines Gerichts (Assets: Food/food_<id>)
++struct FoodPhoto: View {
++    let recipe: Recipe
++    var height: CGFloat = 190
++
++    static func has(_ r: Recipe) -> Bool { UIImage(named: "food_" + r.id) != nil }
++
++    var body: some View {
++        Color.card2
++            .frame(height: height)
++            .frame(maxWidth: .infinity)
++            .overlay { Image("food_" + recipe.id).resizable().scaledToFill() }
++            .clipShape(RoundedRectangle(cornerRadius: height < 80 ? 10 : 16, style: .continuous))
++    }
++}
++
+ struct ShiftChip: View {
+     let kind: String
+     static func short(_ k: String) -> String { ["F": "frei", "F1": "frei", "D": "Spät", "N": "F/N"][k] ?? "" }
+@@ -172,8 +209,12 @@ struct RecipeSheet: View {
+         NavigationStack {
+             ScrollView {
+                 VStack(alignment: .leading, spacing: 14) {
++                    if FoodPhoto.has(meal.recipe) {
++                        FoodPhoto(recipe: meal.recipe, height: 260)
++                        Text("Beispielfoto – so ungefähr sieht deine Portion aus.").font(.caption2).foregroundStyle(Color.mut)
++                    }
+                     HStack(spacing: 14) {
+-                        Plate(emoji: meal.recipe.emoji, size: 90)
++                        if !FoodPhoto.has(meal.recipe) { Plate(emoji: meal.recipe.emoji, size: 90) }
+                         VStack(alignment: .leading, spacing: 4) {
+                             Text("\(meal.kcal) kcal").font(.sport(30))
+                             Text("\(meal.protein) g Eiweiß · \(meal.carbs) g KH · \(meal.fat) g Fett").font(.footnote).foregroundStyle(Color.mut)
+@@ -229,7 +270,11 @@ struct MealPickSheet: View {
+                         dismiss()
+                     } label: {
+                         HStack(spacing: 12) {
+-                            Plate(emoji: r.emoji, size: 50)
++                            if FoodPhoto.has(r) {
++                                FoodPhoto(recipe: r, height: 50).frame(width: 66)
++                            } else {
++                                Plate(emoji: r.emoji, size: 50)
++                            }
+                             VStack(alignment: .leading, spacing: 2) {
+                                 Text(r.name).foregroundStyle(.white)
+                                 Text("ca. \(Int(Double(r.kcal) * meal.factor)) kcal · \(r.minutes) Min. · \(r.devices.joined(separator: ", "))")
+diff --git a/ios-app/TorwartFit/Views/RunViews.swift b/ios-app/TorwartFit/Views/RunViews.swift
+index dd4d605..1466748 100644
+--- a/ios-app/TorwartFit/Views/RunViews.swift
++++ b/ios-app/TorwartFit/Views/RunViews.swift
+@@ -1,5 +1,7 @@
+ import SwiftUI
+ import MapKit
++import AVFoundation
++import AudioToolbox
+ 
+ /// Laufplan der Woche (im Reiter Training)
+ struct RunPlanCard: View {
+@@ -39,8 +41,6 @@ struct RunPlanCard: View {
+                 }
+             }
+             .background(Color.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+-            Button { store.startRun(nil) } label: { Label("Freien Lauf starten (GPS)", systemImage: "location.fill") }
+-                .buttonStyle(LimeButton(secondary: true))
+         }
+         .sheet(item: $detail) { r in RunDetailSheet(run: r).environmentObject(store).presentationDetents([.medium, .large]) }
+     }
+@@ -129,6 +129,11 @@ struct RunTrackerView: View {
+     @State private var finished = false
+     @State private var kmInput = ""
+     @State private var confirmQuit = false
++    @State private var segIndex = -1
++    @StateObject private var voice = IntervalVoice()
++
++    private var gps: Bool { launch.activity.usesGPS }
++    private var timeline: [IntervalProgram.Segment] { launch.program?.timeline ?? [] }
+ 
+     var body: some View {
+         VStack(spacing: 16) {
+@@ -138,17 +143,25 @@ struct RunTrackerView: View {
+                         .background(Color.card2, in: Circle())
+                 }
+                 Spacer()
+-                Text(launch.plan?.title ?? "Freier Lauf").font(.subheadline.weight(.semibold))
++                Text("\(launch.activity.icon) \(launch.title)").font(.subheadline.weight(.semibold)).lineLimit(1)
+                 Spacer()
+-                Text(gpsText).font(.caption).foregroundStyle(t.gps == .ok ? Color.lime : .orange)
++                if gps { Text(gpsText).font(.caption).foregroundStyle(t.gps == .ok ? Color.lime : .orange) }
++                else { Text("Stoppuhr").font(.caption).foregroundStyle(Color.mut) }
+             }
+             .padding(.top, 8)
+             if finished { summary } else { live }
+         }
+         .padding(.horizontal, 16)
+         .background(Color.bg.ignoresSafeArea())
+-        .onAppear { t.begin(); UIApplication.shared.isIdleTimerDisabled = true }
+-        .onDisappear { t.finish(); UIApplication.shared.isIdleTimerDisabled = false }
++        .onAppear {
++            t.useGPS = gps
++            t.maxSpeed = launch.activity.maxSpeed
++            t.begin()
++            UIApplication.shared.isIdleTimerDisabled = true
++            if launch.program != nil { voice.prepare() }
++        }
++        .onChange(of: Int(t.elapsed)) { _, sec in intervalTick(sec) }
++        .onDisappear { t.finish(); voice.stop(); UIApplication.shared.isIdleTimerDisabled = false }
+         .confirmationDialog("Lauf abbrechen?", isPresented: $confirmQuit, titleVisibility: .visible) {
+             Button("Abbrechen ohne Speichern", role: .destructive) { t.finish(); dismiss() }
+             Button("Beenden und speichern") { finish() }
+@@ -166,14 +179,19 @@ struct RunTrackerView: View {
+     private var live: some View {
+         VStack(spacing: 18) {
+             Spacer()
+-            Text(clock(t.elapsed)).font(.system(size: 84, weight: .heavy).width(.condensed).italic().monospacedDigit())
++            if launch.program != nil { intervalPanel }
++            Text(clock(t.elapsed)).font(.system(size: launch.program == nil ? 84 : 44, weight: .heavy).width(.condensed).italic().monospacedDigit())
+             Text(t.running ? "läuft" : "pausiert").font(.subheadline).foregroundStyle(Color.mut)
+             HStack(spacing: 10) {
+-                stat(String(format: "%.2f", t.km).replacingOccurrences(of: ".", with: ","), "km")
+-                stat(t.paceMinPerKm.map { Store.pace($0) } ?? "–", "min/km")
++                if gps {
++                    stat(String(format: "%.2f", t.km).replacingOccurrences(of: ".", with: ","), "km")
++                    stat(t.paceMinPerKm.map { Store.pace($0) } ?? "–", launch.activity == .bike ? "km/h" : "min/km")
++                        .opacity(launch.activity == .bike ? 0 : 1)
++                        .overlay { if launch.activity == .bike { stat(speedText, "km/h") } }
++                }
+                 stat("\(kcal)", "kcal")
+             }
+-            if let p = launch.plan {
++            if let p = launch.plan, launch.program == nil {
+                 VStack(alignment: .leading, spacing: 4) {
+                     ForEach(p.details, id: \.self) { Text("• " + $0).font(.footnote).foregroundStyle(Color.mut) }
+                 }
+@@ -181,7 +199,7 @@ struct RunTrackerView: View {
+                 ProgressView(value: min(t.km, p.km), total: max(p.km, 0.1)).tint(.lime)
+                 Text("Ziel \(fmtKg(p.km)) km").font(.caption).foregroundStyle(Color.mut)
+             }
+-            if t.gps == .denied {
++            if gps && t.gps == .denied {
+                 Text("Ortung ist aus. Erlaube sie unter Einstellungen → TorwartFit → Standort, oder trage die Strecke am Ende selbst ein.")
+                     .font(.footnote).foregroundStyle(.orange).multilineTextAlignment(.center)
+             }
+@@ -209,17 +227,19 @@ struct RunTrackerView: View {
+                 }
+                 HStack(spacing: 10) {
+                     stat("\(max(1, Int(t.elapsed / 60)))", "Minuten")
+-                    stat(String(format: "%.2f", t.km).replacingOccurrences(of: ".", with: ","), "km (GPS)")
++                    if gps { stat(String(format: "%.2f", t.km).replacingOccurrences(of: ".", with: ","), "km (GPS)") }
+                     stat("\(kcal)", "kcal")
+                 }
+-                VStack(alignment: .leading, spacing: 6) {
+-                    Text("Strecke in km (anpassen, falls das GPS gefehlt hat)").font(.footnote).foregroundStyle(Color.mut)
+-                    TextField("km", text: $kmInput).keyboardType(.decimalPad)
+-                        .padding(12).background(Color.card2, in: RoundedRectangle(cornerRadius: 10))
++                if gps {
++                    VStack(alignment: .leading, spacing: 6) {
++                        Text("Strecke in km (anpassen, falls das GPS gefehlt hat)").font(.footnote).foregroundStyle(Color.mut)
++                        TextField("km", text: $kmInput).keyboardType(.decimalPad)
++                            .padding(12).background(Color.card2, in: RoundedRectangle(cornerRadius: 10))
++                    }
+                 }
+                 Button("Speichern") {
+-                    let km = Double(kmInput.replacingOccurrences(of: ",", with: ".")) ?? t.km
+-                    store.saveRun(plan: launch.plan, start: t.start, km: km, seconds: t.elapsed,
++                    let km = gps ? (Double(kmInput.replacingOccurrences(of: ",", with: ".")) ?? t.km) : 0
++                    store.saveRun(launch, start: t.start, km: km, seconds: t.elapsed,
+                                   route: t.route.map { RunCoordinate(lat: $0.latitude, lon: $0.longitude) })
+                     Haptics.success()
+                     dismiss()
+@@ -230,9 +250,73 @@ struct RunTrackerView: View {
+         }
+     }
+ 
+-    private var kcal: Int {
+-        let kg = store.currentKg
+-        return t.km > 0.2 ? Int(0.92 * kg * t.km) : Int(8.5 * kg * t.elapsed / 3600)
++    private var kcal: Int { launch.activity.kcal(kg: store.currentKg, km: gps ? t.km : 0, seconds: t.elapsed) }
++
++    private var speedText: String {
++        t.elapsed > 30 ? String(format: "%.1f", t.km / (t.elapsed / 3600)).replacingOccurrences(of: ".", with: ",") : "–"
++    }
++
++    // MARK: Intervalle
++
++    private func segment(at sec: Int) -> Int? {
++        guard let i = timeline.lastIndex(where: { $0.start <= sec }) else { return nil }
++        return sec < timeline[i].start + timeline[i].seconds ? i : nil
++    }
++
++    private func intervalTick(_ sec: Int) {
++        guard launch.program != nil, t.running else { return }
++        let idx = segment(at: sec) ?? timeline.count
++        if idx != segIndex {
++            let first = segIndex == -1
++            segIndex = idx
++            if idx < timeline.count {
++                let sg = timeline[idx]
++                if !first { AudioServicesPlaySystemSound(1013) }
++                Haptics.success()
++                voice.say("\(sg.name), \(IntervalVoice.spoken(sg.seconds))")
++            } else {
++                AudioServicesPlaySystemSound(1025)
++                Haptics.success()
++                voice.say("Intervalle geschafft. Du kannst jetzt beenden.")
++            }
++            return
++        }
++        if idx < timeline.count {
++            let left = timeline[idx].start + timeline[idx].seconds - sec
++            if left <= 3 && left > 0 { AudioServicesPlaySystemSound(1103) }
++        }
++    }
++
++    @ViewBuilder private var intervalPanel: some View {
++        let sec = Int(t.elapsed)
++        if let i = segment(at: sec) {
++            let sg = timeline[i]
++            let left = sg.start + sg.seconds - sec
++            let color: Color = sg.hard ? .orange : .cyan
++            VStack(spacing: 8) {
++                HStack {
++                    Text(sg.round.map { "Runde \($0) / \(launch.program?.repeats ?? 1)" } ?? (i == 0 ? "Start" : "Ende"))
++                        .font(.caption.weight(.heavy)).foregroundStyle(color)
++                    Spacer()
++                    Text("Abschnitt \(i + 1) / \(timeline.count)").font(.caption).foregroundStyle(Color.mut)
++                }
++                Text(sg.name).font(.sport(44)).textCase(.uppercase).foregroundStyle(color)
++                Text(IntervalProgram.clock(left)).font(.system(size: 84, weight: .heavy).width(.condensed).monospacedDigit())
++                ProgressView(value: Double(sg.seconds - left), total: Double(max(sg.seconds, 1))).tint(color)
++                if i + 1 < timeline.count {
++                    Text("Danach: \(timeline[i + 1].name) · \(IntervalProgram.dur(timeline[i + 1].seconds))")
++                        .font(.footnote).foregroundStyle(Color.mut)
++                }
++            }
++            .padding(16)
++            .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 20))
++            .overlay(RoundedRectangle(cornerRadius: 20).stroke(color.opacity(0.4), lineWidth: 1.5))
++        } else {
++            Text("✓ Intervalle geschafft – locker austraben oder beenden.")
++                .font(.headline).foregroundStyle(Color.lime).multilineTextAlignment(.center)
++                .padding(16).frame(maxWidth: .infinity)
++                .background(Color.lime.opacity(0.1), in: RoundedRectangle(cornerRadius: 20))
++        }
+     }
+ 
+     private func finish() {
+@@ -256,3 +340,32 @@ struct RunTrackerView: View {
+         return h > 0 ? String(format: "%d:%02d:%02d", h, m, s % 60) : String(format: "%d:%02d", m, s % 60)
+     }
+ }
++
++/// Sprachansagen für Intervalle (auch mit Kopfhörern und bei gesperrtem Bildschirm)
++final class IntervalVoice: ObservableObject {
++    private let synth = AVSpeechSynthesizer()
++
++    func prepare() {
++        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .voicePrompt, options: [.duckOthers, .mixWithOthers])
++    }
++
++    func say(_ text: String) {
++        try? AVAudioSession.sharedInstance().setActive(true)
++        let u = AVSpeechUtterance(string: text)
++        u.voice = AVSpeechSynthesisVoice(language: "de-DE")
++        u.rate = 0.5
++        synth.speak(u)
++    }
++
++    func stop() {
++        synth.stopSpeaking(at: .immediate)
++        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
++    }
++
++    static func spoken(_ s: Int) -> String {
++        if s < 60 { return "\(s) Sekunden" }
++        let m = s / 60, r = s % 60
++        let min = m == 1 ? "eine Minute" : "\(m) Minuten"
++        return r == 0 ? min : "\(min) \(r)"
++    }
++}
+diff --git a/ios-app/TorwartFit/Views/StatsView.swift b/ios-app/TorwartFit/Views/StatsView.swift
+index 68b2c00..8ed848d 100644
+--- a/ios-app/TorwartFit/Views/StatsView.swift
++++ b/ios-app/TorwartFit/Views/StatsView.swift
+@@ -27,8 +27,8 @@ struct StatsView: View {
+                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                         kpi("Einheiten", "\(store.s.logs.count)", "")
+                         kpi("Trainingszeit", String(format: "%.1f", Double(store.s.logs.reduce(0) { $0 + $1.minutes } + store.s.runs.reduce(0) { $0 + $1.minutes }) / 60), "h")
+-                        kpi("Gelaufen", String(format: "%.1f", store.s.runs.reduce(0) { $0 + $1.km }), "km")
+-                        kpi("Läufe", "\(store.s.runs.count)", "")
++                        kpi("Gelaufen", String(format: "%.1f", store.runOnly.reduce(0) { $0 + $1.km }), "km")
++                        kpi("Läufe", "\(store.runOnly.count)", "")
+                         kpi("Bewegtes Gewicht", String(format: "%.1f", store.s.logs.reduce(0) { $0 + $1.volume } / 1000), "t")
+                         let rp = store.s.logs.compactMap(\.rpe)
+                         kpi("Ø Anstrengung", rp.isEmpty ? "–" : String(format: "%.1f", Double(rp.reduce(0, +)) / Double(rp.count)), "/10")
+@@ -56,7 +56,7 @@ struct StatsView: View {
+                     Text("Verlauf").sectionTitle()
+                     history
+                     if !store.s.runs.isEmpty {
+-                        Text("Läufe").sectionTitle()
++                        Text("Läufe & Aktivitäten").sectionTitle()
+                         runHistory
+                     }
+                 }
+@@ -178,10 +178,11 @@ struct StatsView: View {
+         VStack(spacing: 0) {
+             ForEach(Array(store.s.runs.suffix(30).reversed())) { r in
+                 HStack(spacing: 12) {
+-                    Text("🏃").frame(width: 34, height: 34).background(Color(hex: "#FF375F").opacity(0.25), in: RoundedRectangle(cornerRadius: 9))
++                    let act = FreeActivity.from(logType: r.type)
++                    Text(act.icon).frame(width: 34, height: 34).background(Color(hex: act.colors[0]).opacity(0.25), in: RoundedRectangle(cornerRadius: 9))
+                     VStack(alignment: .leading, spacing: 2) {
+                         Text(r.title)
+-                        Text("\(DateUtil.format(r.date, "EEEdMMM")) · \(String(format: "%.2f", r.km)) km · \(r.minutes) min\(r.paceMinPerKm.map { " · " + Store.pace($0) + " /km" } ?? "")")
++                        Text("\(DateUtil.format(r.date, "EEEdMMM")) · \(String(format: "%.2f", r.km)) km · \(r.minutes) min\((act.usesGPS ? r.paceMinPerKm : nil).map { " · " + Store.pace($0) + " /km" } ?? "")")
+                             .font(.footnote).foregroundStyle(Color.mut)
+                     }
+                     Spacer()
+diff --git a/ios-app/TorwartFit/Views/TrainingView.swift b/ios-app/TorwartFit/Views/TrainingView.swift
+index 8886490..9e23b08 100644
+--- a/ios-app/TorwartFit/Views/TrainingView.swift
++++ b/ios-app/TorwartFit/Views/TrainingView.swift
+@@ -6,6 +6,7 @@ struct TrainingView: View {
+     @State private var detail: Sel?
+     @State private var query = ""
+     @State private var category = "Alle"
++    @State private var showFree = false
+ 
+     private var library: [String] {
+         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+@@ -36,6 +37,11 @@ struct TrainingView: View {
+                         }
+                     }
+ 
++                    Button { showFree = true } label: {
++                        Label("Freies Training", systemImage: "figure.run.circle.fill")
++                    }
++                    .buttonStyle(LimeButton())
++
+                     RunPlanCard().padding(.top, 6)
+ 
+                     Text("Übungen").sectionTitle().padding(.top, 10)
+@@ -81,6 +87,7 @@ struct TrainingView: View {
+             .toolbar(.hidden, for: .navigationBar)
+             .sheet(item: $preview) { s in SessionPreview(session: s.id).environmentObject(store) }
+             .sheet(item: $detail) { s in ExerciseDetailView(id: s.id).environmentObject(store) }
++            .sheet(isPresented: $showFree) { FreeTrainingSheet().environmentObject(store) }
+         }
+     }
+ }
