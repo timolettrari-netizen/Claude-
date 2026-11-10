@@ -107,7 +107,7 @@ struct NutritionView: View {
                 Text("⏱ \(m.recipe.minutes) Min.").font(.caption).foregroundStyle(Color.mut)
             }
             HStack(spacing: 14) {
-                Plate(emoji: m.recipe.emoji)
+                Plate(emoji: m.recipe.emoji, recipeID: m.recipe.id)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(m.recipe.name).font(.headline)
                     Text("\(m.kcal) kcal · \(m.protein) g Eiweiß · \(m.carbs) g KH").font(.footnote).foregroundStyle(Color.mut)
@@ -141,7 +141,22 @@ struct NutritionView: View {
 struct Plate: View {
     let emoji: [String]
     var size: CGFloat = 76
+    /// Rezept-ID: Gibt es ein Foto "Recipe_<id>" in den Assets, wird es statt der Emojis gezeigt.
+    var recipeID: String? = nil
     var body: some View {
+        if let id = recipeID, UIImage(named: "Recipe_\(id)") != nil {
+            Image("Recipe_\(id)")
+                .resizable()
+                .scaledToFill()
+                .frame(width: size, height: size)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.line, lineWidth: 1))
+        } else {
+            emojiPlate
+        }
+    }
+
+    private var emojiPlate: some View {
         ZStack {
             Circle().fill(Color.card2)
             Circle().fill(Color.card).padding(size * 0.12)
@@ -172,8 +187,14 @@ struct RecipeSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
+                    if UIImage(named: "Recipe_\(meal.recipe.id)") != nil {
+                        Color.black
+                            .aspectRatio(4 / 3, contentMode: .fit)
+                            .overlay { Image("Recipe_\(meal.recipe.id)").resizable().scaledToFill() }
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    }
                     HStack(spacing: 14) {
-                        Plate(emoji: meal.recipe.emoji, size: 90)
+                        Plate(emoji: meal.recipe.emoji, size: 90, recipeID: meal.recipe.id)
                         VStack(alignment: .leading, spacing: 4) {
                             Text("\(meal.kcal) kcal").font(.sport(30))
                             Text("\(meal.protein) g Eiweiß · \(meal.carbs) g KH · \(meal.fat) g Fett").font(.footnote).foregroundStyle(Color.mut)
@@ -229,7 +250,7 @@ struct MealPickSheet: View {
                         dismiss()
                     } label: {
                         HStack(spacing: 12) {
-                            Plate(emoji: r.emoji, size: 50)
+                            Plate(emoji: r.emoji, size: 50, recipeID: r.id)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(r.name).foregroundStyle(.white)
                                 Text("ca. \(Int(Double(r.kcal) * meal.factor)) kcal · \(r.minutes) Min. · \(r.devices.joined(separator: ", "))")
