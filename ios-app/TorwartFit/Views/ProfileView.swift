@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 struct ProfileView: View {
     @EnvironmentObject var store: Store
     @State private var showGoal = false
+    @State private var showPlan = false
     @State private var apiKey = Keychain.get("anthropic_api_key") ?? ""
     @State private var importing = false
     @State private var message: String?
@@ -24,11 +25,11 @@ struct ProfileView: View {
             Form {
                 Section {
                     TextField("Name", text: $store.s.name)
-                    Button { showGoal = true } label: {
+                    Button { if store.program != nil { showPlan = true } else { showGoal = true } } label: {
                         HStack {
-                            Text("Ziel").foregroundStyle(.white)
+                            Text("Plan / Ziel").foregroundStyle(.white)
                             Spacer()
-                            Text(store.goal.map { "\($0.icon) \($0.name)" } ?? "–").foregroundStyle(Color.mut)
+                            Text(store.program.map { "\($0.goal.icon) \($0.goal.name) · \($0.weekText)" } ?? "Kein Plan").foregroundStyle(Color.mut)
                         }
                     }
                     Picker("Spieltag", selection: $store.s.gameDay) {
@@ -150,6 +151,7 @@ struct ProfileView: View {
             .navigationTitle("Profil")
             .toolbar { ToolbarItem(placement: .topBarTrailing) { DismissButton() } }
             .sheet(isPresented: $showGoal) { GoalPickerView(first: false).environmentObject(store) }
+            .sheet(isPresented: $showPlan) { PlanSheet().environmentObject(store) }
             .fileImporter(isPresented: $importing, allowedContentTypes: [.json]) { result in
                 guard case .success(let url) = result else { return }
                 let ok = url.startAccessingSecurityScopedResource()

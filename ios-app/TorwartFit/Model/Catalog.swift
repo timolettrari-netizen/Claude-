@@ -132,6 +132,19 @@ struct RunLog: Codable, Identifiable, Hashable {
     var paceMinPerKm: Double? { km > 0.2 ? Double(minutes) / km : nil }
 }
 
+struct ProgramRecord: Codable, Identifiable, Hashable {
+    var id = UUID()
+    var goal: String
+    var start: Date
+    var end: Date
+    var weeks: Int
+    var units: Int
+    var adherence: Int
+    var completed: Bool
+    var testFrom: Double?
+    var testTo: Double?
+}
+
 struct TestEntry: Codable, Identifiable, Hashable {
     var id = UUID()
     var test: String
@@ -188,6 +201,11 @@ struct AppState: Codable {
     var coachVoice = true
     var hrSource = "none"        // none, ble, watch
     var maxHR = 0                // 0 = automatisch (208 − 0,7 × Alter)
+    // Pläne: Ziel mit Dauer, jederzeit beendbar
+    var programStart: Date?
+    var programWeeks = 8         // 0 = offen
+    var programs: [ProgramRecord] = []
+    var savedRunsPerWeek = 2
 
     init() {}
 
@@ -222,6 +240,11 @@ struct AppState: Codable {
         coachVoice = try c.decodeIfPresent(Bool.self, forKey: .coachVoice) ?? true
         hrSource = try c.decodeIfPresent(String.self, forKey: .hrSource) ?? "none"
         maxHR = try c.decodeIfPresent(Int.self, forKey: .maxHR) ?? 0
+        programStart = try c.decodeIfPresent(Date.self, forKey: .programStart)
+        programWeeks = try c.decodeIfPresent(Int.self, forKey: .programWeeks) ?? 0
+        programs = try c.decodeIfPresent([ProgramRecord].self, forKey: .programs) ?? []
+        savedRunsPerWeek = try c.decodeIfPresent(Int.self, forKey: .savedRunsPerWeek) ?? 2
+        if goal != nil && programStart == nil { programStart = blockStart }   // älterer Stand ohne Plan-Daten
     }
 }
 

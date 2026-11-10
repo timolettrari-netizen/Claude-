@@ -2,14 +2,15 @@
 
 Native iPhone-App für dein Torwart- und Gym-Training. Nicht für den App Store gedacht – du spielst sie mit Xcode direkt auf dein iPhone.
 
-## Was drin ist (Version 1.5)
+## Was drin ist (Version 1.6)
 - **Heute:** Tagesansicht mit heutiger Einheit, Ziel, Tagesform, Wochenplan (abhängig von Spieltag und Ziel), Schritte und Gewicht aus Apple Health
 - **Training:** 11 Einheiten (Torwart + Gym A/B/C) und 55 Übungen mit Suche und Kategorien
 - **Geführtes Training:** Satz für Satz, Gewicht/Wiederholungen, Pausen-Timer mit Ton und Vibration, Steigerungsvorschlag, Display bleibt an, Zusammenfassung mit Anstrengung (RPE)
 - **Übungen:** echte Fotos (Start ⇄ Ende, gemeinfrei aus der Free Exercise DB) oder animierte Figur, Ausrüstung, Schritte, Fehler, Nutzen
 - **Coach:** KI-Coach (Claude) mit deinen Trainingsdaten – braucht einen eigenen API-Schlüssel
 - **Statistik:** Aktivitätsringe, Diagramm, Leistungstests, Bestwerte, Verlauf
-- **Essen:** Mahlzeitenplan für 10 Tage passend zu deinem Dienst (frei / nach Nacht / Spät / Früh-Nacht), 18 Rezepte mit auf dein Kalorienziel skalierten Mengen, „Gegessen“ abhaken, Gerichte tauschen, Eiweiß/Kohlenhydrate, Einkaufsliste (7 Tage, teilbar)
+- **Pläne:** Ziel + Dauer (4/8/12 Wochen oder offen) starten, Fortschritt sehen, jederzeit beenden – mit Bilanz und Verlauf früherer Pläne. Ohne Plan trainierst du frei. Laufplan separat starten/beenden.
+- **Essen:** Mahlzeitenplan für 10 Tage passend zu deinem Dienst (frei / nach Nacht / Spät / Früh-Nacht), 31 Rezepte mit auf dein Kalorienziel skalierten Mengen, „Gegessen“ abhaken, Gerichte tauschen, Eiweiß/Kohlenhydrate, Einkaufsliste (7 Tage, teilbar)
 - **Abnehmen:** Gewicht mit Soll-Linie (Start → Ziel), Kalorienziel (Mifflin-St Jeor, Defizit aus Zieldatum, Trainingsbonus), Eingabe oder Apple Health
 - **Laufplan:** 1–4 Läufe pro Woche, automatisch auf freie Tage gelegt (nie am Spieltag oder Tag davor, möglichst nicht auf Torwart-Tage). Woche 1–2 Lauf-Geh-Intervalle, dann lockerer und langer Lauf, ab Woche 5 Intervalle, jede 4. Woche leichter. Tempo aus deinen Läufen (Start: 6:20 /km)
 - **Lauf-Coach (Sprache):** sagt Gehen/Traben- und Intervall-Wechsel an, jeden Kilometer Zeit, Tempo und Puls, und jede Minute „etwas langsamer“ / „etwas schneller“ – zuerst nach Puls (lockere Läufe in Zone 2 = 60–75 % vom Max-Puls), sonst nach Tempo. Musik wird dabei kurz leiser.

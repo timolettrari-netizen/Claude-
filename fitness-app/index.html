@@ -338,7 +338,7 @@ function norm(o){
   const s=Object.assign({},DEF,o||{});
   s.p=Object.assign({},DEF.p,(o&&o.p)||{});
   s.weights=(o&&o.weights&&o.weights.length)?o.weights:DEF.weights.slice();
-  s.steps=(o&&o.steps)||{};s.workouts=(o&&o.workouts)||[];s.shifts=(o&&o.shifts)||{};s.eaten=(o&&o.eaten)||{};s.swap=(o&&o.swap)||{};s.pick=(o&&o.pick)||{};s.skipped=(o&&o.skipped)||{};s.moved=(o&&o.moved)||{};s.adj=(o&&o.adj)||0;s.adjDone=(o&&o.adjDone)||{};s.photos=(o&&o.photos)||{};s.planned=(o&&o.planned)||{};
+  s.steps=(o&&o.steps)||{};s.workouts=(o&&o.workouts)||[];s.shifts=(o&&o.shifts)||{};s.eaten=(o&&o.eaten)||{};s.swap=(o&&o.swap)||{};s.pick=(o&&o.pick)||{};s.skipped=(o&&o.skipped)||{};s.moved=(o&&o.moved)||{};s.adj=(o&&o.adj)||0;s.adjDone=(o&&o.adjDone)||{};s.photos=(o&&o.photos)||{};s.planned=(o&&o.planned)||{};s.planHist=(o&&o.planHist)||[];
   if(!s.mig1){s.p.kb=10;if(!s.weights.some(w=>w.d==='2026-10-04'))s.weights.push({d:'2026-10-04',kg:118});s.mig1=true}
   if(!s.p.planStart){const t0=new Date();s.p.planStart=fmt(t0.getDay()===0?addD(monOf(t0),7):monOf(t0))}
   if(!s.seeded){
@@ -438,7 +438,7 @@ const WHEN={
 };
 function weekPlan(m){
   const key=fmt(m);if(wkCache[key])return wkCache[key];
-  if(weekNo(m)<1){wkCache[key]={};return wkCache[key]}
+  if(S.p.planEnded||weekNo(m)<1){wkCache[key]={};return wkCache[key]}
   const w=Math.max(1,weekNo(m)),deload=w%4===0,f=deload?0.75:1;
   /* Kandidaten: freie Tage (F2 = ausgeruht, F1 = Tag nach dem Nachtdienst) und Früh/Nacht-Tage (Zeitfenster zwischen den Diensten) */
   const cand=[];
@@ -566,9 +566,6 @@ const R=[
 {id:'frittata',n:'Airfryer-Frittata mit Zucchini & Mozzarella',em:['🍳','🥒','🧀'],tags:['l','d'],min:25,dev:['Airfryer'],kcal:520,p:47,c:8,f:31,
  ing:[['Eier',4,'Stk.',1],['Zucchini',150,'g'],['Putenschinken',60,'g'],['Mozzarella',50,'g'],['Tomate',100,'g'],['Olivenöl',1,'TL'],['Salz & Pfeffer',0,'']],
  st:['Airfryer auf 170 °C vorheizen. Eine kleine ofenfeste Form (ca. 18 cm) mit Öl einfetten.','Zucchini, Tomate und Schinken fein würfeln, Mozzarella zupfen.','Eier mit Salz und Pfeffer verquirlen, Gemüse und Schinken unterrühren, in die Form geben und den Mozzarella darauf verteilen.','Im Airfryer 15–18 Min. backen, bis die Mitte fest ist. 2 Min. ruhen lassen.']},
-{id:'garnelen',n:'Knoblauch-Garnelen mit Zucchini & Feta',em:['🦐','🧄','🥒'],tags:['l','d'],min:15,dev:['Pfanne'],kcal:435,p:47,c:8,f:20,
- ing:[['Garnelen (geschält, aufgetaut)',200,'g'],['Zucchini',250,'g'],['Cherrytomaten',100,'g'],['Feta',40,'g'],['Olivenöl',1,'EL'],['Knoblauchzehen',2,'Stk.',1],['Zitrone',0.5,'Stk.']],
- st:['Garnelen trocken tupfen und salzen. Knoblauch in dünne Scheiben, Zucchini in Halbmonde schneiden.','Öl in einer großen Pfanne stark erhitzen, die Garnelen 1–2 Min. pro Seite braten und herausnehmen.','Zucchini 4 Min. anbraten, dann Knoblauch und halbierte Tomaten 2 Min. mitbraten.','Garnelen zurück in die Pfanne, mit Zitronensaft abschmecken und Feta darüberbröckeln.']},
 {id:'curry',n:'Hähnchen-Gemüse-Curry (Thermomix)',em:['🍛','🍗','🥥'],tags:['l','d'],min:30,dev:['Thermomix'],kcal:510,p:46,c:14,f:25,
  ing:[['Hähnchenbrust',180,'g'],['Paprika',100,'g'],['Zucchini',150,'g'],['Kokosmilch',100,'ml'],['Zwiebel',40,'g'],['Babyspinat',60,'g'],['Rote Currypaste',1,'EL'],['Olivenöl',1,'TL']],
  st:['Zwiebel halbiert in den Mixtopf geben, 5 Sek./Stufe 5 zerkleinern. Öl zugeben, 3 Min./120 °C/Stufe 1 dünsten.','Currypaste zugeben und 1 Min./120 °C/Stufe 1 anrösten.','Hähnchen in Würfel, Paprika und Zucchini in Stücke schneiden und mit der Kokosmilch in den Mixtopf geben. 15 Min./100 °C/Linkslauf/Sanftrührstufe.','Spinat zugeben und 2 Min./90 °C/Linkslauf/Sanftrührstufe ziehen lassen. Mit Salz und etwas Zitronensaft abschmecken.']},
@@ -586,7 +583,49 @@ const R=[
  st:['Thermomix: 500 g Wasser in den Mixtopf, Eier in den Varoma-Behälter, 12 Min./Varoma/Stufe 1. Kalt abschrecken und pellen.','Gurke und Tomaten schneiden, Gouda würfeln.','Alles mit Aufschnitt und Mandeln in die Box packen.']},
 {id:'box_quark',n:'Quark-Dip mit Gemüsesticks & Mandeln',em:['🥕','🥒','🥜'],tags:['box','light','snack'],min:5,dev:['Ohne Kochen'],kcal:315,p:37,c:12,f:11,
  ing:[['Magerquark',250,'g'],['Paprika',100,'g'],['Salatgurke',100,'g'],['Mandeln',20,'g'],['Frische Kräuter (Schnittlauch, Petersilie)',5,'g'],['Salz & Pfeffer',0,'']],
- st:['Quark mit gehackten Kräutern, Salz und Pfeffer glatt rühren.','Paprika und Gurke in Sticks schneiden.','Quark in ein Glas füllen, Sticks und Mandeln dazupacken.']}
+ st:['Quark mit gehackten Kräutern, Salz und Pfeffer glatt rühren.','Paprika und Gurke in Sticks schneiden.','Quark in ein Glas füllen, Sticks und Mandeln dazupacken.']},
+{id:'overnight',n:'Overnight-Quark mit Himbeeren & Mandeln',em:['🥣', '🍓', '🥜'],tags:['b', 'light'],min:5,dev:['Ohne Kochen'],kcal:390,p:38,c:22,f:15,
+ ing:[['Magerquark',250,'g'],['Himbeeren',100,'g'],['Mandeln, gehobelt',20,'g'],['Chiasamen',10,'g'],['Zimt',0,'']],
+ st:['Quark mit Chiasamen und einer Prise Zimt verrühren.', 'In ein Glas füllen, Himbeeren darauf geben.', 'Über Nacht in den Kühlschrank stellen, morgens Mandeln darüberstreuen.']},
+{id:'omelett',n:'Omelett mit Paprika, Schinken & Gouda',em:['🍳', '🫑', '🧀'],tags:['b'],min:12,dev:['Pfanne'],kcal:460,p:38,c:6,f:31,
+ ing:[['Eier',3,'Stk.',1],['Paprika',80,'g'],['Kochschinken',50,'g'],['Gouda',30,'g'],['Butter',5,'g'],['Salz & Pfeffer',0,'']],
+ st:['Paprika und Schinken klein würfeln, Eier mit Salz und Pfeffer verquirlen.', 'Butter in der Pfanne schmelzen, Paprika 2 Min. anbraten.', 'Eier dazugießen, Schinken und Gouda darauf verteilen.', 'Bei mittlerer Hitze 4–5 Min. stocken lassen, zusammenklappen.']},
+{id:'eiermuffins',n:'Airfryer-Eiermuffins mit Spinat & Feta',em:['🧁', '🥬', '🧀'],tags:['b', 'box'],min:20,dev:['Airfryer'],kcal:420,p:34,c:5,f:29,
+ ing:[['Eier',4,'Stk.',1],['Babyspinat',50,'g'],['Feta',40,'g'],['Cherrytomaten',80,'g'],['Salz & Pfeffer',0,'']],
+ st:['Airfryer auf 160 °C vorheizen, 6 Silikon-Muffinförmchen bereitstellen.', 'Spinat hacken, Tomaten vierteln, Feta zerbröseln und in die Förmchen verteilen.', 'Eier verquirlen, würzen und darübergießen.', '12–14 Min. backen, bis die Mitte fest ist. Hält gekühlt 3 Tage.']},
+{id:'putenburger',n:'Puten-Frikadellen mit Gurken-Joghurt',em:['🍔', '🥒', '🥣'],tags:['l', 'd', 'box'],min:25,dev:['Airfryer'],kcal:490,p:52,c:12,f:24,
+ ing:[['Putenhack',200,'g'],['Ei',1,'Stk.',1],['Zwiebel',30,'g'],['Griechischer Joghurt (2 %)',100,'g'],['Salatgurke',150,'g'],['Senf',1,'TL'],['Paprikapulver, Salz, Pfeffer',0,'']],
+ st:['Airfryer auf 190 °C vorheizen. Zwiebel fein würfeln.', 'Hack mit Ei, Zwiebel, Senf und Gewürzen verkneten, 4 flache Frikadellen formen.', '12–14 Min. garen, nach der Hälfte wenden.', 'Gurke raspeln, mit Joghurt, Salz und Pfeffer verrühren und dazu servieren.']},
+{id:'lachs_brokkoli',n:'Ofenlachs mit Brokkoli & Zitronen-Joghurt',em:['🐟', '🥦', '🍋'],tags:['l', 'd'],min:20,dev:['Airfryer', 'Thermomix'],kcal:540,p:44,c:12,f:34,
+ ing:[['Lachsfilet',160,'g'],['Brokkoli',250,'g'],['Griechischer Joghurt (2 %)',80,'g'],['Zitrone',0.5,'Stk.'],['Olivenöl',1,'TL'],['Dill, Salz, Pfeffer',0,'']],
+ st:['Thermomix: 500 g Wasser in den Mixtopf, Brokkoliröschen in den Varoma, 12 Min./Varoma/Stufe 1.', 'Gleichzeitig Lachs mit Öl, Salz und Pfeffer einreiben und im Airfryer bei 200 °C 8–10 Min. garen.', 'Joghurt mit Zitronensaft, Dill und Salz verrühren.', 'Alles anrichten.']},
+{id:'rindpfanne',n:'Rindfleisch-Paprika-Pfanne mit Blumenkohlreis',em:['🥩', '🫑', '🍚'],tags:['l', 'd'],min:25,dev:['Pfanne', 'Thermomix'],kcal:520,p:46,c:16,f:28,
+ ing:[['Rinderhüfte oder Minutensteak',180,'g'],['Blumenkohl',300,'g'],['Paprika',150,'g'],['Frühlingszwiebel',30,'g'],['Sojasauce',1,'EL'],['Rapsöl',1,'EL'],['Knoblauchzehe',1,'Stk.',1]],
+ st:['Blumenkohl in Röschen im Thermomix 4 Sek./Stufe 5 zu „Reis“ zerkleinern (oder reiben).', 'Fleisch in feine Streifen schneiden, in heißem Öl 2 Min. scharf anbraten, herausnehmen.', 'Paprika und Knoblauch 3 Min. braten, Blumenkohlreis zugeben und 4 Min. mitbraten.', 'Fleisch zurückgeben, mit Sojasauce abschmecken, Frühlingszwiebel darüber.']},
+{id:'zoodles_bolo',n:'Zucchini-Nudeln mit Hack-Bolognese (Thermomix)',em:['🍝', '🥒', '🍅'],tags:['l', 'd'],min:30,dev:['Thermomix'],kcal:510,p:42,c:18,f:29,
+ ing:[['Rinderhack (max. 10 % Fett)',180,'g'],['Zucchini',300,'g'],['Passierte Tomaten',200,'g'],['Zwiebel',40,'g'],['Möhre',50,'g'],['Parmesan',15,'g'],['Olivenöl',1,'TL'],['Oregano, Salz, Pfeffer',0,'']],
+ st:['Zwiebel und Möhre in den Mixtopf, 5 Sek./Stufe 5. Öl dazu, 3 Min./120 °C/Stufe 1.', 'Hack zugeben, 5 Min./120 °C/Linkslauf/Sanftrührstufe anbraten.', 'Tomaten und Gewürze dazu, 15 Min./100 °C/Linkslauf/Sanftrührstufe.', 'Zucchini zu Nudeln schneiden und nur kurz in der Soße erwärmen. Mit Parmesan servieren.']},
+{id:'spiesse',n:'Hähnchen-Spieße mit Erdnuss-Dip',em:['🍢', '🥜', '🥒'],tags:['l', 'd', 'box'],min:25,dev:['Airfryer'],kcal:500,p:55,c:10,f:26,
+ ing:[['Hähnchenbrust',200,'g'],['Erdnussmus',20,'g'],['Sojasauce',1,'EL'],['Limette',0.5,'Stk.'],['Salatgurke',150,'g'],['Paprikapulver, Currypulver',0,'']],
+ st:['Hähnchen in Würfel schneiden, mit Curry, Paprika und der Hälfte der Sojasauce mischen, auf Spieße stecken.', 'Im Airfryer bei 190 °C 12–14 Min. garen, nach der Hälfte wenden.', 'Erdnussmus mit restlicher Sojasauce, Limettensaft und 2 EL warmem Wasser glatt rühren.', 'Mit Gurkenscheiben servieren.']},
+{id:'kabeljau',n:'Kabeljau auf Tomaten-Zucchini-Gemüse',em:['🐟', '🍅', '🥒'],tags:['d', 'l'],min:25,dev:['Airfryer'],kcal:390,p:42,c:14,f:17,
+ ing:[['Kabeljaufilet',200,'g'],['Zucchini',200,'g'],['Cherrytomaten',150,'g'],['Oliven',20,'g'],['Olivenöl',1,'EL'],['Zitrone',0.5,'Stk.'],['Kräuter der Provence, Salz',0,'']],
+ st:['Airfryer auf 190 °C vorheizen. Zucchini würfeln, Tomaten halbieren, mit Öl, Oliven und Kräutern mischen.', 'Gemüse in einer ofenfesten Form 8 Min. garen.', 'Kabeljau salzen, mit Zitrone beträufeln, auf das Gemüse legen und weitere 8–10 Min. garen.']},
+{id:'auflauf',n:'Hähnchen-Brokkoli-Auflauf mit Mozzarella',em:['🧀', '🥦', '🍗'],tags:['d', 'box'],min:30,dev:['Airfryer', 'Pfanne'],kcal:530,p:58,c:11,f:27,
+ ing:[['Hähnchenbrust',180,'g'],['Brokkoli',200,'g'],['Frischkäse light',60,'g'],['Mozzarella light',60,'g'],['Olivenöl',1,'TL'],['Muskat, Salz, Pfeffer',0,'']],
+ st:['Brokkoli in Röschen 4 Min. in Salzwasser vorgaren.', 'Hähnchen würfeln und in Öl 4 Min. anbraten, würzen.', 'Mit Brokkoli und Frischkäse in einer kleinen Form mischen, Mozzarella darüber.', 'Im Airfryer bei 180 °C 10–12 Min. überbacken.']},
+{id:'wrap_salat',n:'Thunfisch-Salat-Wraps (Low Carb)',em:['🌯', '🐟', '🥬'],tags:['l', 'box'],min:10,dev:['Ohne Kochen'],kcal:380,p:40,c:9,f:20,
+ ing:[['Thunfisch im eigenen Saft (Abtropfgewicht)',140,'g'],['Griechischer Joghurt (2 %)',60,'g'],['Römersalat-Blätter',6,'Stk.',1],['Paprika',80,'g'],['Mais',30,'g'],['Avocado',50,'g'],['Zitronensaft, Salz, Pfeffer',0,'']],
+ st:['Thunfisch mit Joghurt, Zitronensaft, Salz und Pfeffer verrühren.', 'Paprika und Avocado klein würfeln, mit Mais unterheben.', 'In die Salatblätter füllen und wie Wraps einrollen.']},
+{id:'protein_bowl',n:'Hähnchen-Quinoa-Bowl mit Avocado',em:['🥗', '🍗', '🥑'],tags:['l', 'box'],min:20,dev:['Thermomix'],kcal:560,p:48,c:32,f:24,
+ ing:[['Hähnchenbrust',160,'g'],['Quinoa (roh)',40,'g'],['Avocado',60,'g'],['Cherrytomaten',100,'g'],['Rucola',30,'g'],['Zitronensaft',1,'EL'],['Olivenöl',1,'TL']],
+ st:['Thermomix: Quinoa im Garkörbchen mit 500 g Wasser, Hähnchen im Varoma – 20 Min./Varoma/Stufe 1.', 'Hähnchen in Scheiben schneiden, Tomaten halbieren, Avocado würfeln.', 'Alles auf Rucola anrichten, mit Zitronensaft, Öl und Salz beträufeln.', 'Gut für die Arbeit: Dressing getrennt mitnehmen.']},
+{id:'edamame_snack',n:'Edamame mit Meersalz & Chili',em:['🫛', '🧂', '🌶️'],tags:['snack', 'light'],min:8,dev:['Thermomix'],kcal:240,p:22,c:10,f:11,
+ ing:[['Edamame (TK, in der Schote)',200,'g'],['Meersalz, Chiliflocken',0,'']],
+ st:['Edamame im Varoma über 500 g Wasser 8 Min./Varoma/Stufe 1 garen (oder 5 Min. kochen).', 'Mit Meersalz und Chiliflocken bestreuen.']},
+{id:'skyr_schoko',n:'Schoko-Skyr mit Erdnussmus',em:['🍫', '🥣', '🥜'],tags:['snack', 'light'],min:3,dev:['Ohne Kochen'],kcal:300,p:30,c:16,f:12,
+ ing:[['Skyr natur',200,'g'],['Backkakao (ungesüßt)',10,'g'],['Erdnussmus',15,'g'],['Süßstoff oder etwas Honig',0,'']],
+ st:['Skyr mit Kakao und etwas Süße glatt rühren.', 'Erdnussmus darüber geben – fertig. Ideal gegen Heißhunger im Nachtdienst.']}
 ];
 const SLOTS={
  F:[{n:'Frühstück',t:'8:00',tag:'b',sh:.25},{n:'Mittag',t:'12:30',tag:'l',sh:.30},{n:'Snack',t:'15:30',tag:'snack',sh:.15},{n:'Abend',t:'18:30',tag:'d',sh:.30}],
@@ -1026,6 +1065,11 @@ function viewPlan(){
   }
   h+=`</div><div class="row" style="margin-top:12px"><span class="chip c-F">frei</span><span class="chip c-D">Spät</span><span class="chip c-N">Früh/Nacht (F/N)</span></div><p class="small muted" style="margin:10px 0 0">Früh/Nacht = Frühdienst 5:30–12:30 und Nachtdienst 18:30–5:30. Spät = 12:30–18:30. Der Coach plant zuerst auf freien Tagen, dann morgens vor dem Spätdienst und nur im Notfall kurz zwischen Früh- und Nachtdienst.</p></section>`;
 
+  { const wn=Math.max(1,weekNo(m0)),hist=(S.planHist||[]).slice(-3).reverse();
+    h+=`<section class="card"><div class="row sb"><h2 style="margin:0">Lauf- & Trainingsplan</h2><span class="chip ${S.p.planEnded?'c-S':'c-F'}">${S.p.planEnded?'beendet':'aktiv'}</span></div>
+    <p class="small muted" style="margin:8px 0 12px">${S.p.planEnded?'Gerade läuft kein Plan – du trainierst frei. Starte einen neuen Plan, wenn du wieder geführt laufen möchtest.':'Woche '+wn+' seit '+parse(S.p.planStart).toLocaleDateString('de-DE')+(gkActive()?' · nur Läufe, Kraft kommt aus dem Torwart-Plan':' · Läufe und Kettlebell')+'.'}</p>
+    <div class="row">${S.p.planEnded?`<button data-act="planstart">Plan starten (Woche 1)</button>`:`<button class="sec" data-act="planend" style="color:var(--bad)">Plan beenden</button><button class="sec" data-act="planstart">Neu starten (Woche 1)</button>`}</div>
+    ${hist.length?`<div class="list" style="margin-top:12px">${hist.map(x=>`<div class="it"><span class="small">${parse(x.start).toLocaleDateString('de-DE')} – ${parse(x.end).toLocaleDateString('de-DE')}</span><span class="small muted">${x.weeks} Wo. · ${x.done} Einheiten</span></div>`).join('')}</div>`:''}</section>`; }
   h+=`<section class="card"><h2>Trainingsplan – nächste 14 Tage</h2>`;
   let any=false;
   for(let i=0;i<14;i++){
@@ -1351,6 +1395,12 @@ document.addEventListener('click',e=>{
   else if(a==='skipm'){const se=sessionOn(b.dataset.d);if(se){S.skipped[se.id]=true;delete S.moved[b.dataset.d];save();render()}}
   else if(a==='adj'){S.adj=Math.max(-300,Math.min(300,(S.adj||0)+(+b.dataset.v)));S.adjDone[b.dataset.w]=true;save();render();toast('Kalorienziel angepasst')}
   else if(a==='adjreset'){S.adj=0;save();render()}
+  else if(a==='planend'){
+    if(b.dataset.sure){const st=S.p.planStart,done=S.workouts.filter(w=>w.d>=st&&(w.type==='Lauf'||w.type==='Kettlebell')).length;
+      (S.planHist=S.planHist||[]).push({start:st,end:t,weeks:Math.max(1,weekNo(monOf(new Date()))),done});S.p.planEnded=true;save();render();toast('Plan beendet – du trainierst jetzt frei')}
+    else{b.dataset.sure='1';b.textContent='Wirklich beenden? Nochmal tippen'}
+  }
+  else if(a==='planstart'){S.p.planEnded=false;const t0=new Date();S.p.planStart=fmt(t0.getDay()===0?addD(monOf(t0),7):monOf(t0));save();render();toast('Plan gestartet – Woche 1')}
   else if(a==='mode'){nutMode=b.dataset.m;render();window.scrollTo(0,0)}
   else if(a==='nweek'){nutWeek=b.dataset.w;render()}
   else if(a==='mealpick'){mealSel={ds:b.dataset.d,si:+b.dataset.si};ovl='meal';renderOvl()}

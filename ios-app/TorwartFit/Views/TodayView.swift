@@ -6,7 +6,9 @@ struct TodayView: View {
     @EnvironmentObject var store: Store
     @State private var preview: Sel?
     @State private var showGoal = false
+    @State private var showPlan = false
     @State private var showProfile = false
+    @State private var finishedSummary: ProgramRecord?
 
     private var greeting: String {
         let h = DateUtil.calendar.component(.hour, from: Date())
@@ -35,7 +37,7 @@ struct TodayView: View {
                     HeroCard(preview: $preview)
                     RunTodayCard()
                     CaloriesCard()
-                    GoalCard().onTapGesture { showGoal = true }
+                    GoalCard().onTapGesture { if store.program != nil { showPlan = true } else { showGoal = true } }
                     if store.s.healthEnabled { HealthCard() }
                     ReadinessCard()
                     WeekCard(preview: $preview)
@@ -50,6 +52,12 @@ struct TodayView: View {
             .sheet(item: $preview) { s in SessionPreview(session: s.id).environmentObject(store) }
             .sheet(isPresented: $showGoal) { GoalPickerView(first: false).environmentObject(store) }
             .sheet(isPresented: $showProfile) { ProfileView().environmentObject(store) }
+            .sheet(isPresented: $showPlan) { PlanSheet().environmentObject(store) }
+            .sheet(item: $finishedSummary) { r in ProgramSummaryView(record: r).environmentObject(store) }
+            .onAppear {
+                // Plan mit fester Dauer automatisch abschließen
+                if let p = store.program, p.finished { finishedSummary = store.endProgram(completed: true) }
+            }
         }
     }
 }
@@ -57,6 +65,7 @@ struct TodayView: View {
 struct HeroCard: View {
     @EnvironmentObject var store: Store
     @Binding var preview: Sel?
+    @State private var showPicker = false
 
     var body: some View {
         let i = store.todayIndex, t = store.plan(for: i), night = store.dayKind(Date()) == "N", tired = store.isTired || night
@@ -81,6 +90,12 @@ struct HeroCard: View {
                     Button("Details") { preview = Sel(id: t) }.buttonStyle(LimeButton(secondary: true)).frame(width: 120)
                 }
                 .padding(.top, 10)
+            } else if store.goal == nil {
+                kicker("Kein aktiver Plan")
+                Text("🎯 Freies Training").font(.sport(36)).textCase(.uppercase)
+                Text("Wähle einen Plan mit Ziel und Dauer – oder starte unter „Training“ eine Einheit nach Lust und Laune.")
+                    .foregroundStyle(.white.opacity(0.85))
+                Button("Plan wählen") { showPicker = true }.buttonStyle(LimeButton()).padding(.top, 10)
             } else {
                 kicker("Ruhetag")
                 Text("🛌 Erholung").font(.sport(36)).textCase(.uppercase)
@@ -99,6 +114,7 @@ struct HeroCard: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.line))
+        .sheet(isPresented: $showPicker) { GoalPickerView(first: false).environmentObject(store) }
     }
 
     private var heroColor: Color {
@@ -126,17 +142,17 @@ struct GoalCard: View {
             Text(store.goal?.icon ?? "🎯").font(.system(size: 24))
                 .frame(width: 46, height: 46).background(Color.lime.opacity(0.14), in: RoundedRectangle(cornerRadius: 14))
             VStack(alignment: .leading, spacing: 3) {
-                if let g = store.goal {
-                    Text("Dein Ziel").font(.caption).foregroundStyle(Color.mut)
-                    Text(g.name).font(.headline)
-                    let tests = store.s.tests.filter { $0.test == g.test }
-                    let td = store.catalog.test(g.test)
-                    Text("\(store.adherence) % der Einheiten (4 Wochen) · \(td?.name ?? ""): \(tests.last.map { fmtKg($0.value) + " " + (td?.unit ?? "") } ?? "noch kein Test")")
+                if let p = store.program {
+                    Text("Aktiver Plan · \(p.weekText)").font(.caption).foregroundStyle(Color.mut)
+                    Text(p.goal.name).font(.headline)
+                    let tests = store.s.tests.filter { $0.test == p.goal.test }
+                    let td = store.catalog.test(p.goal.test)
+                    Text("\(p.units) Einheiten · \(p.adherence) % erledigt · \(td?.name ?? ""): \(tests.last.map { fmtKg($0.value) + " " + (td?.unit ?? "") } ?? "noch kein Test")")
                         .font(.caption).foregroundStyle(Color.mut)
-                    ProgressView(value: Double(store.adherence), total: 100).tint(.lime)
+                    ProgressView(value: p.progress).tint(.lime)
                 } else {
-                    Text("Ziel festlegen").font(.headline)
-                    Text("Dein Plan passt sich daran an").font(.caption).foregroundStyle(Color.mut)
+                    Text("Kein aktiver Plan").font(.headline)
+                    Text("Ziel und Dauer wählen – jederzeit beendbar").font(.caption).foregroundStyle(Color.mut)
                 }
             }
             Image(systemName: "chevron.right").foregroundStyle(Color.mut)

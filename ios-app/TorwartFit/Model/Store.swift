@@ -105,7 +105,10 @@ final class Store: ObservableObject {
 
     /// Plan für einen Wochentag (0 = Mo). "game" = Spiel, nil = frei.
     func plan(for day: Int) -> String? {
-        let pri = Array((goal ?? catalog.goal("sprung")!).priority.prefix(s.days))
+        guard let g = goal else {   // kein aktiver Plan: nur den Spieltag zeigen
+            return s.gameDay >= 0 && (day - s.gameDay + 7) % 7 == 0 ? "game" : nil
+        }
+        let pri = Array(g.priority.prefix(s.days))
         if s.gameDay < 0 {
             let slots = Array([0, 4, 2, 5, 1].prefix(s.days))
             guard let k = slots.firstIndex(of: day), k < pri.count else { return nil }

@@ -161,17 +161,19 @@ struct GoalPickerView: View {
     @EnvironmentObject var store: Store
     @Environment(\.dismiss) private var dismiss
     let first: Bool
+    @State private var pick: String?
+    @State private var weeks = 8
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    if first {
-                        Text("Was willst du verbessern? Plan, Übungen und Coach passen sich daran an.").foregroundStyle(Color.mut)
-                    }
+                    Text(first ? "Was willst du verbessern? Plan, Übungen und Coach passen sich daran an. Du kannst den Plan jederzeit beenden."
+                               : "Wähle Ziel und Dauer. Ein laufender Plan wird dabei beendet und im Verlauf gespeichert.")
+                        .foregroundStyle(Color.mut)
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                         ForEach(store.catalog.goals) { g in
-                            Button { store.s.goal = g.id; Haptics.tap() } label: {
+                            Button { pick = g.id; Haptics.tap() } label: {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(g.icon).font(.system(size: 26))
                                     Text(g.name).font(.headline).foregroundStyle(.white)
@@ -179,12 +181,15 @@ struct GoalPickerView: View {
                                 }
                                 .padding(14)
                                 .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
-                                .background(store.s.goal == g.id ? Color.lime.opacity(0.1) : Color.card, in: RoundedRectangle(cornerRadius: 16))
-                                .overlay(RoundedRectangle(cornerRadius: 16).stroke(store.s.goal == g.id ? Color.lime : .clear, lineWidth: 2))
+                                .background(pick == g.id ? Color.lime.opacity(0.1) : Color.card, in: RoundedRectangle(cornerRadius: 16))
+                                .overlay(RoundedRectangle(cornerRadius: 16).stroke(pick == g.id ? Color.lime : .clear, lineWidth: 2))
                             }
                             .buttonStyle(.plain)
                         }
                     }
+                    Text("Dauer").font(.subheadline)
+                    Picker("Dauer", selection: $weeks) { ForEach([4, 8, 12, 0], id: \.self) { w in Text(w == 0 ? "Offen" : "\(w) Wo.").tag(w) } }
+                        .pickerStyle(.segmented)
                     Text("Einheiten pro Woche").font(.subheadline)
                     Picker("Einheiten", selection: $store.s.days) { ForEach(2...5, id: \.self) { Text("\($0)").tag($0) } }
                         .pickerStyle(.segmented)
@@ -194,15 +199,140 @@ struct GoalPickerView: View {
                         ForEach(0..<7, id: \.self) { Text(DateUtil.weekdaysShort[$0]).tag($0) }
                     }
                     .pickerStyle(.segmented)
-                    Button(first ? "Plan erstellen" : "Fertig") { dismiss() }
-                        .buttonStyle(LimeButton())
-                        .disabled(store.s.goal == nil)
-                        .opacity(store.s.goal == nil ? 0.4 : 1)
+                    Button(buttonTitle) {
+                        guard let pick else { return }
+                        store.startProgram(goal: pick, weeks: weeks)
+                        Haptics.success()
+                        dismiss()
+                    }
+                    .buttonStyle(LimeButton())
+                    .disabled(pick == nil)
+                    .opacity(pick == nil ? 0.4 : 1)
+                    if first {
+                        Button("Erst mal ohne Plan") { dismiss() }.buttonStyle(LimeButton(secondary: true))
+                    }
                 }
                 .padding(16)
             }
             .background(Color.bg)
-            .navigationTitle(first ? "Willkommen 👋" : "Dein Ziel")
+            .navigationTitle(first ? "Willkommen 👋" : "Plan wählen")
+            .toolbar { if !first { ToolbarItem(placement: .topBarTrailing) { Button("Abbrechen") { dismiss() } } } }
+            .onAppear {
+                pick = pick ?? store.s.goal
+                weeks = store.program?.weeks ?? 8
+            }
         }
+    }
+
+    private var buttonTitle: String {
+        guard let active = store.program else { return "Plan starten" }
+        return active.goal.id == pick ? "Plan übernehmen" : "Aktuellen Plan beenden & neuen starten"
+    }
+}
+
+/// Details zum laufenden Plan: ändern oder beenden
+struct PlanSheet: View {
+    @EnvironmentObject var store: Store
+    @Environment(\.dismiss) private var dismiss
+    @State private var confirmEnd = false
+    @State private var showPicker = false
+    @State private var summary: ProgramRecord?
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    if let p = store.program {
+                        HStack(spacing: 8) {
+                            Pill(text: p.weekText, highlight: true)
+                            Pill(text: "seit \(DateUtil.format(p.start, "dMMM"))")
+                            Pill(text: "\(p.units) Einheiten")
+                        }
+                        Text(p.goal.info).foregroundStyle(Color.mut)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Fortschritt").font(.caption).foregroundStyle(Color.mut)
+                            ProgressView(value: p.progress).tint(.lime)
+                            Text("\(p.adherence) % der geplanten Einheiten erledigt").font(.footnote)
+                        }
+                        .card()
+                        Button("Plan ändern / anderes Ziel") { showPicker = true }.buttonStyle(LimeButton())
+                        Button("Plan beenden") { confirmEnd = true }.buttonStyle(LimeButton(secondary: true)).foregroundStyle(.red)
+                    } else {
+                        Text("Kein aktiver Plan – du trainierst frei.").foregroundStyle(Color.mut)
+                        Button("Plan wählen") { showPicker = true }.buttonStyle(LimeButton())
+                    }
+                    if !store.s.programs.isEmpty {
+                        Text("Frühere Pläne").sectionTitle().padding(.top, 8)
+                        VStack(spacing: 0) {
+                            ForEach(store.s.programs.reversed()) { r in
+                                let g = store.catalog.goal(r.goal)
+                                HStack {
+                                    Text(g?.icon ?? "🎯")
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(g?.name ?? r.goal)
+                                        Text("\(DateUtil.format(r.start, "dMMMyy")) – \(DateUtil.format(r.end, "dMMMyy")) · \(r.units) Einheiten · \(r.adherence) %\(r.completed ? " · ✓ geschafft" : " · beendet")")
+                                            .font(.caption).foregroundStyle(Color.mut)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 14).padding(.vertical, 9)
+                            }
+                        }
+                        .background(Color.card, in: RoundedRectangle(cornerRadius: 18))
+                    }
+                }
+                .padding(16)
+            }
+            .background(Color.bg)
+            .navigationTitle(store.program.map { "\($0.goal.icon) \($0.goal.name)" } ?? "Plan")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Fertig") { dismiss() } } }
+            .confirmationDialog("Plan jetzt beenden? Deine Trainings bleiben gespeichert.", isPresented: $confirmEnd, titleVisibility: .visible) {
+                Button("Plan beenden", role: .destructive) { summary = store.endProgram(completed: false) }
+            }
+            .sheet(isPresented: $showPicker) { GoalPickerView(first: false).environmentObject(store) }
+            .sheet(item: $summary) { r in ProgramSummaryView(record: r).environmentObject(store) }
+        }
+    }
+}
+
+/// Bilanz nach dem Beenden oder Abschließen eines Plans
+struct ProgramSummaryView: View {
+    @EnvironmentObject var store: Store
+    @Environment(\.dismiss) private var dismiss
+    let record: ProgramRecord
+    @State private var showPicker = false
+
+    var body: some View {
+        let g = store.catalog.goal(record.goal)
+        let t = g.flatMap { store.catalog.test($0.test) }
+        VStack(spacing: 16) {
+            Text(record.completed ? "🏆" : "🏁").font(.system(size: 64)).padding(.top, 24)
+            Text(record.completed ? "Plan geschafft!" : "Plan beendet").font(.sport(36)).textCase(.uppercase)
+            Text("\(g?.icon ?? "") \(g?.name ?? record.goal)").foregroundStyle(Color.mut)
+            HStack(spacing: 10) {
+                box("\(max(1, DateUtil.days(from: record.start, to: record.end) / 7))", "Wochen")
+                box("\(record.units)", "Einheiten")
+                box("\(record.adherence) %", "erledigt")
+            }
+            if let from = record.testFrom, let to = record.testTo, let t {
+                Text("\(t.name): \(fmtKg(from)) → \(fmtKg(to)) \(t.unit)")
+                    .font(.subheadline.weight(.semibold)).foregroundStyle(Color.lime)
+                    .padding(12).frame(maxWidth: .infinity).background(Color.lime.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+            }
+            Text("Bis du einen neuen Plan startest, trainierst du frei – alle Einheiten findest du unter „Training“.")
+                .font(.footnote).foregroundStyle(Color.mut).multilineTextAlignment(.center)
+            Spacer()
+            Button("Neuen Plan wählen") { showPicker = true }.buttonStyle(LimeButton())
+            Button("Ohne Plan weiter") { dismiss() }.buttonStyle(LimeButton(secondary: true))
+        }
+        .padding(16)
+        .background(Color.bg)
+        .sheet(isPresented: $showPicker, onDismiss: { dismiss() }) { GoalPickerView(first: false).environmentObject(store) }
+    }
+
+    private func box(_ v: String, _ l: String) -> some View {
+        VStack(spacing: 2) { Text(v).font(.sport(28)); Text(l).font(.caption).foregroundStyle(Color.mut) }
+            .frame(maxWidth: .infinity).padding(.vertical, 12).background(Color.card, in: RoundedRectangle(cornerRadius: 14))
     }
 }

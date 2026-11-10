@@ -45,7 +45,7 @@ struct RootView: View {
         .sheet(isPresented: $onboarding) {
             GoalPickerView(first: true).environmentObject(store).interactiveDismissDisabled()
         }
-        .onAppear { onboarding = store.s.goal == nil }
+        .onAppear { onboarding = store.s.goal == nil && store.s.programs.isEmpty && store.s.logs.isEmpty }
         .task { await store.refreshHealth() }
         .onChange(of: phase) { _, p in if p == .active { Task { await store.refreshHealth() } } }
     }

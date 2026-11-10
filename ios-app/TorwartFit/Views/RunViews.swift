@@ -12,13 +12,32 @@ struct RunPlanCard: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("Laufplan").sectionTitle()
-                Text("Woche \(store.runWeekNumber(DateUtil.weekStart(Date()))) · \(String(format: "%.1f", store.runKmThisWeek).replacingOccurrences(of: ".", with: ",")) km")
+                Text(store.runPlanActive ? "Woche \(store.runWeekNumber(DateUtil.weekStart(Date()))) · \(String(format: "%.1f", store.runKmThisWeek).replacingOccurrences(of: ".", with: ",")) km" : "beendet")
                     .font(.caption).foregroundStyle(Color.mut)
+                Menu {
+                    if store.runPlanActive {
+                        Button("Laufplan neu starten (Woche 1)") { store.startRunPlan() }
+                        Button("Laufplan beenden", role: .destructive) { store.endRunPlan() }
+                    } else {
+                        Button("Laufplan starten") { store.startRunPlan() }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle").font(.title3).foregroundStyle(Color.lime)
+                }
             }
             VStack(spacing: 0) {
                 if plan.isEmpty {
-                    Text(store.s.runsPerWeek == 0 ? "Laufplan ist aus (Profil → Läufe pro Woche)." : "Diese Woche ist kein Lauf geplant.")
-                        .font(.subheadline).foregroundStyle(Color.mut).padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                    if store.runPlanActive {
+                        Text("Diese Woche ist kein Lauf geplant.")
+                            .font(.subheadline).foregroundStyle(Color.mut).padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Kein Laufplan aktiv – du läufst frei.").font(.subheadline).foregroundStyle(Color.mut)
+                            Button("Laufplan starten (\(max(1, store.s.savedRunsPerWeek)) × pro Woche)") { store.startRunPlan() }
+                                .font(.subheadline.weight(.bold)).foregroundStyle(Color.lime)
+                        }
+                        .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
                 ForEach(plan) { r in
                     Button { detail = r } label: {
