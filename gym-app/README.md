@@ -36,6 +36,21 @@ Native iPhone-App fürs Gym: erstellt dir automatisch einen Trainingsplan und sp
 - Körpergewicht eintragen, mit Verlauf.
 - Trainingsverlauf mit Details, Einträge lassen sich löschen.
 
+**Essen** (eigener Tab)
+- Essensplan für die nächsten 10 Tage, passend zu deinem Gym-Plan: **Trainingstage** bekommen mehr Kalorien und einen Snack nach dem Training mit Kohlenhydraten. An **Ruhetagen** gibt es beim Abnehmen kohlenhydratärmere Gerichte.
+- **46 Gerichte mit Fotos:** die 31 aus TorwartFit plus 15 neue (z. B. Teriyaki-Bowl, Vollkorn-Bolognese, Burrito-Bowl, Linsen-Dal, Gnocchi-Pfanne, Protein-Porridge, Bananen-Shake). Keine Garnelen.
+- Portionen werden automatisch auf dein Kalorienziel skaliert, mit Zutatenmengen und Zubereitung.
+- Mahlzeiten abhaken, Gerichte tauschen, sonstiges Essen eintragen (auswärts, Snacks).
+- Tagesbilanz: Kalorien, Eiweiß, Kohlenhydrate.
+- Einkaufsliste für 3, 7 oder 10 Tage, abhaken und teilen.
+
+**Gewichtsziel** (Essen → 🎯, Fortschritt → Körpergewicht oder Einstellungen)
+- Startgewicht, Zielgewicht und Zieldatum, Größe, Alter, Geschlecht und Alltagsaktivität. Vorausgefüllt mit deinen Werten aus TorwartFit.
+- Daraus entstehen das Kalorienziel (Mifflin-St Jeor, Defizit aus dem Zieldatum, 300–900 kcal), der Trainingstag-Bonus und das Eiweißziel (1,8 g/kg).
+- Live-Vorschau beim Bearbeiten, mit Warnung, wenn das Ziel zu ehrgeizig ist.
+- **Automatik:** Jeden Montag wird dein tatsächliches Tempo der letzten 4 Wochen mit dem Plan verglichen und die Hälfte der Abweichung ausgeglichen (±300 kcal).
+- Gewichtsverlauf mit Soll-Linie, Fortschrittsbalken, Tempo pro Woche und Prognose, wann du das Ziel erreichst.
+
 **Übungen:** 85 Übungen nach Muskelgruppe, mit Suche, Ausführungstipps und deinem Fortschritt.
 
 **Einstellungen:** Backup exportieren und importieren (JSON), Pausen-Mitteilung, alle Daten löschen. Alles bleibt lokal auf dem iPhone.
@@ -65,7 +80,9 @@ Wenn der Bundle Identifier `de.timo.gymplan` belegt ist, ändere ihn in Xcode un
 ```
 GymPlan/
   App/     App-Start, Tabs, Pausen-Mitteilung, Design (Hintergrund, Glas-Karten, Chips)
-  Model/   Datenmodell, Übungsbibliothek, Plan-Generator, Store (Progression, Statistik, Speichern)
-  Views/   Heute, Plan, Generator, Training, Fortschritt, Übungen, Einstellungen
-  Assets.xcassets/  App-Icon, Akzentfarbe
+  Model/   Datenmodell, Übungsbibliothek, Plan-Generator, Store (Progression, Statistik, Speichern),
+           Nutrition (Kalorienziel, Essensplan, Einkaufsliste)
+  Views/   Heute, Plan, Generator, Training, Essen, Gewichtsziel, Fortschritt, Übungen, Einstellungen
+  Resources/recipes.json   46 Rezepte mit Zutaten, Nährwerten und Zubereitung
+  Assets.xcassets/  App-Icon, Akzentfarbe, Food/ (46 Fotos)
 ```

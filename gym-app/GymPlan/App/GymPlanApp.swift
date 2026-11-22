@@ -19,7 +19,7 @@ struct GymPlanApp: App {
 }
 
 enum AppTab: Hashable {
-    case today, plan, progress, exercises
+    case today, plan, food, progress, exercises
 }
 
 struct RootView: View {
@@ -35,6 +35,9 @@ struct RootView: View {
             }
             Tab("Plan", systemImage: "calendar", value: AppTab.plan) {
                 PlanView()
+            }
+            Tab("Essen", systemImage: "fork.knife", value: AppTab.food) {
+                NutritionView()
             }
             Tab("Fortschritt", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 ProgressTab()

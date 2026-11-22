@@ -26,6 +26,19 @@ struct SettingsView: View {
             }
             .listRowBackground(Rectangle().fill(.thinMaterial))
 
+            Section("Körper & Ernährung") {
+                NavigationLink {
+                    GoalView()
+                } label: {
+                    Label("Gewichtsziel & Körperdaten", systemImage: "target")
+                }
+                if store.profile.configured {
+                    LabeledContent("Kalorien Ruhe- / Trainingstag", value: "\(store.baseIntake) / \(store.baseIntake + store.trainingBonus)")
+                    LabeledContent("Eiweiß pro Tag", value: "\(store.proteinTarget) g")
+                }
+            }
+            .listRowBackground(Rectangle().fill(.thinMaterial))
+
             Section {
                 Toggle(isOn: $store.restAlerts) {
                     Label("Mitteilung bei Pausenende", systemImage: "bell.badge")
@@ -92,7 +105,7 @@ struct SettingsView: View {
                 store.showGenerator = true
             }
         } message: {
-            Text("Plan, Trainingsverlauf und Körpergewicht werden entfernt.")
+            Text("Plan, Trainingsverlauf, Körpergewicht, Gewichtsziel und Essensdaten werden entfernt.")
         }
         .alert(message ?? "", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
             Button("OK", role: .cancel) {}

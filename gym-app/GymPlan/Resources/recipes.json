@@ -1,0 +1,3128 @@
+{
+ "recipes": [
+  {
+   "id": "ruehrei",
+   "name": "Rührei mit Räucherlachs & Avocado",
+   "emoji": [
+    "🍳",
+    "🥑",
+    "🐟"
+   ],
+   "tags": [
+    "b"
+   ],
+   "minutes": 10,
+   "devices": [
+    "Pfanne"
+   ],
+   "kcal": 450,
+   "protein": 29,
+   "carbs": 3,
+   "fat": 35,
+   "ingredients": [
+    {
+     "name": "Eier",
+     "qty": 3,
+     "unit": "Stk.",
+     "whole": true
+    },
+    {
+     "name": "Räucherlachs",
+     "qty": 40,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Avocado",
+     "qty": 80,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Butter",
+     "qty": 5,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Schnittlauch",
+     "qty": 5,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Salz & Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Eier in einer Schüssel verquirlen und mit Salz und Pfeffer würzen.",
+    "Butter in einer beschichteten Pfanne bei mittlerer Hitze schmelzen, Eier zugeben und unter Rühren 2–3 Min. stocken lassen. Sie sollen noch cremig sein.",
+    "Avocado in Scheiben schneiden, Lachs in Streifen reißen. Alles anrichten und mit Schnittlauch bestreuen."
+   ]
+  },
+  {
+   "id": "skyr",
+   "name": "Skyr-Bowl mit Beeren & Nüssen",
+   "emoji": [
+    "🥣",
+    "🫐",
+    "🥜"
+   ],
+   "tags": [
+    "b",
+    "light",
+    "snack"
+   ],
+   "minutes": 5,
+   "devices": [
+    "Ohne Kochen"
+   ],
+   "kcal": 385,
+   "protein": 33,
+   "carbs": 17,
+   "fat": 18,
+   "ingredients": [
+    {
+     "name": "Skyr natur",
+     "qty": 250,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Beeren (TK oder frisch)",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Walnüsse",
+     "qty": 20,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Leinsamen, geschrotet",
+     "qty": 10,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zimt",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "TK-Beeren am besten am Vorabend im Kühlschrank auftauen, sonst 1 Min. in der Mikrowelle.",
+    "Skyr in eine Schüssel geben und die Beeren darauf verteilen.",
+    "Walnüsse grob hacken, mit Leinsamen und einer Prise Zimt darüberstreuen."
+   ]
+  },
+  {
+   "id": "pfannkuchen",
+   "name": "Protein-Pfannkuchen mit Himbeeren",
+   "emoji": [
+    "🥞",
+    "🍓"
+   ],
+   "tags": [
+    "b"
+   ],
+   "minutes": 15,
+   "devices": [
+    "Pfanne"
+   ],
+   "kcal": 375,
+   "protein": 34,
+   "carbs": 10,
+   "fat": 17,
+   "ingredients": [
+    {
+     "name": "Eier",
+     "qty": 2,
+     "unit": "Stk.",
+     "whole": true
+    },
+    {
+     "name": "Magerquark",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Mandelmehl (entölt)",
+     "qty": 20,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Backpulver",
+     "qty": 2,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Butter",
+     "qty": 5,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Himbeeren",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Eier, Magerquark, Mandelmehl und Backpulver zu einem glatten Teig verrühren und 2 Min. quellen lassen.",
+    "Butter in einer beschichteten Pfanne bei mittlerer Hitze erhitzen. Den Teig in 3–4 kleinen Portionen backen, pro Seite 2–3 Min. bis goldbraun.",
+    "Himbeeren darauf verteilen. Wer es süßer mag: eine Prise Zimt."
+   ]
+  },
+  {
+   "id": "shake",
+   "name": "Eiweiß-Beeren-Shake (Thermomix)",
+   "emoji": [
+    "🥤",
+    "🫐"
+   ],
+   "tags": [
+    "b",
+    "light",
+    "snack"
+   ],
+   "minutes": 5,
+   "devices": [
+    "Thermomix"
+   ],
+   "kcal": 365,
+   "protein": 46,
+   "carbs": 12,
+   "fat": 10,
+   "ingredients": [
+    {
+     "name": "Ungesüßte Mandelmilch",
+     "qty": 250,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Magerquark",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Whey-Protein (neutral oder Vanille)",
+     "qty": 30,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "TK-Beeren",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Mandelmus",
+     "qty": 15,
+     "unit": "g",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Alle Zutaten in den Mixtopf geben.",
+    "30 Sek./Stufe 8–10 mixen, bei Bedarf 10 Sek. nachmixen.",
+    "In eine Flasche füllen. Gekühlt hält der Shake bis zu 12 Stunden."
+   ]
+  },
+  {
+   "id": "fruehpfanne",
+   "name": "Frühstückspfanne mit Spinat & Feta",
+   "emoji": [
+    "🍳",
+    "🍅",
+    "🥬"
+   ],
+   "tags": [
+    "b"
+   ],
+   "minutes": 12,
+   "devices": [
+    "Pfanne"
+   ],
+   "kcal": 440,
+   "protein": 38,
+   "carbs": 6,
+   "fat": 30,
+   "ingredients": [
+    {
+     "name": "Eier",
+     "qty": 3,
+     "unit": "Stk.",
+     "whole": true
+    },
+    {
+     "name": "Putenschinken",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Cherrytomaten",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Babyspinat",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Feta",
+     "qty": 30,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "TL",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Olivenöl in einer Pfanne erhitzen, den Putenschinken in Streifen 1–2 Min. anbraten.",
+    "Cherrytomaten halbieren, zugeben und 2 Min. mitbraten. Spinat unterheben, bis er zusammenfällt.",
+    "Eier verquirlen, darübergießen und bei mittlerer Hitze unter gelegentlichem Rühren 3–4 Min. stocken lassen. Feta darüberbröckeln, mit Pfeffer würzen."
+   ]
+  },
+  {
+   "id": "haehnchen_af",
+   "name": "Airfryer-Hähnchen mit Zucchini & Feta",
+   "emoji": [
+    "🍗",
+    "🥒",
+    "🧀"
+   ],
+   "tags": [
+    "l",
+    "d"
+   ],
+   "minutes": 25,
+   "devices": [
+    "Airfryer"
+   ],
+   "kcal": 480,
+   "protein": 55,
+   "carbs": 9,
+   "fat": 21,
+   "ingredients": [
+    {
+     "name": "Hähnchenbrust",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zucchini",
+     "qty": 250,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Cherrytomaten",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Feta",
+     "qty": 40,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "EL",
+     "whole": false
+    },
+    {
+     "name": "Paprikapulver, Knoblauchpulver, Salz, Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Airfryer auf 180 °C vorheizen (ca. 3 Min.).",
+    "Hähnchenbrust trocken tupfen und mit der Hälfte des Öls, Paprikapulver, Knoblauchpulver, Salz und Pfeffer einreiben.",
+    "Zucchini in dicke Scheiben schneiden, Tomaten halbieren und mit dem restlichen Öl und Salz mischen.",
+    "Hähnchen 16–20 Min. garen, nach der Hälfte wenden (Kerntemperatur 75 °C). Das Gemüse nach 8 Min. dazugeben.",
+    "Hähnchen in Scheiben schneiden, mit dem Gemüse anrichten und Feta darüberbröckeln."
+   ]
+  },
+  {
+   "id": "lachs_bohnen",
+   "name": "Airfryer-Lachs mit grünen Bohnen",
+   "emoji": [
+    "🐟",
+    "🫘",
+    "🍋"
+   ],
+   "tags": [
+    "l",
+    "d"
+   ],
+   "minutes": 20,
+   "devices": [
+    "Airfryer",
+    "Thermomix"
+   ],
+   "kcal": 520,
+   "protein": 41,
+   "carbs": 9,
+   "fat": 36,
+   "ingredients": [
+    {
+     "name": "Lachsfilet",
+     "qty": 180,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Grüne Bohnen (frisch oder TK)",
+     "qty": 250,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Butter",
+     "qty": 10,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zitrone",
+     "qty": 0.5,
+     "unit": "Stk.",
+     "whole": false
+    },
+    {
+     "name": "Salz & Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Thermomix: 500 g Wasser in den Mixtopf, die geputzten Bohnen in den Varoma-Behälter, 15 Min./Varoma/Stufe 1 garen.",
+    "Währenddessen den Airfryer auf 200 °C vorheizen. Lachs mit Salz, Pfeffer und etwas Zitronensaft würzen.",
+    "Lachs mit der Hautseite nach unten 8–10 Min. garen.",
+    "Bohnen mit der Butter schwenken, mit Zitronenabrieb und Salz würzen und mit dem Lachs anrichten."
+   ]
+  },
+  {
+   "id": "chili",
+   "name": "Low-Carb-Chili con Carne (Thermomix)",
+   "emoji": [
+    "🌶️",
+    "🥩",
+    "🫑"
+   ],
+   "tags": [
+    "l",
+    "d"
+   ],
+   "minutes": 30,
+   "devices": [
+    "Thermomix"
+   ],
+   "kcal": 610,
+   "protein": 49,
+   "carbs": 25,
+   "fat": 31,
+   "ingredients": [
+    {
+     "name": "Rinderhack (max. 10 % Fett)",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Paprika",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Passierte Tomaten",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zwiebel",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Kidneybohnen (Abtropfgewicht)",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "EL",
+     "whole": false
+    },
+    {
+     "name": "Paprikapulver, Kreuzkümmel, Chili, Salz",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Zwiebel halbiert in den Mixtopf geben, 5 Sek./Stufe 5 zerkleinern. Öl zugeben, 3 Min./120 °C/Stufe 1 dünsten.",
+    "Hack zugeben und 5 Min./120 °C/Linkslauf/Sanftrührstufe anbraten.",
+    "Paprika in Stücken, Tomaten, Bohnen und Gewürze zugeben. 15 Min./100 °C/Linkslauf/Sanftrührstufe köcheln.",
+    "Abschmecken. Hält sich gekühlt 3 Tage und lässt sich gut einfrieren."
+   ]
+  },
+  {
+   "id": "pute",
+   "name": "Putengeschnetzeltes mit Zucchini-Nudeln",
+   "emoji": [
+    "🦃",
+    "🫑",
+    "🥒"
+   ],
+   "tags": [
+    "l",
+    "d"
+   ],
+   "minutes": 25,
+   "devices": [
+    "Pfanne"
+   ],
+   "kcal": 465,
+   "protein": 57,
+   "carbs": 14,
+   "fat": 18,
+   "ingredients": [
+    {
+     "name": "Putenbrust",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Paprika",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zucchini",
+     "qty": 250,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Frischkäse light",
+     "qty": 80,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zwiebel",
+     "qty": 40,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "EL",
+     "whole": false
+    },
+    {
+     "name": "Paprikapulver, Salz, Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Zucchini mit Spiralschneider oder Sparschäler zu Nudeln schneiden und beiseitestellen.",
+    "Pute in Streifen schneiden, würzen. Öl in einer großen Pfanne erhitzen und die Pute 4–5 Min. rundum anbraten, herausnehmen.",
+    "Zwiebel und Paprika in Streifen 4 Min. anbraten, Paprikapulver zugeben.",
+    "Frischkäse und einen Schuss Wasser unterrühren, 2 Min. köcheln. Die Pute zurück in die Pfanne geben.",
+    "Zucchini-Nudeln 2 Min. unterheben, sie sollen nur warm werden. Abschmecken."
+   ]
+  },
+  {
+   "id": "thunfisch",
+   "name": "Thunfisch-Ei-Bowl",
+   "emoji": [
+    "🥗",
+    "🐟",
+    "🥚"
+   ],
+   "tags": [
+    "l",
+    "box"
+   ],
+   "minutes": 12,
+   "devices": [
+    "Thermomix",
+    "Ohne Kochen"
+   ],
+   "kcal": 460,
+   "protein": 47,
+   "carbs": 8,
+   "fat": 28,
+   "ingredients": [
+    {
+     "name": "Thunfisch im eigenen Saft (Abtropfgewicht)",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Eier",
+     "qty": 2,
+     "unit": "Stk.",
+     "whole": true
+    },
+    {
+     "name": "Salatgurke",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Cherrytomaten",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Rucola",
+     "qty": 40,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Oliven",
+     "qty": 20,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "EL",
+     "whole": false
+    },
+    {
+     "name": "Zitronensaft",
+     "qty": 1,
+     "unit": "EL",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Thermomix: 500 g Wasser in den Mixtopf, Eier in den Varoma-Behälter, 12 Min./Varoma/Stufe 1. Danach abschrecken und pellen. Ohne Thermomix: 10 Min. kochen.",
+    "Gurke und Tomaten in Stücke schneiden, Rucola waschen.",
+    "Alles mit Thunfisch, Oliven und geviertelten Eiern mischen.",
+    "Öl und Zitronensaft mit Salz und Pfeffer verrühren und erst kurz vor dem Essen darübergeben."
+   ]
+  },
+  {
+   "id": "frittata",
+   "name": "Airfryer-Frittata mit Zucchini & Mozzarella",
+   "emoji": [
+    "🍳",
+    "🥒",
+    "🧀"
+   ],
+   "tags": [
+    "l",
+    "d"
+   ],
+   "minutes": 25,
+   "devices": [
+    "Airfryer"
+   ],
+   "kcal": 520,
+   "protein": 47,
+   "carbs": 8,
+   "fat": 31,
+   "ingredients": [
+    {
+     "name": "Eier",
+     "qty": 4,
+     "unit": "Stk.",
+     "whole": true
+    },
+    {
+     "name": "Zucchini",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Putenschinken",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Mozzarella",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Tomate",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "TL",
+     "whole": false
+    },
+    {
+     "name": "Salz & Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Airfryer auf 170 °C vorheizen. Eine kleine ofenfeste Form (ca. 18 cm) mit Öl einfetten.",
+    "Zucchini, Tomate und Schinken fein würfeln, Mozzarella zupfen.",
+    "Eier mit Salz und Pfeffer verquirlen, Gemüse und Schinken unterrühren, in die Form geben und den Mozzarella darauf verteilen.",
+    "Im Airfryer 15–18 Min. backen, bis die Mitte fest ist. 2 Min. ruhen lassen."
+   ]
+  },
+  {
+   "id": "curry",
+   "name": "Hähnchen-Gemüse-Curry (Thermomix)",
+   "emoji": [
+    "🍛",
+    "🍗",
+    "🥥"
+   ],
+   "tags": [
+    "l",
+    "d"
+   ],
+   "minutes": 30,
+   "devices": [
+    "Thermomix"
+   ],
+   "kcal": 510,
+   "protein": 46,
+   "carbs": 14,
+   "fat": 25,
+   "ingredients": [
+    {
+     "name": "Hähnchenbrust",
+     "qty": 180,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Paprika",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zucchini",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Kokosmilch",
+     "qty": 100,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Zwiebel",
+     "qty": 40,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Babyspinat",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Rote Currypaste",
+     "qty": 1,
+     "unit": "EL",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "TL",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Zwiebel halbiert in den Mixtopf geben, 5 Sek./Stufe 5 zerkleinern. Öl zugeben, 3 Min./120 °C/Stufe 1 dünsten.",
+    "Currypaste zugeben und 1 Min./120 °C/Stufe 1 anrösten.",
+    "Hähnchen in Würfel, Paprika und Zucchini in Stücke schneiden und mit der Kokosmilch in den Mixtopf geben. 15 Min./100 °C/Linkslauf/Sanftrührstufe.",
+    "Spinat zugeben und 2 Min./90 °C/Linkslauf/Sanftrührstufe ziehen lassen. Mit Salz und etwas Zitronensaft abschmecken."
+   ]
+  },
+  {
+   "id": "zboote",
+   "name": "Zucchini-Boote mit Hack (Airfryer)",
+   "emoji": [
+    "🥒",
+    "🥩",
+    "🧀"
+   ],
+   "tags": [
+    "d",
+    "l"
+   ],
+   "minutes": 30,
+   "devices": [
+    "Airfryer",
+    "Pfanne"
+   ],
+   "kcal": 440,
+   "protein": 40,
+   "carbs": 9,
+   "fat": 25,
+   "ingredients": [
+    {
+     "name": "Zucchini",
+     "qty": 300,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Rinderhack (max. 10 % Fett)",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Tomate",
+     "qty": 80,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Mozzarella",
+     "qty": 40,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zwiebel",
+     "qty": 30,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "TL",
+     "whole": false
+    },
+    {
+     "name": "Salz, Pfeffer, Oregano",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Airfryer auf 180 °C vorheizen. Zucchini längs halbieren und mit einem Löffel aushöhlen (Rand ca. 1 cm lassen). Das Fruchtfleisch hacken.",
+    "Zwiebel würfeln und in einer Pfanne mit dem Öl glasig dünsten, Hack zugeben und 5 Min. krümelig braten.",
+    "Gehacktes Zucchinifleisch und gewürfelte Tomate 2 Min. mitbraten, mit Salz, Pfeffer und Oregano würzen.",
+    "Die Füllung in die Zucchini-Hälften geben, Mozzarella darauf verteilen.",
+    "Im Airfryer 12–15 Min. garen, bis der Käse goldbraun ist."
+   ]
+  },
+  {
+   "id": "huettenkaese",
+   "name": "Hüttenkäse-Schale mit Gurke & Kürbiskernen",
+   "emoji": [
+    "🥣",
+    "🥒",
+    "🍅"
+   ],
+   "tags": [
+    "b",
+    "light",
+    "snack"
+   ],
+   "minutes": 5,
+   "devices": [
+    "Ohne Kochen"
+   ],
+   "kcal": 370,
+   "protein": 33,
+   "carbs": 12,
+   "fat": 17,
+   "ingredients": [
+    {
+     "name": "Hüttenkäse",
+     "qty": 250,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Salatgurke",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Cherrytomaten",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Kürbiskerne",
+     "qty": 15,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Schnittlauch",
+     "qty": 5,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Salz & Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Gurke in kleine Würfel schneiden, Tomaten vierteln.",
+    "Hüttenkäse in eine Schale geben und das Gemüse darauf verteilen.",
+    "Mit Kürbiskernen, Schnittlauch, Salz und Pfeffer bestreuen."
+   ]
+  },
+  {
+   "id": "box_huhn",
+   "name": "Hähnchen-Paprika-Feta-Box",
+   "emoji": [
+    "🍱",
+    "🍗",
+    "🫑"
+   ],
+   "tags": [
+    "box",
+    "l",
+    "d"
+   ],
+   "minutes": 25,
+   "devices": [
+    "Airfryer"
+   ],
+   "kcal": 475,
+   "protein": 46,
+   "carbs": 10,
+   "fat": 24,
+   "ingredients": [
+    {
+     "name": "Hähnchenbrust",
+     "qty": 180,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Paprika",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Feta",
+     "qty": 40,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Oliven",
+     "qty": 20,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Salatgurke",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "EL",
+     "whole": false
+    },
+    {
+     "name": "Salz, Pfeffer, Paprikapulver",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Airfryer auf 180 °C vorheizen. Hähnchen mit Salz, Pfeffer, Paprikapulver und dem Öl einreiben.",
+    "Hähnchen 16–20 Min. garen, nach der Hälfte wenden (Kerntemperatur 75 °C). Paprika in Streifen nach 8 Min. mitgaren.",
+    "Abkühlen lassen, Hähnchen in Streifen schneiden und mit Paprika, Feta, Oliven und Gurkenscheiben in die Box packen.",
+    "Tipp: Doppelte Menge zubereiten. Gekühlt hält die Box 2 Tage."
+   ]
+  },
+  {
+   "id": "box_ei",
+   "name": "Eier-Käse-Schinken-Box",
+   "emoji": [
+    "🍱",
+    "🥚",
+    "🧀"
+   ],
+   "tags": [
+    "box",
+    "light"
+   ],
+   "minutes": 12,
+   "devices": [
+    "Thermomix"
+   ],
+   "kcal": 575,
+   "protein": 45,
+   "carbs": 7,
+   "fat": 36,
+   "ingredients": [
+    {
+     "name": "Eier",
+     "qty": 3,
+     "unit": "Stk.",
+     "whole": true
+    },
+    {
+     "name": "Putenbrust-Aufschnitt",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Gouda",
+     "qty": 40,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Salatgurke",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Cherrytomaten",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Mandeln",
+     "qty": 20,
+     "unit": "g",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Thermomix: 500 g Wasser in den Mixtopf, Eier in den Varoma-Behälter, 12 Min./Varoma/Stufe 1. Kalt abschrecken und pellen.",
+    "Gurke und Tomaten schneiden, Gouda würfeln.",
+    "Alles mit Aufschnitt und Mandeln in die Box packen."
+   ]
+  },
+  {
+   "id": "box_quark",
+   "name": "Quark-Dip mit Gemüsesticks & Mandeln",
+   "emoji": [
+    "🥕",
+    "🥒",
+    "🥜"
+   ],
+   "tags": [
+    "box",
+    "light",
+    "snack"
+   ],
+   "minutes": 5,
+   "devices": [
+    "Ohne Kochen"
+   ],
+   "kcal": 315,
+   "protein": 37,
+   "carbs": 12,
+   "fat": 11,
+   "ingredients": [
+    {
+     "name": "Magerquark",
+     "qty": 250,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Paprika",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Salatgurke",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Mandeln",
+     "qty": 20,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Frische Kräuter (Schnittlauch, Petersilie)",
+     "qty": 5,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Salz & Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Quark mit gehackten Kräutern, Salz und Pfeffer glatt rühren.",
+    "Paprika und Gurke in Sticks schneiden.",
+    "Quark in ein Glas füllen, Sticks und Mandeln dazupacken."
+   ]
+  },
+  {
+   "id": "overnight",
+   "name": "Overnight-Quark mit Himbeeren & Mandeln",
+   "emoji": [
+    "🥣",
+    "🍓",
+    "🥜"
+   ],
+   "tags": [
+    "b",
+    "light"
+   ],
+   "minutes": 5,
+   "devices": [
+    "Ohne Kochen"
+   ],
+   "kcal": 390,
+   "protein": 38,
+   "carbs": 22,
+   "fat": 15,
+   "ingredients": [
+    {
+     "name": "Magerquark",
+     "qty": 250,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Himbeeren",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Mandeln, gehobelt",
+     "qty": 20,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Chiasamen",
+     "qty": 10,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zimt",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Quark mit Chiasamen und einer Prise Zimt verrühren.",
+    "In ein Glas füllen, Himbeeren darauf geben.",
+    "Über Nacht in den Kühlschrank stellen, morgens Mandeln darüberstreuen."
+   ]
+  },
+  {
+   "id": "omelett",
+   "name": "Omelett mit Paprika, Schinken & Gouda",
+   "emoji": [
+    "🍳",
+    "🫑",
+    "🧀"
+   ],
+   "tags": [
+    "b"
+   ],
+   "minutes": 12,
+   "devices": [
+    "Pfanne"
+   ],
+   "kcal": 460,
+   "protein": 38,
+   "carbs": 6,
+   "fat": 31,
+   "ingredients": [
+    {
+     "name": "Eier",
+     "qty": 3,
+     "unit": "Stk.",
+     "whole": true
+    },
+    {
+     "name": "Paprika",
+     "qty": 80,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Kochschinken",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Gouda",
+     "qty": 30,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Butter",
+     "qty": 5,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Salz & Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Paprika und Schinken klein würfeln, Eier mit Salz und Pfeffer verquirlen.",
+    "Butter in der Pfanne schmelzen, Paprika 2 Min. anbraten.",
+    "Eier dazugießen, Schinken und Gouda darauf verteilen.",
+    "Bei mittlerer Hitze 4–5 Min. stocken lassen, zusammenklappen."
+   ]
+  },
+  {
+   "id": "eiermuffins",
+   "name": "Airfryer-Eiermuffins mit Spinat & Feta",
+   "emoji": [
+    "🧁",
+    "🥬",
+    "🧀"
+   ],
+   "tags": [
+    "b",
+    "box"
+   ],
+   "minutes": 20,
+   "devices": [
+    "Airfryer"
+   ],
+   "kcal": 420,
+   "protein": 34,
+   "carbs": 5,
+   "fat": 29,
+   "ingredients": [
+    {
+     "name": "Eier",
+     "qty": 4,
+     "unit": "Stk.",
+     "whole": true
+    },
+    {
+     "name": "Babyspinat",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Feta",
+     "qty": 40,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Cherrytomaten",
+     "qty": 80,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Salz & Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Airfryer auf 160 °C vorheizen, 6 Silikon-Muffinförmchen bereitstellen.",
+    "Spinat hacken, Tomaten vierteln, Feta zerbröseln und in die Förmchen verteilen.",
+    "Eier verquirlen, würzen und darübergießen.",
+    "12–14 Min. backen, bis die Mitte fest ist. Hält gekühlt 3 Tage."
+   ]
+  },
+  {
+   "id": "putenburger",
+   "name": "Puten-Frikadellen mit Gurken-Joghurt",
+   "emoji": [
+    "🍔",
+    "🥒",
+    "🥣"
+   ],
+   "tags": [
+    "l",
+    "d",
+    "box"
+   ],
+   "minutes": 25,
+   "devices": [
+    "Airfryer"
+   ],
+   "kcal": 490,
+   "protein": 52,
+   "carbs": 12,
+   "fat": 24,
+   "ingredients": [
+    {
+     "name": "Putenhack",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Ei",
+     "qty": 1,
+     "unit": "Stk.",
+     "whole": true
+    },
+    {
+     "name": "Zwiebel",
+     "qty": 30,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Griechischer Joghurt (2 %)",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Salatgurke",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Senf",
+     "qty": 1,
+     "unit": "TL",
+     "whole": false
+    },
+    {
+     "name": "Paprikapulver, Salz, Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Airfryer auf 190 °C vorheizen. Zwiebel fein würfeln.",
+    "Hack mit Ei, Zwiebel, Senf und Gewürzen verkneten, 4 flache Frikadellen formen.",
+    "12–14 Min. garen, nach der Hälfte wenden.",
+    "Gurke raspeln, mit Joghurt, Salz und Pfeffer verrühren und dazu servieren."
+   ]
+  },
+  {
+   "id": "lachs_brokkoli",
+   "name": "Ofenlachs mit Brokkoli & Zitronen-Joghurt",
+   "emoji": [
+    "🐟",
+    "🥦",
+    "🍋"
+   ],
+   "tags": [
+    "l",
+    "d"
+   ],
+   "minutes": 20,
+   "devices": [
+    "Airfryer",
+    "Thermomix"
+   ],
+   "kcal": 540,
+   "protein": 44,
+   "carbs": 12,
+   "fat": 34,
+   "ingredients": [
+    {
+     "name": "Lachsfilet",
+     "qty": 160,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Brokkoli",
+     "qty": 250,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Griechischer Joghurt (2 %)",
+     "qty": 80,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zitrone",
+     "qty": 0.5,
+     "unit": "Stk.",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "TL",
+     "whole": false
+    },
+    {
+     "name": "Dill, Salz, Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Thermomix: 500 g Wasser in den Mixtopf, Brokkoliröschen in den Varoma, 12 Min./Varoma/Stufe 1.",
+    "Gleichzeitig Lachs mit Öl, Salz und Pfeffer einreiben und im Airfryer bei 200 °C 8–10 Min. garen.",
+    "Joghurt mit Zitronensaft, Dill und Salz verrühren.",
+    "Alles anrichten."
+   ]
+  },
+  {
+   "id": "rindpfanne",
+   "name": "Rindfleisch-Paprika-Pfanne mit Blumenkohlreis",
+   "emoji": [
+    "🥩",
+    "🫑",
+    "🍚"
+   ],
+   "tags": [
+    "l",
+    "d"
+   ],
+   "minutes": 25,
+   "devices": [
+    "Pfanne",
+    "Thermomix"
+   ],
+   "kcal": 520,
+   "protein": 46,
+   "carbs": 16,
+   "fat": 28,
+   "ingredients": [
+    {
+     "name": "Rinderhüfte oder Minutensteak",
+     "qty": 180,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Blumenkohl",
+     "qty": 300,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Paprika",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Frühlingszwiebel",
+     "qty": 30,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Sojasauce",
+     "qty": 1,
+     "unit": "EL",
+     "whole": false
+    },
+    {
+     "name": "Rapsöl",
+     "qty": 1,
+     "unit": "EL",
+     "whole": false
+    },
+    {
+     "name": "Knoblauchzehe",
+     "qty": 1,
+     "unit": "Stk.",
+     "whole": true
+    }
+   ],
+   "steps": [
+    "Blumenkohl in Röschen im Thermomix 4 Sek./Stufe 5 zu „Reis“ zerkleinern (oder reiben).",
+    "Fleisch in feine Streifen schneiden, in heißem Öl 2 Min. scharf anbraten, herausnehmen.",
+    "Paprika und Knoblauch 3 Min. braten, Blumenkohlreis zugeben und 4 Min. mitbraten.",
+    "Fleisch zurückgeben, mit Sojasauce abschmecken, Frühlingszwiebel darüber."
+   ]
+  },
+  {
+   "id": "zoodles_bolo",
+   "name": "Zucchini-Nudeln mit Hack-Bolognese (Thermomix)",
+   "emoji": [
+    "🍝",
+    "🥒",
+    "🍅"
+   ],
+   "tags": [
+    "l",
+    "d"
+   ],
+   "minutes": 30,
+   "devices": [
+    "Thermomix"
+   ],
+   "kcal": 510,
+   "protein": 42,
+   "carbs": 18,
+   "fat": 29,
+   "ingredients": [
+    {
+     "name": "Rinderhack (max. 10 % Fett)",
+     "qty": 180,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zucchini",
+     "qty": 300,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Passierte Tomaten",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zwiebel",
+     "qty": 40,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Möhre",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Parmesan",
+     "qty": 15,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "TL",
+     "whole": false
+    },
+    {
+     "name": "Oregano, Salz, Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Zwiebel und Möhre in den Mixtopf, 5 Sek./Stufe 5. Öl dazu, 3 Min./120 °C/Stufe 1.",
+    "Hack zugeben, 5 Min./120 °C/Linkslauf/Sanftrührstufe anbraten.",
+    "Tomaten und Gewürze dazu, 15 Min./100 °C/Linkslauf/Sanftrührstufe.",
+    "Zucchini zu Nudeln schneiden und nur kurz in der Soße erwärmen. Mit Parmesan servieren."
+   ]
+  },
+  {
+   "id": "spiesse",
+   "name": "Hähnchen-Spieße mit Erdnuss-Dip",
+   "emoji": [
+    "🍢",
+    "🥜",
+    "🥒"
+   ],
+   "tags": [
+    "l",
+    "d",
+    "box"
+   ],
+   "minutes": 25,
+   "devices": [
+    "Airfryer"
+   ],
+   "kcal": 500,
+   "protein": 55,
+   "carbs": 10,
+   "fat": 26,
+   "ingredients": [
+    {
+     "name": "Hähnchenbrust",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Erdnussmus",
+     "qty": 20,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Sojasauce",
+     "qty": 1,
+     "unit": "EL",
+     "whole": false
+    },
+    {
+     "name": "Limette",
+     "qty": 0.5,
+     "unit": "Stk.",
+     "whole": false
+    },
+    {
+     "name": "Salatgurke",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Paprikapulver, Currypulver",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Hähnchen in Würfel schneiden, mit Curry, Paprika und der Hälfte der Sojasauce mischen, auf Spieße stecken.",
+    "Im Airfryer bei 190 °C 12–14 Min. garen, nach der Hälfte wenden.",
+    "Erdnussmus mit restlicher Sojasauce, Limettensaft und 2 EL warmem Wasser glatt rühren.",
+    "Mit Gurkenscheiben servieren."
+   ]
+  },
+  {
+   "id": "kabeljau",
+   "name": "Kabeljau auf Tomaten-Zucchini-Gemüse",
+   "emoji": [
+    "🐟",
+    "🍅",
+    "🥒"
+   ],
+   "tags": [
+    "d",
+    "l"
+   ],
+   "minutes": 25,
+   "devices": [
+    "Airfryer"
+   ],
+   "kcal": 390,
+   "protein": 42,
+   "carbs": 14,
+   "fat": 17,
+   "ingredients": [
+    {
+     "name": "Kabeljaufilet",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zucchini",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Cherrytomaten",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Oliven",
+     "qty": 20,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "EL",
+     "whole": false
+    },
+    {
+     "name": "Zitrone",
+     "qty": 0.5,
+     "unit": "Stk.",
+     "whole": false
+    },
+    {
+     "name": "Kräuter der Provence, Salz",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Airfryer auf 190 °C vorheizen. Zucchini würfeln, Tomaten halbieren, mit Öl, Oliven und Kräutern mischen.",
+    "Gemüse in einer ofenfesten Form 8 Min. garen.",
+    "Kabeljau salzen, mit Zitrone beträufeln, auf das Gemüse legen und weitere 8–10 Min. garen."
+   ]
+  },
+  {
+   "id": "auflauf",
+   "name": "Hähnchen-Brokkoli-Auflauf mit Mozzarella",
+   "emoji": [
+    "🧀",
+    "🥦",
+    "🍗"
+   ],
+   "tags": [
+    "d",
+    "box"
+   ],
+   "minutes": 30,
+   "devices": [
+    "Airfryer",
+    "Pfanne"
+   ],
+   "kcal": 530,
+   "protein": 58,
+   "carbs": 11,
+   "fat": 27,
+   "ingredients": [
+    {
+     "name": "Hähnchenbrust",
+     "qty": 180,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Brokkoli",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Frischkäse light",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Mozzarella light",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "TL",
+     "whole": false
+    },
+    {
+     "name": "Muskat, Salz, Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Brokkoli in Röschen 4 Min. in Salzwasser vorgaren.",
+    "Hähnchen würfeln und in Öl 4 Min. anbraten, würzen.",
+    "Mit Brokkoli und Frischkäse in einer kleinen Form mischen, Mozzarella darüber.",
+    "Im Airfryer bei 180 °C 10–12 Min. überbacken."
+   ]
+  },
+  {
+   "id": "wrap_salat",
+   "name": "Thunfisch-Salat-Wraps (Low Carb)",
+   "emoji": [
+    "🌯",
+    "🐟",
+    "🥬"
+   ],
+   "tags": [
+    "l",
+    "box"
+   ],
+   "minutes": 10,
+   "devices": [
+    "Ohne Kochen"
+   ],
+   "kcal": 380,
+   "protein": 40,
+   "carbs": 9,
+   "fat": 20,
+   "ingredients": [
+    {
+     "name": "Thunfisch im eigenen Saft (Abtropfgewicht)",
+     "qty": 140,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Griechischer Joghurt (2 %)",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Römersalat-Blätter",
+     "qty": 6,
+     "unit": "Stk.",
+     "whole": true
+    },
+    {
+     "name": "Paprika",
+     "qty": 80,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Mais",
+     "qty": 30,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Avocado",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zitronensaft, Salz, Pfeffer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Thunfisch mit Joghurt, Zitronensaft, Salz und Pfeffer verrühren.",
+    "Paprika und Avocado klein würfeln, mit Mais unterheben.",
+    "In die Salatblätter füllen und wie Wraps einrollen."
+   ]
+  },
+  {
+   "id": "protein_bowl",
+   "name": "Hähnchen-Quinoa-Bowl mit Avocado",
+   "emoji": [
+    "🥗",
+    "🍗",
+    "🥑"
+   ],
+   "tags": [
+    "l",
+    "box",
+    "carb"
+   ],
+   "minutes": 20,
+   "devices": [
+    "Thermomix"
+   ],
+   "kcal": 560,
+   "protein": 48,
+   "carbs": 32,
+   "fat": 24,
+   "ingredients": [
+    {
+     "name": "Hähnchenbrust",
+     "qty": 160,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Quinoa (roh)",
+     "qty": 40,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Avocado",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Cherrytomaten",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Rucola",
+     "qty": 30,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zitronensaft",
+     "qty": 1,
+     "unit": "EL",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 1,
+     "unit": "TL",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Thermomix: Quinoa im Garkörbchen mit 500 g Wasser, Hähnchen im Varoma – 20 Min./Varoma/Stufe 1.",
+    "Hähnchen in Scheiben schneiden, Tomaten halbieren, Avocado würfeln.",
+    "Alles auf Rucola anrichten, mit Zitronensaft, Öl und Salz beträufeln.",
+    "Gut für die Arbeit: Dressing getrennt mitnehmen."
+   ]
+  },
+  {
+   "id": "edamame_snack",
+   "name": "Edamame mit Meersalz & Chili",
+   "emoji": [
+    "🫛",
+    "🧂",
+    "🌶️"
+   ],
+   "tags": [
+    "snack",
+    "light"
+   ],
+   "minutes": 8,
+   "devices": [
+    "Thermomix"
+   ],
+   "kcal": 240,
+   "protein": 22,
+   "carbs": 10,
+   "fat": 11,
+   "ingredients": [
+    {
+     "name": "Edamame (TK, in der Schote)",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Meersalz, Chiliflocken",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Edamame im Varoma über 500 g Wasser 8 Min./Varoma/Stufe 1 garen (oder 5 Min. kochen).",
+    "Mit Meersalz und Chiliflocken bestreuen."
+   ]
+  },
+  {
+   "id": "skyr_schoko",
+   "name": "Schoko-Skyr mit Erdnussmus",
+   "emoji": [
+    "🍫",
+    "🥣",
+    "🥜"
+   ],
+   "tags": [
+    "snack",
+    "light"
+   ],
+   "minutes": 3,
+   "devices": [
+    "Ohne Kochen"
+   ],
+   "kcal": 300,
+   "protein": 30,
+   "carbs": 16,
+   "fat": 12,
+   "ingredients": [
+    {
+     "name": "Skyr natur",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Backkakao (ungesüßt)",
+     "qty": 10,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Erdnussmus",
+     "qty": 15,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Süßstoff oder etwas Honig",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Skyr mit Kakao und etwas Süße glatt rühren.",
+    "Erdnussmus darüber geben – fertig. Ideal gegen Heißhunger im Nachtdienst."
+   ]
+  },
+  {
+   "id": "protein_porridge",
+   "name": "Protein-Porridge mit Banane & Erdnussmus",
+   "emoji": [
+    "🥣",
+    "🍌",
+    "🥜"
+   ],
+   "tags": [
+    "b",
+    "carb"
+   ],
+   "minutes": 8,
+   "devices": [
+    "Topf"
+   ],
+   "kcal": 590,
+   "protein": 39,
+   "carbs": 71,
+   "fat": 15,
+   "ingredients": [
+    {
+     "name": "Haferflocken",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Milch 1,5 %",
+     "qty": 250,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Eiweißpulver (Vanille)",
+     "qty": 25,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Banane",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Erdnussmus",
+     "qty": 10,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zimt",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Haferflocken mit der Milch aufkochen und 3–4 Min. unter Rühren köcheln lassen.",
+    "Vom Herd nehmen, Eiweißpulver einrühren (nicht mehr kochen, sonst klumpt es).",
+    "Mit Bananenscheiben, Erdnussmus und Zimt toppen."
+   ]
+  },
+  {
+   "id": "vollkorn_toast",
+   "name": "Vollkornbrot mit Frischkäse, Ei & Tomate",
+   "emoji": [
+    "🍞",
+    "🥚",
+    "🍅"
+   ],
+   "tags": [
+    "b",
+    "carb"
+   ],
+   "minutes": 10,
+   "devices": [
+    "Topf"
+   ],
+   "kcal": 550,
+   "protein": 41,
+   "carbs": 47,
+   "fat": 19,
+   "ingredients": [
+    {
+     "name": "Vollkornbrot",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Körniger Frischkäse",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Eier",
+     "qty": 2,
+     "unit": "Stk.",
+     "whole": true
+    },
+    {
+     "name": "Tomate",
+     "qty": 120,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Kräuter",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Eier 8 Min. kochen, abschrecken und pellen.",
+    "Brot mit körnigem Frischkäse bestreichen.",
+    "Mit Tomaten- und Eierscheiben belegen, salzen, pfeffern und mit Kräutern bestreuen."
+   ]
+  },
+  {
+   "id": "bircher",
+   "name": "Bircher-Müsli mit Skyr & Apfel",
+   "emoji": [
+    "🍎",
+    "🥣",
+    "🌰"
+   ],
+   "tags": [
+    "b",
+    "light",
+    "carb"
+   ],
+   "minutes": 5,
+   "devices": [
+    "Ohne Kochen"
+   ],
+   "kcal": 515,
+   "protein": 40,
+   "carbs": 56,
+   "fat": 13,
+   "ingredients": [
+    {
+     "name": "Haferflocken",
+     "qty": 45,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Skyr",
+     "qty": 250,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Milch 1,5 %",
+     "qty": 80,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Apfel",
+     "qty": 120,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Mandeln",
+     "qty": 15,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zimt",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Haferflocken mit Milch und Skyr verrühren, am besten über Nacht im Kühlschrank quellen lassen.",
+    "Apfel grob raspeln und unterheben.",
+    "Mit gehackten Mandeln und Zimt servieren."
+   ]
+  },
+  {
+   "id": "teriyaki_bowl",
+   "name": "Teriyaki-Hähnchen-Bowl mit Reis & Brokkoli",
+   "emoji": [
+    "🍚",
+    "🍗",
+    "🥦"
+   ],
+   "tags": [
+    "l",
+    "d",
+    "box",
+    "carb"
+   ],
+   "minutes": 25,
+   "devices": [
+    "Pfanne",
+    "Topf"
+   ],
+   "kcal": 575,
+   "protein": 57,
+   "carbs": 70,
+   "fat": 6,
+   "ingredients": [
+    {
+     "name": "Basmatireis (roh)",
+     "qty": 70,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Hähnchenbrust",
+     "qty": 180,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Brokkoli",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Sojasauce",
+     "qty": 20,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Honig",
+     "qty": 10,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Sesam",
+     "qty": 5,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Ingwer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    },
+    {
+     "name": "Knoblauch",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Reis nach Packung garen. Brokkoli in Röschen die letzten 5 Min. über dem Reis dämpfen.",
+    "Hähnchen in Würfel schneiden und in einer heißen Pfanne ohne Öl rundum 6–7 Min. braten.",
+    "Sojasauce, Honig, geriebenen Ingwer und Knoblauch zugeben und 1 Min. einköcheln, bis das Fleisch glänzt.",
+    "Alles in einer Schale anrichten und mit Sesam bestreuen."
+   ]
+  },
+  {
+   "id": "lachs_suesskartoffel",
+   "name": "Ofenlachs mit Süßkartoffel & grünem Spargel",
+   "emoji": [
+    "🐟",
+    "🍠",
+    "🌱"
+   ],
+   "tags": [
+    "d",
+    "l",
+    "carb"
+   ],
+   "minutes": 30,
+   "devices": [
+    "Airfryer"
+   ],
+   "kcal": 600,
+   "protein": 38,
+   "carbs": 54,
+   "fat": 26,
+   "ingredients": [
+    {
+     "name": "Lachsfilet",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Süßkartoffel",
+     "qty": 250,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Grüner Spargel",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 5,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Limette",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    },
+    {
+     "name": "Gewürze",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Süßkartoffel in Spalten schneiden, mit der Hälfte des Öls, Salz und Paprikapulver mischen und 12 Min. bei 200 °C im Airfryer garen.",
+    "Lachs und Spargel mit dem restlichen Öl dazulegen und weitere 10–12 Min. garen.",
+    "Mit Limettensaft beträufeln."
+   ]
+  },
+  {
+   "id": "bolo_vollkorn",
+   "name": "Vollkorn-Spaghetti Bolognese",
+   "emoji": [
+    "🍝",
+    "🍅",
+    "🥩"
+   ],
+   "tags": [
+    "l",
+    "d",
+    "carb"
+   ],
+   "minutes": 25,
+   "devices": [
+    "Topf",
+    "Pfanne"
+   ],
+   "kcal": 595,
+   "protein": 50,
+   "carbs": 64,
+   "fat": 13,
+   "ingredients": [
+    {
+     "name": "Vollkornspaghetti (roh)",
+     "qty": 80,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Rinderhack (5 % Fett)",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Passierte Tomaten",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zwiebel",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Parmesan",
+     "qty": 10,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Knoblauch",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    },
+    {
+     "name": "Kräuter",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Spaghetti nach Packung bissfest kochen.",
+    "Zwiebel und Knoblauch fein würfeln, mit dem Hack krümelig anbraten.",
+    "Passierte Tomaten zugeben, mit Salz, Pfeffer und Oregano würzen und 10 Min. köcheln.",
+    "Mit den Spaghetti anrichten und Parmesan darüberreiben."
+   ]
+  },
+  {
+   "id": "griech_salat",
+   "name": "Griechischer Salat mit Hähnchen & Feta",
+   "emoji": [
+    "🥗",
+    "🫒",
+    "🍗"
+   ],
+   "tags": [
+    "l",
+    "box",
+    "d"
+   ],
+   "minutes": 15,
+   "devices": [
+    "Pfanne"
+   ],
+   "kcal": 445,
+   "protein": 48,
+   "carbs": 12,
+   "fat": 22,
+   "ingredients": [
+    {
+     "name": "Hähnchenbrust",
+     "qty": 160,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Römersalat",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Gurke",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Kirschtomaten",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Rote Zwiebel",
+     "qty": 30,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Feta",
+     "qty": 40,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Oliven",
+     "qty": 20,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 8,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Weißweinessig",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Hähnchen salzen, pfeffern und in einer Pfanne 5–6 Min. pro Seite braten, dann in Streifen schneiden.",
+    "Salat, Gurke, Tomaten und Zwiebel schneiden.",
+    "Mit Olivenöl, Essig und Oregano anmachen, Feta und Oliven darüber, Hähnchen obendrauf."
+   ]
+  },
+  {
+   "id": "linsen_dal",
+   "name": "Rote-Linsen-Dal mit Hähnchen & Spinat",
+   "emoji": [
+    "🍛",
+    "🫘",
+    "🌿"
+   ],
+   "tags": [
+    "l",
+    "d",
+    "box",
+    "carb"
+   ],
+   "minutes": 25,
+   "devices": [
+    "Thermomix",
+    "Topf"
+   ],
+   "kcal": 530,
+   "protein": 51,
+   "carbs": 45,
+   "fat": 13,
+   "ingredients": [
+    {
+     "name": "Rote Linsen (roh)",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Hähnchenbrust",
+     "qty": 130,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Kokosmilch light",
+     "qty": 100,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Passierte Tomaten",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Babyspinat",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Zwiebel",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Currypaste",
+     "qty": 10,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Ingwer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    },
+    {
+     "name": "Brühe",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Zwiebel und Ingwer andünsten, Currypaste kurz mitrösten (Thermomix: 3 Min./120 °C/Stufe 1).",
+    "Linsen, Tomaten, Kokosmilch und 150 ml Brühe zugeben und 12 Min. köcheln (Thermomix: 12 Min./100 °C/Linkslauf/Stufe 1).",
+    "Hähnchenwürfel zugeben und 6 Min. mitgaren, zum Schluss den Spinat unterheben."
+   ]
+  },
+  {
+   "id": "burrito_bowl",
+   "name": "Burrito-Bowl mit Rinderhack, Bohnen & Reis",
+   "emoji": [
+    "🌯",
+    "🫘",
+    "🌽"
+   ],
+   "tags": [
+    "l",
+    "d",
+    "box",
+    "carb"
+   ],
+   "minutes": 25,
+   "devices": [
+    "Pfanne",
+    "Topf"
+   ],
+   "kcal": 565,
+   "protein": 47,
+   "carbs": 66,
+   "fat": 10,
+   "ingredients": [
+    {
+     "name": "Basmatireis (roh)",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Rinderhack (5 % Fett)",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Kidneybohnen (abgetropft)",
+     "qty": 80,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Mais",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Paprika",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Salsa",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Joghurt 1,5 %",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Kreuzkümmel",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    },
+    {
+     "name": "Limette",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Reis nach Packung garen.",
+    "Hack mit Paprikawürfeln krümelig braten, mit Kreuzkümmel, Paprikapulver, Salz und Pfeffer würzen.",
+    "Bohnen und Mais kurz mit erwärmen.",
+    "Reis, Hack, Bohnen und Mais in einer Schale anrichten, mit Salsa, Joghurt und Limette servieren."
+   ]
+  },
+  {
+   "id": "kartoffel_quark",
+   "name": "Ofenkartoffeln mit Kräuterquark & Pute",
+   "emoji": [
+    "🥔",
+    "🍗",
+    "🌿"
+   ],
+   "tags": [
+    "d",
+    "l",
+    "carb"
+   ],
+   "minutes": 30,
+   "devices": [
+    "Airfryer",
+    "Pfanne"
+   ],
+   "kcal": 505,
+   "protein": 56,
+   "carbs": 52,
+   "fat": 7,
+   "ingredients": [
+    {
+     "name": "Kartoffeln",
+     "qty": 300,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Putenbrust",
+     "qty": 130,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Magerquark",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Gurke",
+     "qty": 80,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 5,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Kräuter",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    },
+    {
+     "name": "Knoblauch",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Kartoffeln halbieren, mit Öl, Salz und Rosmarin mischen und 20–22 Min. bei 200 °C im Airfryer garen.",
+    "Pute in Streifen schneiden und in einer Pfanne 5 Min. braten.",
+    "Quark mit Kräutern, geriebener Gurke, Knoblauch, Salz und Pfeffer verrühren und zu Kartoffeln und Pute servieren."
+   ]
+  },
+  {
+   "id": "gnocchi_pfanne",
+   "name": "Gnocchi-Hähnchen-Pfanne mit Spinat & Tomaten",
+   "emoji": [
+    "🥟",
+    "🍅",
+    "🌿"
+   ],
+   "tags": [
+    "l",
+    "d",
+    "carb"
+   ],
+   "minutes": 20,
+   "devices": [
+    "Pfanne"
+   ],
+   "kcal": 630,
+   "protein": 55,
+   "carbs": 70,
+   "fat": 13,
+   "ingredients": [
+    {
+     "name": "Gnocchi (Kühlregal)",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Hähnchenbrust",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Kirschtomaten",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Babyspinat",
+     "qty": 80,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Mozzarella light",
+     "qty": 50,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 5,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Knoblauch",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Hähnchen würfeln und im Öl 5 Min. anbraten, herausnehmen.",
+    "Gnocchi in derselben Pfanne 5–6 Min. goldbraun braten.",
+    "Tomaten halbieren, mit Knoblauch und Hähnchen zugeben, 2 Min. schmoren.",
+    "Spinat unterheben, bis er zusammenfällt, Mozzarella darüberzupfen."
+   ]
+  },
+  {
+   "id": "puten_wok",
+   "name": "Puten-Gemüse-Wok mit Basmatireis",
+   "emoji": [
+    "🥢",
+    "🍚",
+    "🥕"
+   ],
+   "tags": [
+    "l",
+    "d",
+    "box",
+    "carb"
+   ],
+   "minutes": 20,
+   "devices": [
+    "Pfanne",
+    "Topf"
+   ],
+   "kcal": 520,
+   "protein": 52,
+   "carbs": 57,
+   "fat": 8,
+   "ingredients": [
+    {
+     "name": "Putenbrust",
+     "qty": 170,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Wokgemüse (TK)",
+     "qty": 250,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Basmatireis (roh)",
+     "qty": 60,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Sojasauce",
+     "qty": 20,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 5,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Ingwer",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    },
+    {
+     "name": "Knoblauch",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Reis nach Packung garen.",
+    "Pute in Streifen schneiden und im heißen Öl 4 Min. scharf anbraten.",
+    "Wokgemüse zugeben und 5–6 Min. unter Rühren braten.",
+    "Mit Sojasauce, Ingwer und Knoblauch abschmecken und mit dem Reis servieren."
+   ]
+  },
+  {
+   "id": "seelachs_kartoffelsalat",
+   "name": "Seelachs mit Kartoffel-Gurken-Salat",
+   "emoji": [
+    "🐟",
+    "🥔",
+    "🥒"
+   ],
+   "tags": [
+    "d",
+    "l",
+    "box",
+    "carb"
+   ],
+   "minutes": 30,
+   "devices": [
+    "Topf",
+    "Pfanne"
+   ],
+   "kcal": 440,
+   "protein": 45,
+   "carbs": 44,
+   "fat": 8,
+   "ingredients": [
+    {
+     "name": "Seelachsfilet",
+     "qty": 200,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Kartoffeln",
+     "qty": 250,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Gurke",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Joghurt 1,5 %",
+     "qty": 80,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Olivenöl",
+     "qty": 5,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Senf",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    },
+    {
+     "name": "Dill",
+     "qty": 0,
+     "unit": "",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Kartoffeln 18–20 Min. kochen, pellen und in Scheiben schneiden.",
+    "Gurke hobeln, mit Joghurt, Senf, Dill, Salz und Pfeffer zum Dressing verrühren und mit den Kartoffeln mischen.",
+    "Seelachs salzen und im Öl 3 Min. pro Seite braten, mit Zitrone servieren."
+   ]
+  },
+  {
+   "id": "reiswaffel_quark",
+   "name": "Reiswaffeln mit Beeren-Quark",
+   "emoji": [
+    "🍘",
+    "🫐",
+    "🍓"
+   ],
+   "tags": [
+    "snack",
+    "carb"
+   ],
+   "minutes": 3,
+   "devices": [
+    "Ohne Kochen"
+   ],
+   "kcal": 275,
+   "protein": 21,
+   "carbs": 42,
+   "fat": 2,
+   "ingredients": [
+    {
+     "name": "Reiswaffeln",
+     "qty": 30,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Magerquark",
+     "qty": 150,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Beeren (TK)",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Honig",
+     "qty": 5,
+     "unit": "g",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Quark mit aufgetauten Beeren und Honig verrühren.",
+    "Auf die Reiswaffeln streichen – ideal direkt nach dem Training."
+   ]
+  },
+  {
+   "id": "bananen_shake",
+   "name": "Bananen-Hafer-Shake nach dem Training",
+   "emoji": [
+    "🥤",
+    "🍌",
+    "🌾"
+   ],
+   "tags": [
+    "snack",
+    "b",
+    "carb"
+   ],
+   "minutes": 3,
+   "devices": [
+    "Thermomix"
+   ],
+   "kcal": 460,
+   "protein": 38,
+   "carbs": 54,
+   "fat": 9,
+   "ingredients": [
+    {
+     "name": "Milch 1,5 %",
+     "qty": 300,
+     "unit": "ml",
+     "whole": false
+    },
+    {
+     "name": "Eiweißpulver (Vanille)",
+     "qty": 30,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Banane",
+     "qty": 100,
+     "unit": "g",
+     "whole": false
+    },
+    {
+     "name": "Haferflocken",
+     "qty": 30,
+     "unit": "g",
+     "whole": false
+    }
+   ],
+   "steps": [
+    "Alle Zutaten in den Mixtopf geben und 30 Sek./Stufe 10 mixen (oder im Mixer).",
+    "Sofort trinken – gut innerhalb einer Stunde nach dem Training."
+   ]
+  }
+ ],
+ "snacks": [
+  {
+   "name": "Hartgekochtes Ei",
+   "info": "75 kcal · 6 g Eiweiß"
+  },
+  {
+   "name": "Skyr, 150 g",
+   "info": "95 kcal · 16 g Eiweiß"
+  },
+  {
+   "name": "Mandeln, 20 g",
+   "info": "120 kcal · 4 g Eiweiß"
+  },
+  {
+   "name": "Putenbrust-Aufschnitt, 50 g",
+   "info": "55 kcal · 11 g Eiweiß"
+  },
+  {
+   "name": "Gurken- oder Paprika-Sticks",
+   "info": "fast keine Kalorien"
+  },
+  {
+   "name": "Banane",
+   "info": "105 kcal · ideal vor dem Training"
+  },
+  {
+   "name": "Proteinriegel",
+   "info": "ca. 200 kcal · 20 g Eiweiß"
+  }
+ ]
+}

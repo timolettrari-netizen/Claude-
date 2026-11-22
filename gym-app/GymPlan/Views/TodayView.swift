@@ -26,6 +26,8 @@ struct TodayView: View {
                         WeekStrip()
                     }
 
+                    TodayFoodCard { tab = .food }
+
                     HStack(spacing: 12) {
                         StatTile(value: weekValue, label: "Diese Woche", icon: "checkmark.circle.fill")
                         StatTile(value: "\(store.weekStreak)", label: "Wochen in Folge", icon: "flame.fill", tint: Theme.accent2)
@@ -252,6 +254,78 @@ private struct WeekStrip: View {
             }
         }
         .glassCard(padding: 14, radius: 24)
+    }
+}
+
+private struct TodayFoodCard: View {
+    @Environment(Store.self) private var store
+    let openFood: () -> Void
+
+    var body: some View {
+        let today = Date.now
+        let target = store.calorieTarget(on: today)
+        let totals = store.eatenTotals(on: today)
+        let meals = store.meals(on: today)
+        let next = meals.first { !store.isEaten($0) }
+        let progress = min(1, Double(totals.kcal) / Double(max(1, target)))
+
+        Button(action: openFood) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle().stroke(Color.primary.opacity(0.1), lineWidth: 6)
+                        Circle()
+                            .trim(from: 0, to: progress)
+                            .stroke(Theme.accent.gradient, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                        Image(systemName: "fork.knife").font(.caption.bold())
+                    }
+                    .frame(width: 46, height: 46)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Essen heute").font(.caption.weight(.semibold)).foregroundStyle(Theme.accent)
+                        Text("\(totals.kcal) von \(target) kcal").font(.headline).monospacedDigit()
+                        Text("\(totals.protein) / \(store.proteinTarget) g Eiweiß · \(store.dayType(today).title)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+                }
+
+                if let next {
+                    HStack(spacing: 12) {
+                        FoodImage(recipe: next.recipe)
+                            .frame(width: 54, height: 54)
+                            .clipShape(.rect(cornerRadius: 14))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Als Nächstes · \(next.slot.name) \(next.slot.time)")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            Text(next.recipe.name).font(.subheadline.weight(.semibold)).lineLimit(1)
+                            Text("\(next.kcal) kcal · \(next.protein) g Eiweiß").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                } else if !meals.isEmpty {
+                    Label("Alle Mahlzeiten für heute abgehakt", systemImage: "checkmark.seal.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.green)
+                }
+
+                if store.profile.configured {
+                    HStack {
+                        Label("\(Fmt.kg(store.currentKg)) kg", systemImage: "scalemass")
+                        Spacer()
+                        Text(store.goalDirection == .keep ? "Ziel erreicht" : "Ziel \(Fmt.kg(store.profile.goalKg)) kg · noch \(Fmt.kg(abs(store.currentKg - store.profile.goalKg))) kg")
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.caption.monospacedDigit())
+                    ProgressView(value: store.goalProgress).tint(Theme.accent)
+                }
+            }
+            .glassCard(interactive: true)
+        }
+        .buttonStyle(.plain)
     }
 }
 

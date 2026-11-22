@@ -10,6 +10,10 @@ final class Store {
     var active: ActiveWorkout? = nil
     var bodyWeights: [BodyEntry] = []    // älteste zuerst
     var restAlerts = true
+    var profile = BodyProfile()
+    var mealPicks: [String: String] = [:]
+    var eaten: Set<String> = []
+    var foodLog: [FoodEntry] = []
 
     // Nur für die Oberfläche, wird nicht gespeichert
     var showWorkout = false
@@ -27,6 +31,10 @@ final class Store {
         var active: ActiveWorkout?
         var bodyWeights: [BodyEntry]
         var restAlerts: Bool?
+        var profile: BodyProfile?
+        var mealPicks: [String: String]?
+        var eaten: Set<String>?
+        var foodLog: [FoodEntry]?
     }
 
     private static var fileURL: URL {
@@ -34,7 +42,8 @@ final class Store {
     }
 
     private var snapshot: Snapshot {
-        Snapshot(plan: plan, logs: logs, active: active, bodyWeights: bodyWeights, restAlerts: restAlerts)
+        Snapshot(plan: plan, logs: logs, active: active, bodyWeights: bodyWeights, restAlerts: restAlerts,
+                 profile: profile, mealPicks: mealPicks, eaten: eaten, foodLog: foodLog)
     }
 
     func save() {
@@ -59,6 +68,12 @@ final class Store {
         active = snap.active
         bodyWeights = snap.bodyWeights.sorted { $0.date < $1.date }
         restAlerts = snap.restAlerts ?? true
+        profile = snap.profile ?? BodyProfile()
+        foodLog = snap.foodLog ?? []
+        // Abhaken und Tausch nur für die letzten 60 Tage aufbewahren
+        let cutoff = Self.dayKey(Self.calendar.date(byAdding: .day, value: -60, to: .now) ?? .now)
+        mealPicks = (snap.mealPicks ?? [:]).filter { $0.key >= cutoff }
+        eaten = (snap.eaten ?? []).filter { $0 >= cutoff }
     }
 
     func exportBackup() -> URL? {
@@ -90,6 +105,10 @@ final class Store {
         logs = []
         active = nil
         bodyWeights = []
+        profile = BodyProfile()
+        mealPicks = [:]
+        eaten = []
+        foodLog = []
         RestNotifier.shared.cancel()
         save()
     }
@@ -523,8 +542,16 @@ final class Store {
     // MARK: - Körpergewicht
 
     func addBodyWeight(_ kg: Double, date: Date) {
-        bodyWeights.append(BodyEntry(date: date, kg: kg))
+        bodyWeights.removeAll { Self.calendar.isDate($0.date, inSameDayAs: date) }
+        bodyWeights.append(BodyEntry(date: date, kg: (kg * 10).rounded() / 10))
         bodyWeights.sort { $0.date < $1.date }
+        save()
+    }
+
+    func saveProfile(_ newProfile: BodyProfile) {
+        var p = newProfile
+        p.configured = true
+        profile = p
         save()
     }
 

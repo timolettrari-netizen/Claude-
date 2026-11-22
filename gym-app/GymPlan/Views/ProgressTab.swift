@@ -110,12 +110,30 @@ private struct WeeklyVolumeCard: View {
 private struct BodyWeightCard: View {
     @Environment(Store.self) private var store
     @Binding var showSheet: Bool
+    @State private var showGoal = false
+
+    private struct TargetPoint: Identifiable {
+        let date: Date
+        let kg: Double
+        var id: Date { date }
+    }
 
     var body: some View {
+        let p = store.profile
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Label("Körpergewicht", systemImage: "figure").font(.headline)
                 Spacer()
+                Button {
+                    showGoal = true
+                } label: {
+                    Image(systemName: "target")
+                        .font(.headline)
+                        .frame(width: 34, height: 34)
+                }
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
+                .accessibilityLabel("Gewichtsziel")
                 Button {
                     showSheet = true
                 } label: {
@@ -125,22 +143,42 @@ private struct BodyWeightCard: View {
                 }
                 .buttonStyle(.glass)
                 .buttonBorderShape(.circle)
+                .accessibilityLabel("Gewicht eintragen")
             }
 
-            if let last = store.bodyWeights.last {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(Fmt.kg(last.kg)).font(.system(size: 34, weight: .bold, design: .rounded))
-                    Text("kg").foregroundStyle(.secondary)
-                    if let first = store.bodyWeights.first, store.bodyWeights.count > 1 {
-                        let diff = last.kg - first.kg
-                        Text("\(diff >= 0 ? "+" : "−")\(Fmt.kg(abs(diff))) kg seit \(first.date.formatted(.dateTime.day().month(.abbreviated)))")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(Fmt.kg(store.currentKg)).font(.system(size: 34, weight: .bold, design: .rounded))
+                Text("kg").foregroundStyle(.secondary)
+                Spacer()
+                if p.configured && store.goalDirection != .keep {
+                    Text("noch \(Fmt.kg(abs(store.currentKg - p.goalKg))) kg")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.accent)
+                } else if p.configured {
+                    Badge(text: "Ziel erreicht", icon: "checkmark.seal.fill", tint: .green)
                 }
-                if store.bodyWeights.count > 1 {
-                    Chart(store.bodyWeights) { entry in
-                        LineMark(x: .value("Datum", entry.date), y: .value("kg", entry.kg))
+            }
+
+            if p.configured {
+                VStack(alignment: .leading, spacing: 6) {
+                    ProgressView(value: store.goalProgress)
+                        .tint(Theme.accent)
+                    HStack {
+                        Text("Start \(Fmt.kg(p.startKg))")
+                        Spacer()
+                        Text("Soll heute \(Fmt.kg((store.targetKg(on: .now) * 10).rounded() / 10))")
+                        Spacer()
+                        Text("Ziel \(Fmt.kg(p.goalKg)) kg")
+                    }
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                }
+            }
+
+            if store.bodyWeights.count > 1 {
+                Chart {
+                    ForEach(store.bodyWeights) { entry in
+                        LineMark(x: .value("Datum", entry.date), y: .value("kg", entry.kg), series: .value("Linie", "Gewicht"))
                             .interpolationMethod(.catmullRom)
                             .foregroundStyle(Color.blue)
                             .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
@@ -148,21 +186,75 @@ private struct BodyWeightCard: View {
                             .foregroundStyle(Color.blue)
                             .symbolSize(30)
                     }
-                    .chartYScale(domain: .automatic(includesZero: false))
-                    .frame(height: 130)
+                    if p.configured {
+                        ForEach(targetLine) { t in
+                            LineMark(x: .value("Datum", t.date), y: .value("kg", t.kg), series: .value("Linie", "Soll"))
+                                .foregroundStyle(Theme.accent.opacity(0.8))
+                                .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 4]))
+                        }
+                    }
                 }
+                .chartYScale(domain: .automatic(includesZero: false))
+                .frame(height: 150)
+                if p.configured {
+                    HStack(spacing: 12) {
+                        Label("Gewicht", systemImage: "circle.fill").foregroundStyle(.blue)
+                        Label("Soll-Linie zum Ziel", systemImage: "line.diagonal").foregroundStyle(Theme.accent)
+                    }
+                    .font(.caption2)
+                    .labelStyle(.titleAndIcon)
+                }
+            }
+
+            if p.configured, let trend = store.weightTrend() {
+                let word = trend >= 0 ? "abgenommen" : "zugenommen"
+                Text("Letzte 4 Wochen: \(abs(trend).formatted(.number.precision(.fractionLength(1)))) kg pro Woche \(word)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            if p.configured, let forecast = store.goalForecast {
+                Label("Bei diesem Tempo erreichst du dein Ziel ca. am \(forecast.formatted(date: .long, time: .omitted)).",
+                      systemImage: "flag.checkered")
+                    .font(.caption)
+            }
+
+            if !p.configured {
+                Button {
+                    showGoal = true
+                } label: {
+                    Label("Gewichtsziel festlegen", systemImage: "target")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glassProminent)
+            }
+
+            if !store.bodyWeights.isEmpty {
                 NavigationLink {
                     BodyWeightListView()
                 } label: {
                     Text("Alle Einträge").font(.caption.weight(.semibold))
                 }
             } else {
-                Text("Trage dein Gewicht regelmäßig ein, um Veränderungen zu sehen.")
+                Text("Trage dein Gewicht regelmäßig ein – am besten morgens nüchtern, 2–3× pro Woche.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
         }
         .glassCard()
+        .sheet(isPresented: $showGoal) {
+            GoalView()
+        }
+    }
+
+    /// Soll-Linie im sichtbaren Zeitraum (vom ersten Eintrag bis etwas nach heute)
+    private var targetLine: [TargetPoint] {
+        guard let first = store.bodyWeights.first?.date else { return [] }
+        let start = max(first, store.profile.startDate)
+        let end = min(store.profile.goalDate, Date.now.addingTimeInterval(7 * 86400))
+        guard end > start else { return [] }
+        return [TargetPoint(date: start, kg: store.targetKg(on: start)),
+                TargetPoint(date: end, kg: store.targetKg(on: end))]
     }
 }
 
